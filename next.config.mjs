@@ -4,10 +4,14 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const nextConfig = {
 	allowedDevOrigins: ['**.*', 'localhost', '*.localhost', '[::1]'],
-	htmlLimitedBots: /.*/,
 	images: {
-		unoptimized: true,
+		minimumCacheTTL: 86400,
 		remotePatterns: [
+			{
+				protocol: 'https',
+				hostname: '247labstage.spctek.com',
+				pathname: '/**',
+			},
 			{
 				protocol: 'https',
 				hostname: '247labstage.spctek.com',

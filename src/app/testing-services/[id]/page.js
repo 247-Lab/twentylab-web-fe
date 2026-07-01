@@ -6,8 +6,6 @@ import { getLocaleFromCookieStore } from '@/lib/locale';
 import { loadMessages } from '@/i18n/loadMessages';
 import { resolveMetadata } from '@/lib/seo';
 
-export const dynamic = 'force-dynamic';
-
 export async function generateMetadata({ params }) {
 	const cookieStore = await cookies();
 	const locale = getLocaleFromCookieStore(cookieStore);
@@ -41,21 +39,16 @@ export default async function TestingServiceDetailsRoute({ params }) {
 	const messages = await loadMessages(locale);
 	const t = messages?.TestingServiceDetailsPage;
 
-	let products = [];
-	let allCategories = [];
-	try {
-		products = await fetchProducts(locale);
-	} catch (error) {
-		console.error('Failed to fetch products:', error);
-		products = [];
-	}
-
-	try {
-		allCategories = await fetchCategories(locale);
-	} catch (error) {
-		console.error('Failed to fetch categories:', error);
-		allCategories = [];
-	}
+	const [products, allCategories] = await Promise.all([
+		fetchProducts(locale).catch((error) => {
+			console.error('Failed to fetch products:', error);
+			return [];
+		}),
+		fetchCategories(locale).catch((error) => {
+			console.error('Failed to fetch categories:', error);
+			return [];
+		}),
+	]);
 
 	const product = products.find((entry) => String(entry.id) === String(id));
 	if (!product) {

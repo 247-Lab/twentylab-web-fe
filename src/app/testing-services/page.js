@@ -1,12 +1,11 @@
 import { cookies } from 'next/headers';
 import TestingServicesPage from '@/components/testing-services/TestingServicesPage';
 import { fetchProducts } from '@/lib/api';
+import { summarizeHtml } from '@/lib/htmlSanitizer';
 import { getLocaleFromCookieStore } from '@/lib/locale';
 import { generateMetadataFor } from '@/lib/seo';
 
 export const generateMetadata = generateMetadataFor('/testing-services');
-
-export const dynamic = 'force-dynamic';
 
 export default async function TestingServicesRoute({ searchParams }) {
 	const cookieStore = await cookies();
@@ -21,11 +20,21 @@ export default async function TestingServicesRoute({ searchParams }) {
 	} catch {
 		products = [];
 	}
+	const listingProducts = products.map((product) => ({
+		...product,
+		description: summarizeHtml(product.description, 260),
+		variants: product.variants.map((variant) => ({
+			id: variant.id,
+			name: variant.name,
+			regularPrice: variant.regularPrice,
+			salePrice: variant.salePrice,
+		})),
+	}));
 
 	return (
 		<TestingServicesPage
 			key={`${locale}:${initialSearch}`}
-			products={products}
+			products={listingProducts}
 			locale={locale}
 			initialSearch={initialSearch}
 		/>

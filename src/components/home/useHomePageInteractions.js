@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 export default function useHomePageInteractions({ heroSlidesCount, reviewsCount }) {
 	const [activeSlide, setActiveSlide] = useState(0);
 	const [activeReview, setActiveReview] = useState(0);
-	const [isBooting, setIsBooting] = useState(true);
 	const [activeSection, setActiveSection] = useState('home');
 	const [activeWhyFeature, setActiveWhyFeature] = useState(0);
 	const [activeFaqId, setActiveFaqId] = useState(null);
@@ -20,21 +19,6 @@ export default function useHomePageInteractions({ heroSlidesCount, reviewsCount 
 
 		return () => window.clearInterval(timer);
 	}, [heroSlidesCount]);
-
-	useEffect(() => {
-		const bootTimer = window.setTimeout(() => {
-			setIsBooting(false);
-		}, 1300);
-
-		return () => window.clearTimeout(bootTimer);
-	}, []);
-
-	useEffect(() => {
-		document.body.style.overflow = isBooting ? 'hidden' : '';
-		return () => {
-			document.body.style.overflow = '';
-		};
-	}, [isBooting]);
 
 	useEffect(() => {
 		const revealElements = document.querySelectorAll('[data-reveal]');
@@ -176,7 +160,6 @@ export default function useHomePageInteractions({ heroSlidesCount, reviewsCount 
 		activeReview,
 		nextReview,
 		prevReview,
-		isBooting,
 		activeSection,
 		activeWhyFeature,
 		activeFaqId,

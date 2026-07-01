@@ -1,8 +1,7 @@
 'use client';
 
-import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
-import AITestFinderModal from '@/components/common/AITestFinderModal';
 import HomeAppointmentSection from '@/components/home/sections/HomeAppointmentSection';
 import HomeBreadcrumbs from '@/components/home/sections/HomeBreadcrumbs';
 import HomeFaqSection from '@/components/home/sections/HomeFaqSection';
@@ -13,37 +12,7 @@ import HomeServicesSection from '@/components/home/sections/HomeServicesSection'
 import HomeWhyChooseSection from '@/components/home/sections/HomeWhyChooseSection';
 import useHomePageInteractions from '@/components/home/useHomePageInteractions';
 
-function BootScreen({ t }) {
-	return (
-		<div className="fixed inset-0 z-[120] grid place-items-center bg-[radial-gradient(circle_at_20%_20%,#eff8ff,#dcecff_45%,#cde3f9_100%)]">
-			<div className="surface-noise absolute inset-0 opacity-40" />
-			<div className="relative flex flex-col items-center gap-5 px-6 text-center">
-				<div className="relative grid h-28 w-28 place-items-center">
-					<span className="absolute h-28 w-28 rounded-full border-2 border-[var(--tl-primary)]/20" />
-					<span className="absolute h-28 w-28 animate-spin rounded-full border-2 border-transparent border-t-[var(--tl-primary)] border-r-[var(--tl-primary)]/45" />
-					<span className="absolute h-20 w-20 animate-[spin_2.4s_linear_infinite_reverse] rounded-full border-2 border-transparent border-b-[var(--tl-primary)]/50 border-l-[var(--tl-primary)]/60" />
-					<Image
-						src="/images/24x7-logo.png"
-						alt={t('Hero.logoAlt')}
-						width={90}
-						height={52}
-						className="h-11 w-auto"
-						priority
-					/>
-				</div>
-
-				<div className="space-y-2">
-					<p className="font-display text-sm font-extrabold tracking-[0.22em] text-[var(--tl-primary-strong)] uppercase">
-						{t('Hero.loadingTitle')}
-					</p>
-					<p className="text-sm text-slate-600">{t('Hero.loadingSubtitle')}</p>
-				</div>
-
-				<div className="progress-shimmer h-1.5 w-56 rounded-full bg-slate-200/80" />
-			</div>
-		</div>
-	);
-}
+const AITestFinderModal = dynamic(() => import('@/components/common/AITestFinderModal'));
 
 export default function HomePage({ locale = 'en' }) {
 	const t = useTranslations('HomePage');
@@ -68,7 +37,6 @@ export default function HomePage({ locale = 'en' }) {
 		activeReview,
 		nextReview,
 		prevReview,
-		isBooting,
 		activeSection,
 		activeWhyFeature,
 		activeFaqId,
@@ -82,8 +50,6 @@ export default function HomePage({ locale = 'en' }) {
 
 	return (
 		<div className="relative isolate overflow-clip bg-white text-slate-900">
-			{isBooting && <BootScreen t={t} />}
-
 			<main>
 				<HomeHeroSection
 					t={t}
@@ -120,7 +86,7 @@ export default function HomePage({ locale = 'en' }) {
 			</main>
 
 			<HomeBreadcrumbs t={t} breadcrumbItems={breadcrumbItems} activeSection={activeSection} />
-			<AITestFinderModal isOpen={isAiFinderOpen} onClose={() => setIsAiFinderOpen(false)} locale={locale} />
+			{isAiFinderOpen ? <AITestFinderModal isOpen onClose={() => setIsAiFinderOpen(false)} locale={locale} /> : null}
 		</div>
 	);
 }

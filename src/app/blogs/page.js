@@ -1,10 +1,9 @@
 import { cookies } from 'next/headers';
 import { fetchBlogs, fetchCategories } from '@/lib/api';
+import { summarizeHtml } from '@/lib/htmlSanitizer';
 import { getLocaleFromCookieStore } from '@/lib/locale';
 import BlogListPage from '@/components/blog/BlogListPage';
 import { generateMetadataForPath } from '@/lib/seo';
-
-export const dynamic = 'force-dynamic';
 
 export const generateMetadata = generateMetadataForPath('/blogs');
 
@@ -14,20 +13,22 @@ export default async function BlogsRoute({ searchParams }) {
 	const resolvedSearchParams = (await searchParams) || {};
 	const initialCategory = String(resolvedSearchParams?.category || 'all');
 
-	let blogs = [];
-	let categories = [];
+	const [blogs, categories] = await Promise.all([
+		fetchBlogs(locale).catch(() => []),
+		fetchCategories(locale).catch(() => []),
+	]);
+	const blogSummaries = blogs.map((blog) => ({
+		...blog,
+		blogcontent: summarizeHtml(blog.blogcontent, 260),
+	}));
+	const categorySummaries = categories.map(({ id, name }) => ({ id, name }));
 
-	try {
-		blogs = await fetchBlogs(locale);
-	} catch {
-		blogs = [];
-	}
-
-	try {
-		categories = await fetchCategories(locale);
-	} catch {
-		categories = [];
-	}
-
-	return <BlogListPage blogs={blogs} categories={categories} locale={locale} initialCategory={initialCategory} />;
+	return (
+		<BlogListPage
+			blogs={blogSummaries}
+			categories={categorySummaries}
+			locale={locale}
+			initialCategory={initialCategory}
+		/>
+	);
 }

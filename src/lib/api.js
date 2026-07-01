@@ -6,6 +6,7 @@ function resolveApiOrigin() {
 }
 
 const API_ORIGIN = resolveApiOrigin();
+const CONTENT_REVALIDATE_SECONDS = 300;
 
 const PATH_MAP = {
 	BLOGS: 'blogs',
@@ -186,7 +187,10 @@ export function normalizeBlog(blog, locale = 'en') {
 
 export async function fetchProducts(locale = 'en') {
 	const response = await fetch(withLocaleQuery(ENDPOINTS.PRODUCTS, locale), {
-		cache: 'no-store',
+		next: {
+			revalidate: CONTENT_REVALIDATE_SECONDS,
+			tags: [`products:${locale}`],
+		},
 		headers: {
 			Accept: 'application/json',
 		},
@@ -204,7 +208,10 @@ export async function fetchProducts(locale = 'en') {
 
 export async function fetchBlogs(locale = 'en') {
 	const response = await fetch(withLocaleQuery(ENDPOINTS.BLOGS, locale), {
-		cache: 'no-store',
+		next: {
+			revalidate: CONTENT_REVALIDATE_SECONDS,
+			tags: [`blogs:${locale}`],
+		},
 		headers: {
 			Accept: 'application/json',
 		},
@@ -228,7 +235,10 @@ export async function fetchBlogs(locale = 'en') {
 
 export async function fetchCategories(locale = 'en') {
 	const response = await fetch(withLocaleQuery(ENDPOINTS.CATEGORIES, locale), {
-		cache: 'no-store',
+		next: {
+			revalidate: CONTENT_REVALIDATE_SECONDS,
+			tags: [`categories:${locale}`],
+		},
 		headers: {
 			Accept: 'application/json',
 		},

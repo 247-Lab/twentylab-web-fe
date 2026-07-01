@@ -6,8 +6,6 @@ import { getLocaleFromCookieStore } from '@/lib/locale';
 import { loadMessages } from '@/i18n/loadMessages';
 import { resolveMetadata } from '@/lib/seo';
 
-export const dynamic = 'force-dynamic';
-
 export async function generateMetadata({ params }) {
 	const cookieStore = await cookies();
 	const locale = getLocaleFromCookieStore(cookieStore);
@@ -43,27 +41,11 @@ export default async function BlogDetailsRoute({ params }) {
 	const resolvedParams = await params;
 	const slug = resolvedParams?.slug;
 
-	let blogs = [];
-	let categories = [];
-	let products = [];
-
-	try {
-		blogs = await fetchBlogs(locale);
-	} catch {
-		blogs = [];
-	}
-
-	try {
-		categories = await fetchCategories(locale);
-	} catch {
-		categories = [];
-	}
-
-	try {
-		products = await fetchProducts(locale);
-	} catch {
-		products = [];
-	}
+	const [blogs, categories, products] = await Promise.all([
+		fetchBlogs(locale).catch(() => []),
+		fetchCategories(locale).catch(() => []),
+		fetchProducts(locale).catch(() => []),
+	]);
 
 	const blog = blogs.find((entry) => entry.slug === slug);
 	if (!blog) {
