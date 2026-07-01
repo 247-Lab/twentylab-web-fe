@@ -1,12 +1,8 @@
 function resolveApiOrigin() {
-	const configured =
-		process.env.BE_URL ||
-		process.env.NEXT_PUBLIC_BE_URL ||
-		process.env.NEXT_PUBLIC_API_URL ||
-		(process.env.NEXT_PUBLIC_MODE === 'dev' ? 'http://localhost:3000' : 'https://247labstage.spctek.com:9000');
+	const base =
+		process.env.NEXT_PUBLIC_MODE === 'dev' ? process.env.NEXT_PUBLIC_DEV_API_URL : process.env.NEXT_PUBLIC_PROD_API_URL;
 
-	const base = configured.replace(/\/$/, '');
-	return base.endsWith('/api') ? base : `${base}/api`;
+	return base + '/api';
 }
 
 const API_ORIGIN = resolveApiOrigin();
