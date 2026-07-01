@@ -1,15 +1,11 @@
-import { cookies } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
-import { getLocaleFromCookieStore } from '@/lib/locale';
 import Link from 'next/link';
 import { generateMetadataFor } from '@/lib/seo';
 
 export const generateMetadata = generateMetadataFor('/privacy-policy');
 
 export default async function PrivacyPolicyPage() {
-	const cookieStore = await cookies();
-	const locale = getLocaleFromCookieStore(cookieStore);
-	const t = await getTranslations({ locale, namespace: 'PrivacyPolicyPage' });
+	const t = await getTranslations('PrivacyPolicyPage');
 	const sections = t.raw('sections');
 
 	return (

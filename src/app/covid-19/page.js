@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { cookies } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
 import {
 	ArrowRight,
@@ -12,15 +11,12 @@ import {
 	MapPin,
 	ShieldCheck,
 } from 'lucide-react';
-import { getLocaleFromCookieStore } from '@/lib/locale';
 import { generateMetadataFor } from '@/lib/seo';
 
 export const generateMetadata = generateMetadataFor('/covid-19');
 
 export default async function CovidPage() {
-	const cookieStore = await cookies();
-	const locale = getLocaleFromCookieStore(cookieStore);
-	const t = await getTranslations({ locale, namespace: 'CovidPage' });
+	const t = await getTranslations('CovidPage');
 
 	const symptoms = t.raw('symptoms');
 	const reasons = t.raw('reasons');

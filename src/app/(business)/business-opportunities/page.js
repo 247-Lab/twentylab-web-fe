@@ -1,18 +1,14 @@
 import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
-import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { CheckCircle, Users, TrendingUp, HeartHandshake } from 'lucide-react';
-import { getLocaleFromCookieStore } from '@/lib/locale';
 import BusinessOpportunitiesFaq from './BusinessOpportunitiesFaq';
 import { generateMetadataFor } from '@/lib/seo';
 
 export const generateMetadata = generateMetadataFor('/business-opportunities');
 
 export default async function BusinessOpportunitiesPage() {
-	const cookieStore = await cookies();
-	const locale = getLocaleFromCookieStore(cookieStore);
-	const t = await getTranslations({ locale, namespace: 'BusinessOpportunitiesPage' });
+	const t = await getTranslations('BusinessOpportunitiesPage');
 	const benefits = t.raw('benefits.items');
 	const faqs = t.raw('faq.questions');
 	const teamCards = t.raw('team.cards');

@@ -1,46 +1,14 @@
-import { cookies } from 'next/headers';
-import { getTranslations } from 'next-intl/server';
-import {
-	TestingServiceHero,
-	TestingServiceHowItWorks,
-	TestingServiceItems,
-	TestingServiceFinalCta,
-} from '@/components/testing-services/TestingServiceTemplate';
-import { getLocaleFromCookieStore } from '@/lib/locale';
+import TestingServicePage from '@/components/testing-services/TestingServicePage';
 import { generateMetadataFor } from '@/lib/seo';
 
 export const generateMetadata = generateMetadataFor('/drug-testing');
 
-const pageKey = 'DrugTestingPage';
-
-export default async function DrugTestingPage() {
-	const cookieStore = await cookies();
-	const locale = getLocaleFromCookieStore(cookieStore);
-	const t = await getTranslations({ locale });
-
+export default function DrugTestingPage() {
 	return (
-		<main className="bg-white">
-			<TestingServiceHero t={t} pageKey={pageKey} />
-			<TestingServiceHowItWorks t={t} pageKey={pageKey} />
-
-			{/* Self-Drug Testing Section */}
-			<section className="bg-slate-50 px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-				<div className="mx-auto max-w-5xl">
-					<h2 className="font-display mb-6 text-3xl font-bold text-slate-900 sm:text-4xl">
-						{t('DrugTestingPage.selfDrugTesting.title')}
-					</h2>
-					<p className="text-base leading-relaxed text-slate-700 sm:text-lg">
-						{t('DrugTestingPage.selfDrugTesting.description')}
-					</p>
-				</div>
-			</section>
-
-			<TestingServiceItems t={t} pageKey={pageKey} sectionKey="drugTestTypes" itemsKey="tests" />
-			<TestingServiceFinalCta
-				title={t(`${pageKey}.cta.title`)}
-				description={t(`${pageKey}.cta.description`)}
-				buttonText={t(`${pageKey}.cta.buttonText`)}
-			/>
-		</main>
+		<TestingServicePage
+			pageKey="DrugTestingPage"
+			items={{ sectionKey: 'drugTestTypes', itemsKey: 'tests' }}
+			infoSectionKey="selfDrugTesting"
+		/>
 	);
 }

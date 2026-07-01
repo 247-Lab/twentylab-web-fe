@@ -1,14 +1,10 @@
-import { cookies } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
-import { getLocaleFromCookieStore } from '@/lib/locale';
 import { generateMetadataFor } from '@/lib/seo';
 
 export const generateMetadata = generateMetadataFor('/telemedicine');
 
 export default async function TelemedicineServicePage() {
-	const cookieStore = await cookies();
-	const locale = getLocaleFromCookieStore(cookieStore);
-	const t = await getTranslations({ locale, namespace: 'TelemedicineServicePage' });
+	const t = await getTranslations('TelemedicineServicePage');
 
 	return (
 		<div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4 sm:px-6 lg:px-8">

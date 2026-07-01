@@ -5,8 +5,8 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { CalendarDays, ChevronLeft } from 'lucide-react';
 
-import { resolveImageUrl } from '@/lib/api';
 import { formatBlogDate } from '@/lib/blog-content';
+import { shouldBypassImageOptimization } from '@/lib/image';
 import BlogContentRenderer from './BlogContentRenderer';
 import RelatedProductsSection from '@/components/common/RelatedProductsSection';
 import TestingServiceCard from '@/components/testing-services/components/TestingServiceCard';
@@ -19,41 +19,6 @@ export default function BlogDetailPage({
 	locale = 'en',
 }) {
 	const t = useTranslations('BlogDetailPage');
-	const productT = useTranslations('TestingServiceDetailsPage');
-
-	const formatPrice = (value, localeOverride = locale) => {
-		const numericValue = Number(value);
-
-		if (!Number.isFinite(numericValue) || numericValue <= 0) {
-			return productT('contactUs');
-		}
-
-		return new Intl.NumberFormat(localeOverride === 'es' ? 'es-US' : 'en-US', {
-			style: 'currency',
-			currency: 'USD',
-			maximumFractionDigits: 2,
-		}).format(numericValue);
-	};
-
-	const summarizeText = (value, limit = 145) => {
-		if (!value) {
-			return '';
-		}
-
-		const plainText = String(value)
-			.replace(/<[^>]+>/g, ' ')
-			.replace(/\s+/g, ' ')
-			.trim();
-		if (plainText.length <= limit) {
-			return plainText;
-		}
-
-		return `${plainText.slice(0, limit).trimEnd()}...`;
-	};
-
-	const getProductImage = (product) =>
-		resolveImageUrl(product?.mainImage || product?.image || '/images/placeholder.png');
-
 	return (
 		<main className="min-h-screen bg-[linear-gradient(180deg,#eff6ff_0%,#ffffff_45%,#f6faff_100%)] text-[var(--tl-ink)]">
 			<section className="mx-auto w-full max-w-[1320px] px-4 pt-10 pb-8 lg:px-6">
@@ -74,6 +39,7 @@ export default function BlogDetailPage({
 							alt={blog.title || t('cardImageAlt')}
 							fill
 							sizes="(min-width: 768px) 960px, 100vw"
+							unoptimized={shouldBypassImageOptimization(blog.thumbnailimage)}
 							className="h-full w-full object-cover"
 						/>
 					</div>
@@ -147,16 +113,7 @@ export default function BlogDetailPage({
 				<RelatedProductsSection
 					title={t('relatedProducts')}
 					items={relatedProducts}
-					renderItem={(relatedProduct) => (
-						<TestingServiceCard
-							product={relatedProduct}
-							t={productT}
-							locale={locale}
-							formatPrice={formatPrice}
-							summarizeText={summarizeText}
-							getProductImage={getProductImage}
-						/>
-					)}
+					renderItem={(relatedProduct) => <TestingServiceCard product={relatedProduct} />}
 				/>
 			</section>
 		</main>

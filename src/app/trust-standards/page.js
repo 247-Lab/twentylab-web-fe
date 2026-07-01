@@ -1,15 +1,11 @@
 import { CheckCircle2, ClipboardCheck, ShieldCheck, Stethoscope } from 'lucide-react';
-import { cookies } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
-import { getLocaleFromCookieStore } from '@/lib/locale';
 import { generateMetadataFor } from '@/lib/seo';
 
 export const generateMetadata = generateMetadataFor('/trust-standards');
 
 export default async function TrustStandardsPage() {
-	const cookieStore = await cookies();
-	const locale = getLocaleFromCookieStore(cookieStore);
-	const t = await getTranslations({ locale, namespace: 'TrustStandardsPage' });
+	const t = await getTranslations('TrustStandardsPage');
 	const standards = t.raw('standards');
 
 	return (

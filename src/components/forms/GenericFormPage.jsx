@@ -5,12 +5,12 @@ import { useTranslations } from 'next-intl';
 import { ArrowRight, Clock3, Loader2, Mail, MapPin, PhoneCall } from 'lucide-react';
 import FormFieldRenderer from '@/components/forms/generic-form/FormFieldRenderer';
 import { buildFormConfig, flattenVisibleFields, initialFieldValues } from '@/components/forms/generic-form/config';
-import { useAppData } from '@/components/providers/DataProvider';
+import { appData } from '@/lib/static-data';
 import { isEmail, normalizePhone, safeT } from '@/components/forms/generic-form/utils';
 
 export default function GenericFormPage({ formKey, initialValues = {} }) {
 	const t = useTranslations('Forms');
-	const { states, locations, infections } = useAppData();
+	const { states, locations, infections } = appData;
 	const [values, setValues] = useState(() => ({
 		...initialFieldValues(formKey),
 		...initialValues,

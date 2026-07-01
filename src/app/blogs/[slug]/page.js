@@ -1,16 +1,12 @@
-import { cookies } from 'next/headers';
+import { getLocale, getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import BlogDetailPage from '@/components/blog/BlogDetailPage';
 import { fetchBlogs, fetchCategories, fetchProducts } from '@/lib/api';
-import { getLocaleFromCookieStore } from '@/lib/locale';
-import { loadMessages } from '@/i18n/loadMessages';
+import { toCategoryLink, toProductCard, toRecentPost } from '@/lib/content-view-models';
 import { resolveMetadata } from '@/lib/seo';
 
 export async function generateMetadata({ params }) {
-	const cookieStore = await cookies();
-	const locale = getLocaleFromCookieStore(cookieStore);
-	const messages = await loadMessages(locale);
-	const resolvedParams = await params;
+	const [messages, resolvedParams] = await Promise.all([getMessages(), params]);
 	const slug = resolvedParams?.slug;
 
 	let blogTitle = messages?.BlogDetailPage?.fallbackTitle;
@@ -36,9 +32,7 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function BlogDetailsRoute({ params }) {
-	const cookieStore = await cookies();
-	const locale = getLocaleFromCookieStore(cookieStore);
-	const resolvedParams = await params;
+	const [locale, resolvedParams] = await Promise.all([getLocale(), params]);
 	const slug = resolvedParams?.slug;
 
 	const [blogs, categories, products] = await Promise.all([
@@ -80,9 +74,9 @@ export default async function BlogDetailsRoute({ params }) {
 	return (
 		<BlogDetailPage
 			blog={blog}
-			categories={categories}
-			recentPosts={recentPosts}
-			relatedProducts={relatedProductsToShow}
+			categories={categories.map(toCategoryLink)}
+			recentPosts={recentPosts.map(toRecentPost)}
+			relatedProducts={relatedProductsToShow.map(toProductCard)}
 			locale={locale}
 		/>
 	);

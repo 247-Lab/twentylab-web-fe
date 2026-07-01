@@ -1,33 +1,10 @@
-import { cookies } from 'next/headers';
-import { getTranslations } from 'next-intl/server';
-import {
-	TestingServiceHero,
-	TestingServiceHowItWorks,
-	TestingServiceItems,
-	TestingServiceFinalCta,
-} from '@/components/testing-services/TestingServiceTemplate';
-import { getLocaleFromCookieStore } from '@/lib/locale';
+import TestingServicePage from '@/components/testing-services/TestingServicePage';
 import { generateMetadataFor } from '@/lib/seo';
 
 export const generateMetadata = generateMetadataFor('/allergy-testing');
 
-const pageKey = 'AllergyTestingPage';
-
-export default async function AllergyTestingPage() {
-	const cookieStore = await cookies();
-	const locale = getLocaleFromCookieStore(cookieStore);
-	const t = await getTranslations({ locale });
-
+export default function AllergyTestingPage() {
 	return (
-		<main className="bg-white">
-			<TestingServiceHero t={t} pageKey={pageKey} />
-			<TestingServiceHowItWorks t={t} pageKey={pageKey} />
-			<TestingServiceItems t={t} pageKey={pageKey} sectionKey="allergyPanels" itemsKey="panels" />
-			<TestingServiceFinalCta
-				title={t(`${pageKey}.cta.title`)}
-				description={t(`${pageKey}.cta.description`)}
-				buttonText={t(`${pageKey}.cta.buttonText`)}
-			/>
-		</main>
+		<TestingServicePage pageKey="AllergyTestingPage" items={{ sectionKey: 'allergyPanels', itemsKey: 'panels' }} />
 	);
 }

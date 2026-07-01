@@ -1,17 +1,13 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { cookies } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
 import { ArrowRight, BadgeCheck, CheckCircle2, Clock3, FlaskConical, Mail, MapPin, PhoneCall } from 'lucide-react';
-import { getLocaleFromCookieStore } from '@/lib/locale';
 import { generateMetadataFor } from '@/lib/seo';
 
 export const generateMetadata = generateMetadataFor('/about');
 
 export default async function AboutPage() {
-	const cookieStore = await cookies();
-	const locale = getLocaleFromCookieStore(cookieStore);
-	const t = await getTranslations({ locale, namespace: 'AboutPage' });
+	const t = await getTranslations('AboutPage');
 
 	const serviceHighlights = t.raw('serviceHighlights');
 	const whyChooseUs = t.raw('whyChooseUs');

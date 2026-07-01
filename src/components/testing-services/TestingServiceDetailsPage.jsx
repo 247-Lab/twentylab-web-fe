@@ -3,13 +3,13 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { useTranslations } from 'next-intl';
 import { ArrowLeft, ArrowRight, PhoneCall, ChevronDown } from 'lucide-react';
 import React from 'react';
 import { useCart } from '@/components/cart/CartProvider';
 import RelatedProductsSection from '@/components/common/RelatedProductsSection';
 import HtmlDescription from '@/components/common/HtmlDescription';
 import { resolveImageUrl } from '@/lib/api';
+import { shouldBypassImageOptimization } from '@/lib/image';
 import TestingServiceCard from './components/TestingServiceCard';
 
 function parsePrice(value) {
@@ -70,22 +70,6 @@ function renderDescription(description) {
 	}
 
 	return <HtmlDescription content={description} />;
-}
-
-function summarizeText(value, maxLength = 145) {
-	if (!value) {
-		return '';
-	}
-
-	if (value.length <= maxLength) {
-		return value;
-	}
-
-	return `${value.slice(0, maxLength).trimEnd()}...`;
-}
-
-function getProductImage(product) {
-	return product?.mainImage || product?.image || '/images/placeholder.png';
 }
 
 function getCategoryImage(category) {
@@ -236,8 +220,6 @@ export default React.memo(function TestingServiceDetailsPage({
 		return getMessage('contactUs');
 	};
 
-	const cardT = (key, params) => getMessage(key, params);
-
 	function handleAddToCart() {
 		const selectedItem = selectedVariant || product;
 		addToCart(selectedItem, {
@@ -320,6 +302,7 @@ export default React.memo(function TestingServiceDetailsPage({
 												src={categoryImage}
 												alt={categoryName}
 												fill
+												unoptimized={shouldBypassImageOptimization(categoryImage)}
 												sizes="(max-width: 768px) 100vw, 45vw"
 												className="object-cover"
 											/>
@@ -372,16 +355,7 @@ export default React.memo(function TestingServiceDetailsPage({
 								<RelatedProductsSection
 									title={categoryName}
 									items={categoryProducts}
-									renderItem={(categoryProduct) => (
-										<TestingServiceCard
-											product={categoryProduct}
-											t={cardT}
-											locale={locale}
-											formatPrice={formatPrice}
-											summarizeText={summarizeText}
-											getProductImage={getProductImage}
-										/>
-									)}
+									renderItem={(categoryProduct) => <TestingServiceCard product={categoryProduct} />}
 								/>
 							</>
 						) : (
@@ -394,6 +368,7 @@ export default React.memo(function TestingServiceDetailsPage({
 													src={productImage}
 													alt={productName}
 													fill
+													unoptimized={shouldBypassImageOptimization(productImage)}
 													sizes="(max-width: 768px) 100vw, 45vw"
 													className="object-cover"
 												/>
@@ -556,16 +531,7 @@ export default React.memo(function TestingServiceDetailsPage({
 								<RelatedProductsSection
 									title={getMessage('relatedTitle')}
 									items={relatedProducts}
-									renderItem={(relatedProduct) => (
-										<TestingServiceCard
-											product={relatedProduct}
-											t={cardT}
-											locale={locale}
-											formatPrice={formatPrice}
-											summarizeText={summarizeText}
-											getProductImage={getProductImage}
-										/>
-									)}
+									renderItem={(relatedProduct) => <TestingServiceCard product={relatedProduct} />}
 								/>
 							</>
 						)}

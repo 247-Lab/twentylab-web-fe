@@ -1,5 +1,3 @@
-import { cookies } from 'next/headers';
-import { getLocaleFromCookieStore } from '@/lib/locale';
 import GenericFormPage from '@/components/forms/GenericFormPage';
 import { generateMetadataFor } from '@/lib/seo';
 

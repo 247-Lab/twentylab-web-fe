@@ -1,17 +1,13 @@
 import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
-import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { Stethoscope, Briefcase, Scale, Star, ArrowRight } from 'lucide-react';
-import { getLocaleFromCookieStore } from '@/lib/locale';
 import { generateMetadataFor } from '@/lib/seo';
 
 export const generateMetadata = generateMetadataFor('/business-solutions');
 
 export default async function BusinessSolutionPage() {
-	const cookieStore = await cookies();
-	const locale = getLocaleFromCookieStore(cookieStore);
-	const t = await getTranslations({ locale, namespace: 'BusinessSolutionPage' });
+	const t = await getTranslations('BusinessSolutionPage');
 	const sections = t.raw('sections');
 	const highlights = t.raw('highlights');
 	const features = t.raw('features.items');

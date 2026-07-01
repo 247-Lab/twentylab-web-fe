@@ -14,7 +14,7 @@ import useHomePageInteractions from '@/components/home/useHomePageInteractions';
 
 const AITestFinderModal = dynamic(() => import('@/components/common/AITestFinderModal'));
 
-export default function HomePage({ locale = 'en' }) {
+export default function HomePage() {
 	const t = useTranslations('HomePage');
 	const heroSlides = t.raw('Hero.slides');
 	const serviceCards = t.raw('Services.items');
@@ -86,7 +86,7 @@ export default function HomePage({ locale = 'en' }) {
 			</main>
 
 			<HomeBreadcrumbs t={t} breadcrumbItems={breadcrumbItems} activeSection={activeSection} />
-			{isAiFinderOpen ? <AITestFinderModal isOpen onClose={() => setIsAiFinderOpen(false)} locale={locale} /> : null}
+			{isAiFinderOpen ? <AITestFinderModal isOpen onClose={() => setIsAiFinderOpen(false)} /> : null}
 		</div>
 	);
 }

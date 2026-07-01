@@ -3,14 +3,16 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { ArrowLeft, Sparkles, X } from 'lucide-react';
 import { TEST_FINDER_TREE } from '@/components/common/ai-test-finder/tree';
 import useRecommendedProducts from '@/components/common/ai-test-finder/useRecommendedProducts';
 import { getCurrentLocale, getLabel } from '@/components/common/ai-test-finder/utils';
+import { shouldBypassImageOptimization } from '@/lib/image';
 
-export default function AITestFinderModal({ isOpen, onClose, locale = 'en' }) {
+export default function AITestFinderModal({ isOpen, onClose }) {
 	const t = useTranslations('AITestFinderModal');
+	const locale = useLocale();
 	const language = getCurrentLocale(locale);
 	const copy = {
 		title: t('title'),
@@ -309,6 +311,7 @@ export default function AITestFinderModal({ isOpen, onClose, locale = 'en' }) {
 											alt={product.name ?? `${copy.fallbackProductName} ${product.id}`}
 											fill
 											sizes="(max-width: 640px) 100vw, 96px"
+											unoptimized={shouldBypassImageOptimization(product.image)}
 											className="object-cover object-center"
 										/>
 									) : (

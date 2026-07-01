@@ -1,14 +1,11 @@
-import { cookies } from 'next/headers';
-import { getLocaleFromCookieStore } from '@/lib/locale';
-import { loadMessages } from '@/i18n/loadMessages';
+import { getLocale, getMessages } from 'next-intl/server';
 import { fetchCategories, fetchProducts } from '@/lib/api';
+import { toProductCard } from '@/lib/content-view-models';
 import CategoryDetailPage from '@/components/categories/CategoryDetailPage';
 import { resolveMetadata } from '@/lib/seo';
 
 export async function generateMetadata({ params }) {
-	const { id } = await params;
-	const locale = getLocaleFromCookieStore(await cookies());
-	const messages = await loadMessages(locale);
+	const [{ id }, messages] = await Promise.all([params, getMessages()]);
 
 	// Always fetch English categories to get English name for metadata
 	const categories = await fetchCategories('en');
@@ -23,9 +20,7 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function CategoryRoute({ params }) {
-	const { id } = await params;
-	const cookieStore = await cookies();
-	const locale = getLocaleFromCookieStore(cookieStore);
+	const [{ id }, locale] = await Promise.all([params, getLocale()]);
 
 	const [categories, allProducts] = await Promise.all([fetchCategories(locale), fetchProducts(locale)]);
 
@@ -39,9 +34,9 @@ export default async function CategoryRoute({ params }) {
 		);
 	}
 
-	const categoryProducts = allProducts.filter((product) =>
-		product.categories.some((cat) => String(cat.id) === String(id))
-	);
+	const categoryProducts = allProducts
+		.filter((product) => product.categories.some((cat) => String(cat.id) === String(id)))
+		.map(toProductCard);
 
-	return <CategoryDetailPage category={category} products={categoryProducts} locale={locale} />;
+	return <CategoryDetailPage category={category} products={categoryProducts} />;
 }

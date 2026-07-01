@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { CheckCircle2, LoaderCircle, Tag, TriangleAlert, Lock } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useCart } from '@/components/cart/CartProvider';
-import { useAppData } from '@/components/providers/DataProvider';
+import { appData } from '@/lib/static-data';
 import { createOrder, validateCoupon, processPayment } from '@/lib/api';
 
 const initialForm = {
@@ -40,7 +40,7 @@ export default function CheckoutPage() {
 	const t = useTranslations('CheckoutPage');
 	const locale = useLocale();
 	const { cart, clearCart } = useCart();
-	const { states } = useAppData();
+	const { states } = appData;
 
 	const [form, setForm] = useState(initialForm);
 	const [couponCode, setCouponCode] = useState('');

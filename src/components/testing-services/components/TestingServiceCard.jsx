@@ -1,9 +1,13 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import React, { useEffect, useState, useMemo } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import { useCart } from '@/components/cart/CartProvider';
 import { summarizeHtml } from '@/lib/htmlSanitizer';
+import { shouldBypassImageOptimization } from '@/lib/image';
 
 function parsePrice(value) {
 	const numericValue = Number(value);
@@ -66,14 +70,21 @@ function getPricingModel(product) {
 	};
 }
 
-export default React.memo(function TestingServiceCard({
-	product,
-	t,
-	locale,
-	formatPrice,
-	summarizeText,
-	getProductImage,
-}) {
+function formatPrice(value, locale) {
+	if (!Number.isFinite(value)) {
+		return null;
+	}
+
+	return new Intl.NumberFormat(locale === 'es' ? 'es-US' : 'en-US', {
+		style: 'currency',
+		currency: 'USD',
+		maximumFractionDigits: 2,
+	}).format(value);
+}
+
+export default React.memo(function TestingServiceCard({ product }) {
+	const t = useTranslations('TestingServicesPage');
+	const locale = useLocale();
 	const { addToCart } = useCart();
 	const [added, setAdded] = useState(false);
 	const productName = product.name ?? t('fallbackProductName', { id: product.id });
@@ -82,9 +93,8 @@ export default React.memo(function TestingServiceCard({
 		: t('emptyCategory');
 	const pricingModel = getPricingModel(product);
 	const hasVariants = Array.isArray(product.variants) && product.variants.length > 0;
-
-	// Use summarizeHtml to extract and truncate plain text from HTML descriptions
 	const descriptionSummary = useMemo(() => summarizeHtml(product.description, 145), [product.description]);
+	const productImage = product.mainImage || product.image || '/images/placeholder.png';
 
 	useEffect(() => {
 		if (!added) {
@@ -117,10 +127,11 @@ export default React.memo(function TestingServiceCard({
 					aria-label={productName}
 				>
 					<Image
-						src={getProductImage(product)}
+						src={productImage}
 						alt={productName}
 						fill
 						sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
+						unoptimized={shouldBypassImageOptimization(productImage)}
 						className="object-cover transition duration-500 group-hover:scale-105"
 					/>
 				</Link>

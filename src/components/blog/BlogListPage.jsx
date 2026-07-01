@@ -6,6 +6,7 @@ import { useDeferredValue, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { CalendarDays, Search } from 'lucide-react';
 import { extractBlogSnippet, formatBlogDate } from '@/lib/blog-content';
+import { shouldBypassImageOptimization } from '@/lib/image';
 
 const ITEMS_PER_PAGE = 6;
 
@@ -150,6 +151,7 @@ export default function BlogListPage({ blogs = [], categories = [], locale = 'en
 											alt={post.title || t('cardImageAlt')}
 											fill
 											sizes="(min-width: 768px) 300px, 100vw"
+											unoptimized={shouldBypassImageOptimization(post.thumbnailimage)}
 											className="h-full w-full object-cover"
 										/>
 									</div>

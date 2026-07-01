@@ -7,42 +7,14 @@ import { ArrowLeft } from 'lucide-react';
 import HtmlDescription from '@/components/common/HtmlDescription';
 import TestingServiceCard from '@/components/testing-services/components/TestingServiceCard';
 import { resolveImageUrl } from '@/lib/api';
+import { shouldBypassImageOptimization } from '@/lib/image';
 
-function formatPrice(value, locale) {
-	if (!Number.isFinite(value)) {
-		return null;
-	}
-
-	return new Intl.NumberFormat(locale === 'es' ? 'es-US' : 'en-US', {
-		style: 'currency',
-		currency: 'USD',
-		maximumFractionDigits: 2,
-	}).format(value);
-}
-
-function summarizeText(value, maxLength = 130) {
-	if (!value) {
-		return '';
-	}
-
-	if (value.length <= maxLength) {
-		return value;
-	}
-
-	return `${value.slice(0, maxLength).trimEnd()}...`;
-}
-
-function getProductImage(product) {
-	return product?.mainImage || '/images/placeholder.png';
-}
-
-export default function CategoryDetailPage({ category, products = [], locale = 'en' }) {
+export default function CategoryDetailPage({ category, products = [] }) {
 	const t = useTranslations('CategoryDetailPage');
 	const categoryName = category?.name || t('fallbackTitle', { id: category?.id });
 	const categoryImage = category?.main_image || category?.mainImage || '/images/placeholder.png';
+	const resolvedCategoryImage = resolveImageUrl(categoryImage);
 	const categoryDescription = category?.description || category?.shortDescription || '';
-
-	const productT = useTranslations('TestingServiceDetailsPage');
 
 	return (
 		<main className="min-h-screen bg-[linear-gradient(180deg,#eef6ff_0%,#ffffff_40%,#f7fbff_100%)]">
@@ -61,11 +33,12 @@ export default function CategoryDetailPage({ category, products = [], locale = '
 						{categoryImage && (
 							<div className="relative aspect-square overflow-hidden rounded-2xl">
 								<Image
-									src={resolveImageUrl(categoryImage)}
+									src={resolvedCategoryImage}
 									alt={categoryName}
 									fill
 									className="object-cover"
 									sizes="(max-width: 1024px) 100vw, 50vw"
+									unoptimized={shouldBypassImageOptimization(resolvedCategoryImage)}
 									priority
 								/>
 							</div>
@@ -96,15 +69,7 @@ export default function CategoryDetailPage({ category, products = [], locale = '
 
 					<div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
 						{products.map((product) => (
-							<TestingServiceCard
-								key={product.id}
-								product={product}
-								t={productT}
-								locale={locale}
-								formatPrice={formatPrice}
-								summarizeText={summarizeText}
-								getProductImage={getProductImage}
-							/>
+							<TestingServiceCard key={product.id} product={product} />
 						))}
 					</div>
 				</section>

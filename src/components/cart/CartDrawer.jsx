@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Minus, Plus, ShoppingCart, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo } from 'react';
 import { useCart } from '@/components/cart/CartProvider';
+import { shouldBypassImageOptimization } from '@/lib/image';
 
 function toCurrency(value, locale) {
 	if (!Number.isFinite(value)) {
@@ -104,7 +105,14 @@ export default function CartDrawer({ open, onClose }) {
 									>
 										<div className="grid grid-cols-[76px_1fr] gap-3">
 											<div className="relative h-[76px] w-[76px] overflow-hidden rounded-xl bg-slate-100">
-												<Image src={item.image} alt={item.name} fill className="object-cover" sizes="76px" />
+												<Image
+													src={item.image}
+													alt={item.name}
+													fill
+													className="object-cover"
+													sizes="76px"
+													unoptimized={shouldBypassImageOptimization(item.image)}
+												/>
 											</div>
 											<div className="min-w-0">
 												<h3 className="truncate text-sm font-bold text-[var(--tl-metallic-black)]">{item.name}</h3>

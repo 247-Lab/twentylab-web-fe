@@ -1,11 +1,9 @@
-import { cookies } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
 import {
 	TestingServiceHero,
 	TestingServiceHowItWorks,
 	TestingServiceFinalCta,
 } from '@/components/testing-services/TestingServiceTemplate';
-import { getLocaleFromCookieStore } from '@/lib/locale';
 import { generateMetadataFor } from '@/lib/seo';
 import HormonePackages from '@/components/testing-services/HormonePackages';
 
@@ -14,9 +12,7 @@ export const generateMetadata = generateMetadataFor('/hormone-testing');
 const pageKey = 'HormoneTestingPage';
 
 export default async function HormoneTestingPage() {
-	const cookieStore = await cookies();
-	const locale = getLocaleFromCookieStore(cookieStore);
-	const t = await getTranslations({ locale });
+	const t = await getTranslations();
 
 	return (
 		<main className="bg-white">

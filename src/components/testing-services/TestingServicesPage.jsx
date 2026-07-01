@@ -12,30 +12,6 @@ import TestingServicesPagination from './components/TestingServicesPagination';
 
 const ITEMS_PER_PAGE = 8;
 
-function formatPrice(value, locale) {
-	if (!Number.isFinite(value)) {
-		return null;
-	}
-
-	return new Intl.NumberFormat(locale === 'es' ? 'es-US' : 'en-US', {
-		style: 'currency',
-		currency: 'USD',
-		maximumFractionDigits: 2,
-	}).format(value);
-}
-
-function summarizeText(value, maxLength = 130) {
-	if (!value) {
-		return '';
-	}
-
-	if (value.length <= maxLength) {
-		return value;
-	}
-
-	return `${value.slice(0, maxLength).trimEnd()}...`;
-}
-
 function buildCategoryOptions(products, locale, t) {
 	const categories = new Map();
 
@@ -62,10 +38,6 @@ function buildCategoryOptions(products, locale, t) {
 	return Array.from(categories.values()).sort((left, right) =>
 		left.name.localeCompare(right.name, locale === 'es' ? 'es' : 'en')
 	);
-}
-
-function getProductImage(product) {
-	return product.mainImage || '/images/placeholder.png';
 }
 
 export default function TestingServicesPage({ products = [], locale = 'en', initialSearch = '' }) {
@@ -133,15 +105,7 @@ export default function TestingServicesPage({ products = [], locale = 'en', init
 					<>
 						<div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
 							{visibleProducts.map((product) => (
-								<TestingServiceCard
-									key={product.id}
-									product={product}
-									t={t}
-									locale={locale}
-									formatPrice={formatPrice}
-									summarizeText={summarizeText}
-									getProductImage={getProductImage}
-								/>
+								<TestingServiceCard key={product.id} product={product} />
 							))}
 						</div>
 

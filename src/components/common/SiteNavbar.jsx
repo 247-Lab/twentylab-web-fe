@@ -2,12 +2,14 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { ChevronDown, Menu, Search, ShoppingCart, X } from 'lucide-react';
-import CartDrawer from '@/components/cart/CartDrawer';
 import { useCart } from '@/components/cart/CartProvider';
+
+const CartDrawer = dynamic(() => import('@/components/cart/CartDrawer'));
 
 const primaryMenuItems = [
 	{ key: 'about', href: '/about' },
@@ -147,22 +149,40 @@ export default function SiteNavbar() {
 	const [searchOpen, setSearchOpen] = useState(false);
 	const [navSearch, setNavSearch] = useState('');
 	const [isScrolled, setIsScrolled] = useState(false);
-	const [scrollProgress, setScrollProgress] = useState(0);
+	const scrollProgressRef = useRef(null);
 
 	useEffect(() => {
-		const onScroll = () => {
+		let animationFrameId = null;
+		const updateScrollState = () => {
 			const offsetY = window.scrollY;
 			setIsScrolled(offsetY > 0);
 
 			const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
 			const progress = maxScroll > 0 ? (offsetY / maxScroll) * 100 : 0;
-			setScrollProgress(Math.min(100, Math.max(0, progress)));
+			if (scrollProgressRef.current) {
+				scrollProgressRef.current.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+			}
+		};
+		const onScroll = () => {
+			if (animationFrameId !== null) {
+				return;
+			}
+
+			animationFrameId = window.requestAnimationFrame(() => {
+				animationFrameId = null;
+				updateScrollState();
+			});
 		};
 
-		onScroll();
+		updateScrollState();
 		window.addEventListener('scroll', onScroll, { passive: true });
 
-		return () => window.removeEventListener('scroll', onScroll);
+		return () => {
+			window.removeEventListener('scroll', onScroll);
+			if (animationFrameId !== null) {
+				window.cancelAnimationFrame(animationFrameId);
+			}
+		};
 	}, []);
 
 	const handleSearchSubmit = (event) => {
@@ -484,12 +504,13 @@ export default function SiteNavbar() {
 
 			<div className="absolute inset-x-0 bottom-0 h-[2px] overflow-hidden bg-white/50">
 				<div
+					ref={scrollProgressRef}
 					className="h-full bg-gradient-to-r from-[var(--tl-primary-soft)] via-[var(--tl-primary)] to-[var(--tl-primary-strong)] transition-[width] duration-300"
-					style={{ width: `${scrollProgress}%` }}
+					style={{ width: '0%' }}
 				/>
 			</div>
 
-			<CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+			{cartOpen ? <CartDrawer open onClose={() => setCartOpen(false)} /> : null}
 		</header>
 	);
 }

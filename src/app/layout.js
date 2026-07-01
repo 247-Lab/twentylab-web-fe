@@ -1,14 +1,11 @@
 import { Manrope, Montserrat } from 'next/font/google';
-import { cookies } from 'next/headers';
 import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getMessages } from 'next-intl/server';
 import RouteScrollReset from '@/components/common/RouteScrollReset';
 import SiteNavbar from '@/components/common/SiteNavbar';
 import SiteFooter from '@/components/common/SiteFooter';
 import FloatingLocaleSwitcher from '@/components/common/FloatingLocaleSwitcher';
 import { CartProvider } from '@/components/cart/CartProvider';
-import { DataProvider } from '@/components/providers/DataProvider';
-import { loadMessages } from '@/i18n/loadMessages';
-import { getLocaleFromCookieStore } from '@/lib/locale';
 import './globals.css';
 
 const montserrat = Montserrat({
@@ -29,9 +26,7 @@ export const metadata = {
 };
 
 export default async function RootLayout({ children }) {
-	const cookieStore = await cookies();
-	const locale = getLocaleFromCookieStore(cookieStore);
-	const messages = await loadMessages(locale);
+	const [locale, messages] = await Promise.all([getLocale(), getMessages()]);
 
 	return (
 		<html
@@ -41,15 +36,13 @@ export default async function RootLayout({ children }) {
 		>
 			<body className="min-h-full bg-[var(--tl-surface)] font-sans text-[var(--tl-ink)]">
 				<NextIntlClientProvider locale={locale} messages={messages}>
-					<DataProvider>
-						<CartProvider>
-							<RouteScrollReset />
-							<SiteNavbar />
-							<div className="pt-[98px]">{children}</div>
-							<SiteFooter locale={locale} />
-							<FloatingLocaleSwitcher />
-						</CartProvider>
-					</DataProvider>
+					<CartProvider>
+						<RouteScrollReset />
+						<SiteNavbar />
+						<div className="pt-[98px]">{children}</div>
+						<SiteFooter locale={locale} />
+						<FloatingLocaleSwitcher />
+					</CartProvider>
 				</NextIntlClientProvider>
 			</body>
 		</html>
