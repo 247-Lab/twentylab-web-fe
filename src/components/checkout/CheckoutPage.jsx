@@ -19,6 +19,7 @@ const initialForm = {
 	city: '',
 	countrystate_id: '',
 	zipcode: '',
+	appointment_time: '',
 	additional_information: '',
 };
 
@@ -28,12 +29,28 @@ const initialPaymentForm = {
 	cardCode: '',
 };
 
+const AFTER_HOURS_FEE = 40;
+
 function toCurrency(value, locale) {
 	return new Intl.NumberFormat(locale === 'es' ? 'es-US' : 'en-US', {
 		style: 'currency',
 		currency: 'USD',
 		maximumFractionDigits: 2,
 	}).format(value);
+}
+
+function isAfterHours(appointmentTime) {
+	if (!appointmentTime) {
+		return false;
+	}
+
+	const selectedTime = new Date(appointmentTime);
+	if (Number.isNaN(selectedTime.getTime())) {
+		return false;
+	}
+
+	const minutes = selectedTime.getHours() * 60 + selectedTime.getMinutes();
+	return minutes < 9 * 60 || minutes > 19 * 60;
 }
 
 export default function CheckoutPage() {
@@ -54,6 +71,7 @@ export default function CheckoutPage() {
 	const [processingPayment, setProcessingPayment] = useState(false);
 	const [acceptJsLoaded, setAcceptJsLoaded] = useState(false);
 	const [tokenError, setTokenError] = useState('');
+	const appointmentIsAfterHours = isAfterHours(form.appointment_time);
 
 	useEffect(() => {
 		const scriptUrl =
@@ -82,17 +100,20 @@ export default function CheckoutPage() {
 
 	const pricing = useMemo(() => {
 		const subtotal = cart.subtotal;
+		const afterHoursFee = appointmentIsAfterHours ? AFTER_HOURS_FEE : 0;
+		const amountBeforeDiscount = subtotal + afterHoursFee;
 		const discountRate = appliedCoupon?.discount ? Number(appliedCoupon.discount) / 100 : 0;
-		const discountAmount = discountRate > 0 ? subtotal * discountRate : 0;
-		const total = Math.max(0, subtotal - discountAmount);
+		const discountAmount = discountRate > 0 ? amountBeforeDiscount * discountRate : 0;
+		const total = Math.max(0, amountBeforeDiscount - discountAmount);
 
 		return {
 			subtotal,
+			afterHoursFee,
 			discountRate,
 			discountAmount,
 			total,
 		};
-	}, [appliedCoupon, cart.subtotal]);
+	}, [appliedCoupon, appointmentIsAfterHours, cart.subtotal]);
 
 	function onFieldChange(event) {
 		const { name, value } = event.target;
@@ -142,6 +163,7 @@ export default function CheckoutPage() {
 			'city',
 			'countrystate_id',
 			'zipcode',
+			'appointment_time',
 		];
 
 		const missing = requiredFields.find((field) => !String(form[field] || '').trim());
@@ -394,6 +416,48 @@ export default function CheckoutPage() {
 								<input name="zipcode" value={form.zipcode} onChange={onFieldChange} className="field" />
 							</div>
 							<div className="sm:col-span-2">
+								<div className="grid gap-3 sm:grid-cols-2 sm:items-end">
+									<div>
+										<label className="text-xs font-bold tracking-[0.08em] text-slate-500 uppercase">
+											{t('fields.appointment_time')}
+										</label>
+										<input
+											name="appointment_time"
+											type="datetime-local"
+											value={form.appointment_time}
+											onChange={onFieldChange}
+											className="field"
+										/>
+									</div>
+									<div className="flex items-center justify-center sm:pt-6">
+										<span
+										role="status"
+										aria-label={!form.appointment_time ? t('noDateSelected') : appointmentIsAfterHours ? t('afterHours') : t('normalHours')}
+										title={!form.appointment_time ? t('noDateSelected') : appointmentIsAfterHours ? t('afterHours') : t('normalHours')}
+										className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold shadow-sm ring-1 ring-inset ${
+											!form.appointment_time
+												? 'bg-slate-100 text-slate-600 ring-slate-200'
+												: appointmentIsAfterHours
+													? 'bg-amber-100 text-amber-800 ring-amber-200'
+													: 'bg-emerald-100 text-emerald-800 ring-emerald-200'
+										}`}
+									>
+										<span
+											aria-hidden="true"
+											className={`h-3 w-3 rounded-full ${
+												!form.appointment_time
+													? 'bg-slate-400'
+													: appointmentIsAfterHours
+														? 'bg-amber-500'
+														: 'bg-emerald-500'
+											}`}
+										/>
+										{!form.appointment_time ? t('noDateSelected') : appointmentIsAfterHours ? t('afterHours') : t('normalHours')}
+									</span>
+									</div>
+								</div>
+							</div>
+							<div className="sm:col-span-2">
 								<label className="text-xs font-bold tracking-[0.08em] text-slate-500 uppercase">
 									{t('fields.additional_information')}
 								</label>
@@ -550,6 +614,12 @@ export default function CheckoutPage() {
 								<span className="text-slate-600">{t('subtotal')}</span>
 								<span className="font-semibold text-slate-800">{toCurrency(pricing.subtotal, locale)}</span>
 							</div>
+							{pricing.afterHoursFee > 0 ? (
+								<div className="flex items-center justify-between">
+									<span className="text-slate-600">{t('afterHoursFee')}</span>
+									<span className="font-semibold text-amber-700">{toCurrency(pricing.afterHoursFee, locale)}</span>
+								</div>
+							) : null}
 							{pricing.discountAmount > 0 ? (
 								<div className="flex items-center justify-between">
 									<span className="text-slate-600">{t('discount')}</span>

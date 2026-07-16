@@ -155,6 +155,11 @@
 		"couponInvalid": "Invalid or expired coupon code.",
 		"loadingStates": "Loading states...",
 		"selectState": "Select state",
+		"normalHours": "Normal hours",
+		"afterHours": "After hours",
+		"noDateSelected": "No date selected",
+		"appointmentStatus": "Appointment status",
+		"afterHoursFee": "After-hours fee",
 		"emptyTitle": "No items to checkout",
 		"emptyBody": "Add at least one test to your cart before placing an order.",
 		"browseTests": "Browse tests",
@@ -173,6 +178,7 @@
 			"city": "City",
 			"countrystate_id": "State",
 			"zipcode": "ZIP code",
+			"appointment_time": "Appointment date and time",
 			"additional_information": "Additional instructions (optional)"
 		}
 	}

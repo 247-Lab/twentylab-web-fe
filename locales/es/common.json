@@ -155,6 +155,11 @@
 		"couponInvalid": "Codigo invalido o vencido.",
 		"loadingStates": "Cargando estados...",
 		"selectState": "Selecciona un estado",
+		"normalHours": "Horario normal",
+		"afterHours": "Fuera de horario",
+		"noDateSelected": "No se ha seleccionado una fecha",
+		"appointmentStatus": "Estado de la cita",
+		"afterHoursFee": "Tarifa fuera de horario",
 		"emptyTitle": "No hay articulos para finalizar",
 		"emptyBody": "Agrega al menos una prueba al carrito antes de enviar tu pedido.",
 		"browseTests": "Ver pruebas",
@@ -173,6 +178,7 @@
 			"city": "Ciudad",
 			"countrystate_id": "Estado",
 			"zipcode": "Codigo postal",
+			"appointment_time": "Fecha y hora de la cita",
 			"additional_information": "Instrucciones adicionales (opcional)"
 		}
 	}
