@@ -5,7 +5,7 @@ const DEFAULT_METADATA = {
 	description: '',
 };
 
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://24-7labs.com').replace(/\/$/, '');
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '');
 
 function normalizePath(path) {
 	const normalized = `/${String(path || '/')

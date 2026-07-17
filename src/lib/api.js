@@ -10,13 +10,8 @@ const CONTENT_REVALIDATE_SECONDS = 300;
 
 const PATH_MAP = {
 	BLOGS: 'blogs',
-	CONTACT: 'contact',
 	PRODUCTS: 'products',
 	CATEGORIES: 'category',
-	APPOINTMENTS: 'appointments',
-	CONSENT_FORM: 'consent-form',
-	PATIENT_INTAKE: 'patient-intake',
-	COVID_SCREENING: 'covid-screening',
 	FORMS: 'forms',
 	COUPONS: 'coupons',
 	ORDERS: 'orders',
