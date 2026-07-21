@@ -19,13 +19,11 @@ export default function BlogListPage({ blogs = [], categories = [], locale = 'en
 
 	const orderedBlogs = useMemo(
 		() =>
-			[...blogs]
-				.sort((left, right) => {
-					const leftTime = new Date(left.created_at || 0).valueOf();
-					const rightTime = new Date(right.created_at || 0).valueOf();
-					return rightTime - leftTime;
-				})
-				.slice(0, 5),
+			[...blogs].sort((left, right) => {
+				const leftTime = new Date(left.created_at || 0).valueOf();
+				const rightTime = new Date(right.created_at || 0).valueOf();
+				return rightTime - leftTime;
+			}),
 		[blogs]
 	);
 
