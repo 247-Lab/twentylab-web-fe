@@ -1,4 +1,5 @@
 import { parseBlogContent, resolveBlogImageUrl } from '@/lib/blog-content';
+import { sanitizeCmsHtml } from '@/lib/htmlSanitizer';
 
 function renderList(block, type = 'ul') {
 	const items = Array.isArray(block?.data?.items) ? block.data.items : [];
@@ -10,7 +11,7 @@ function renderList(block, type = 'ul') {
 	return (
 		<ListTag className="mt-5 space-y-2 pl-6 text-slate-700 marker:text-[var(--tl-primary)]">
 			{items.map((item, index) => (
-				<li key={`${block.id || block.type}-${index}`} dangerouslySetInnerHTML={{ __html: item || '' }} />
+				<li key={`${block.id || block.type}-${index}`} dangerouslySetInnerHTML={{ __html: sanitizeCmsHtml(item) }} />
 			))}
 		</ListTag>
 	);
@@ -42,7 +43,7 @@ export default function BlogContentRenderer({ content, imageAltFallback }) {
 							<Tag
 								key={key}
 								className={`font-display font-extrabold text-[var(--tl-metallic-black)] ${sizeMap[level]}`}
-								dangerouslySetInnerHTML={{ __html: block?.data?.text || '' }}
+								dangerouslySetInnerHTML={{ __html: sanitizeCmsHtml(block?.data?.text) }}
 							/>
 						);
 					}
@@ -52,7 +53,7 @@ export default function BlogContentRenderer({ content, imageAltFallback }) {
 							<p
 								key={key}
 								className="mt-5 text-slate-700"
-								dangerouslySetInnerHTML={{ __html: block?.data?.text || '' }}
+								dangerouslySetInnerHTML={{ __html: sanitizeCmsHtml(block?.data?.text) }}
 							/>
 						);
 
@@ -88,7 +89,10 @@ export default function BlogContentRenderer({ content, imageAltFallback }) {
 								key={key}
 								className="mt-8 rounded-2xl border border-sky-100 bg-[linear-gradient(125deg,#f5f9ff_0%,#ffffff_72%)] px-6 py-5 text-slate-700 shadow-[0_14px_36px_-30px_rgba(2,6,14,0.8)]"
 							>
-								<p className="text-lg italic" dangerouslySetInnerHTML={{ __html: block?.data?.text || '' }} />
+								<p
+									className="text-lg italic"
+									dangerouslySetInnerHTML={{ __html: sanitizeCmsHtml(block?.data?.text) }}
+								/>
 								{block?.data?.caption ? (
 									<cite className="mt-2 block text-sm font-semibold text-[var(--tl-primary)] not-italic">
 										{block.data.caption}
@@ -111,7 +115,7 @@ export default function BlogContentRenderer({ content, imageAltFallback }) {
 							<div
 								key={key}
 								className="blog-legacy mt-4"
-								dangerouslySetInnerHTML={{ __html: block?.data?.html || '' }}
+								dangerouslySetInnerHTML={{ __html: sanitizeCmsHtml(block?.data?.html) }}
 							/>
 						);
 

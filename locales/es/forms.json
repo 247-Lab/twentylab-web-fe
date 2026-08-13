@@ -31,7 +31,7 @@
 				"zipCode": "Codigo postal",
 				"state": "Estado",
 				"location": "Ubicacion",
-				"dateTime": "Elegir fecha",
+				"dateTime": "Fecha preferida",
 				"symptomsTests": "Sintomas / Pruebas",
 				"message": "Mensaje",
 				"digitalSignature": "Firma digital"
@@ -39,7 +39,10 @@
 			"validation": {
 				"required": "Este campo es obligatorio.",
 				"invalidEmail": "Ingresa un correo electronico valido.",
-				"invalidPhone": "Ingresa un numero de telefono valido.",
+				"invalidPhone": "Ingresa un numero de telefono de 10 a 15 digitos.",
+				"invalidDate": "Ingresa una fecha valida.",
+				"tooLong": "Usa {max} caracteres o menos.",
+				"signatureTooLarge": "La firma es demasiado grande. Borrala y firma de nuevo.",
 				"mustAgree": "Debes aceptar antes de enviar.",
 				"fixErrors": "Por favor corrige los errores de arriba antes de enviar."
 			},
@@ -96,16 +99,16 @@
 		},
 		"scheduleAppointment": {
 			"metadata": {
-				"title": "Agendar cita | 24-7 Labs",
-				"description": "Reserva una cita para pruebas diagnosticas en Tampa."
+				"title": "Solicitar una cita | 24-7 Labs",
+				"description": "Solicita una fecha preferida para pruebas diagnosticas en Tampa. El personal confirmara la disponibilidad."
 			},
 			"eyebrow": "Citas",
-			"title": "Agendar cita",
-			"subtitle": "Reserva una cita el mismo dia para pruebas diagnosticas. Nuestro equipo esta listo para ayudarte.",
-			"formTitle": "Agendar cita",
-			"submitLabel": "Enviar",
-			"successMessage": "Cita agendada correctamente.",
-			"errorMessage": "No se pudo agendar la cita. Intentalo de nuevo."
+			"title": "Solicitar una cita",
+			"subtitle": "Envia tu fecha preferida para las pruebas diagnosticas. Esta es una solicitud; el personal se comunicara contigo para confirmar la disponibilidad.",
+			"formTitle": "Solicitud de cita",
+			"submitLabel": "Enviar solicitud",
+			"successMessage": "Solicitud de cita recibida. El personal se comunicara contigo para confirmar la disponibilidad.",
+			"errorMessage": "No se pudo enviar la solicitud de cita. Intentalo de nuevo."
 		},
 		"patientIntake": {
 			"metadata": {

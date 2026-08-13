@@ -1,9 +1,11 @@
+import { isPracticalEmail } from './validationConstraints';
+
 export const inputClassName =
 	'mt-1 w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm transition outline-none focus:border-[var(--tl-primary)] focus:ring-2 focus:ring-[var(--tl-primary)]/15';
 
-export function safeT(t, key, fallback = '') {
+export function safeT(t, key, fallback = '', values) {
 	try {
-		return t(key);
+		return values === undefined ? t(key) : t(key, values);
 	} catch {
 		return fallback;
 	}
@@ -17,21 +19,25 @@ export function safeRaw(t, key, fallback = null) {
 	}
 }
 
-export function toIsoDate(value) {
-	if (!value) {
+export function normalizeDateOnly(value) {
+	const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ''));
+	if (!match) return null;
+
+	const [, year, month, day] = match;
+	const parsed = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+	if (
+		parsed.getUTCFullYear() !== Number(year) ||
+		parsed.getUTCMonth() !== Number(month) - 1 ||
+		parsed.getUTCDate() !== Number(day)
+	) {
 		return null;
 	}
 
-	const parsed = new Date(`${value}T00:00:00`);
-	if (Number.isNaN(parsed.getTime())) {
-		return null;
-	}
-
-	return parsed.toISOString();
+	return `${year}-${month}-${day}`;
 }
 
 export function isEmail(value) {
-	return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+	return isPracticalEmail(value);
 }
 
 export function normalizePhone(value) {

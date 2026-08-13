@@ -1,5 +1,6 @@
 import { submitPrescriptionConsentForm } from '@/lib/api';
-import { normalizePhone, safeT, toIsoDate } from '../utils';
+import { buildConsentEvidence } from '../consentEvidence';
+import { normalizeDateOnly, normalizePhone, safeT } from '../utils';
 
 export function createPrescriptionConsentConfig(t, optionSets, shared) {
 	const { yesNoOptions, declarationContent, termsContent, medicationPricingLines, sharedPersonal } = shared;
@@ -125,27 +126,27 @@ export function createPrescriptionConsentConfig(t, optionSets, shared) {
 				],
 			},
 		],
-		buildPayload: (values) => ({
+		buildPayload: (values, { locale } = {}) => ({
 			form_type: 'consent',
 			firstname: values.firstname,
 			lastname: values.lastname,
 			phonenumber: normalizePhone(values.phone),
-			dateofbirth: toIsoDate(values.dateofbirth),
+			dateofbirth: normalizeDateOnly(values.dateofbirth),
 			emailaddress: values.email,
 			address: values.address,
+			apt: values.apt,
 			zipcode: values.zipcode,
 			city: values.city,
 			countrystate: values.state,
 			infection: values.infection,
 			takinganymedication: values.takinganymedication === 'yes',
-			currentmedications: values.currentmedications,
+			currentmedications: values.takinganymedication === 'yes' ? values.currentmedications : '',
 			allergic_to_medication: values.allergic_to_medication === 'yes',
-			allergies: values.allergies,
+			allergies: values.allergic_to_medication === 'yes' ? values.allergies : '',
 			pregnant_or_lactating: values.pregnant_or_lactating === 'yes',
 			pharmacy_name: values.pharmacy_name,
 			pharmacy_phonenumber: normalizePhone(values.pharmacy_phonenumber),
-			declaration_agreed: Boolean(values.declaration_agreed),
-			terms_agreed: Boolean(values.terms_agreed),
+			...buildConsentEvidence(values, locale),
 			digital_signature: values.digital_signature,
 		}),
 		submit: submitPrescriptionConsentForm,

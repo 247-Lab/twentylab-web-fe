@@ -26,6 +26,7 @@ export function createSharedFormData(t, optionSets) {
 			type: 'date',
 			label: safeT(t, 'common.fields.dateOfBirth', 'Date of Birth'),
 			required: true,
+			validation: 'date',
 		},
 		{
 			name: 'email',

@@ -7,7 +7,6 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useCart } from '@/components/cart/CartProvider';
 import { summarizeHtml } from '@/lib/htmlSanitizer';
-import { shouldBypassImageOptimization } from '@/lib/image';
 
 function parsePrice(value) {
 	const numericValue = Number(value);
@@ -131,7 +130,6 @@ export default React.memo(function TestingServiceCard({ product }) {
 						alt={productName}
 						fill
 						sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
-						unoptimized={shouldBypassImageOptimization(productImage)}
 						className="object-cover transition duration-500 group-hover:scale-105"
 					/>
 				</Link>

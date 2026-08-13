@@ -1,7 +1,12 @@
 'use client';
 
+import { useMemo } from 'react';
+import { sanitizeCmsHtml } from '@/lib/htmlSanitizer';
+
 export default function HtmlDescription({ content, className = '' }) {
-	if (!content) return null;
+	const sanitizedContent = useMemo(() => sanitizeCmsHtml(content), [content]);
+
+	if (!sanitizedContent) return null;
 
 	const baseStyles = `
         text-sm leading-relaxed text-slate-700 
@@ -27,7 +32,7 @@ export default function HtmlDescription({ content, className = '' }) {
 	return (
 		<div
 			className={`${baseStyles.replace(/\s+/g, ' ').trim()} ${className}`}
-			dangerouslySetInnerHTML={{ __html: content }}
+			dangerouslySetInnerHTML={{ __html: sanitizedContent }}
 		/>
 	);
 }

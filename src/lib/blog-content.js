@@ -1,4 +1,4 @@
-const API_HOST = 'http://localhost:3000/';
+import { resolveImageUrl } from './api';
 
 function decodeHtmlEntities(value) {
 	if (!value) {
@@ -14,26 +14,11 @@ function decodeHtmlEntities(value) {
 		.replace(/&nbsp;/g, ' ');
 }
 
-export function resolveBlogImageUrl(value) {
-	console.log('Resolving blog image URL:', value);
-
+export function resolveBlogImageUrl(value, config) {
 	if (!value) {
 		return '/images/placeholder.png';
 	}
-
-	if (value.startsWith('http://') || value.startsWith('https://')) {
-		return value;
-	}
-
-	if (value.startsWith('//')) {
-		return `https:${value}`;
-	}
-
-	if (value.startsWith('/')) {
-		return `${API_HOST}${value}`;
-	}
-
-	return `${API_HOST}/${value}`;
+	return resolveImageUrl(value, config);
 }
 
 export function parseBlogContent(blogcontent) {

@@ -1,7 +1,7 @@
 import GenericFormPage from '@/components/forms/GenericFormPage';
-import { generateMetadataFor } from '@/lib/seo';
+import { generateScheduleAppointmentMetadata } from './metadata';
 
-export const generateMetadata = generateMetadataFor('/schedule-appointment');
+export const generateMetadata = generateScheduleAppointmentMetadata;
 
 export default function ScheduleAppointmentPage() {
 	return <GenericFormPage formKey="scheduleAppointment" />;

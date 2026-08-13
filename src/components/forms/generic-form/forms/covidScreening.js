@@ -1,5 +1,6 @@
 import { submitCovidScreeningForm } from '@/lib/api';
-import { normalizePhone, safeT, toIsoDate } from '../utils';
+import { buildConsentEvidence } from '../consentEvidence';
+import { normalizeDateOnly, normalizePhone, safeT } from '../utils';
 
 export function createCovidScreeningConfig(t, shared) {
 	const { yesNoOptions, declarationContent, covidTermsContent, sharedPersonal } = shared;
@@ -132,12 +133,12 @@ export function createCovidScreeningConfig(t, shared) {
 				],
 			},
 		],
-		buildPayload: (values) => ({
+		buildPayload: (values, { locale } = {}) => ({
 			form_type: 'covid_screening',
 			firstname: values.firstname,
 			lastname: values.lastname,
 			phonenumber: normalizePhone(values.phone),
-			dateofbirth: toIsoDate(values.dateofbirth),
+			dateofbirth: normalizeDateOnly(values.dateofbirth),
 			emailaddress: values.email,
 			address: values.address,
 			city: values.city,
@@ -157,6 +158,7 @@ export function createCovidScreeningConfig(t, shared) {
 			close_contact_14_days: values.covid_exposure === 'yes',
 			tested_positive_before: values.previous_covid_infection === 'yes',
 			vaccination_status: values.vaccination_status,
+			...buildConsentEvidence(values, locale),
 			digital_signature: values.digital_signature,
 		}),
 		submit: submitCovidScreeningForm,

@@ -2,19 +2,24 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+Use Node 22.23.2 and npm 10.9.8. Copy `example.env` to `.env.local`, then install and run the development server:
 
 ```bash
+npm ci
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:4000](http://localhost:4000) with your browser to see the result.
+
+Run the local CI gates with `npm run ci`, `npm run audit`, and `npm run audit:prod`. CI also produces a CycloneDX container SBOM and blocks fixed High/Critical container vulnerabilities. The liveness endpoint is `/api/health`.
+
+## Container
+
+The multi-stage image uses the Next.js standalone output, runs without root, and can be built for ARM64 with Buildx:
+
+```bash
+docker buildx build --platform linux/arm64 --build-arg NEXT_PUBLIC_PROD_API_URL=https://api.example.com --build-arg NEXT_PUBLIC_SITE_URL=https://24-7labs.com -t 24-7labs-web .
+```
 
 You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
@@ -29,8 +34,8 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Deploy only an image that passed the required `Frontend Fast Checks` branch-protection check. Public `NEXT_PUBLIC_*` values are embedded at build time and must never contain secrets.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Before production DNS cutover, complete the source-backed legacy URL inventory and validation gate in `docs/legacy-url-cutover.md`; the small checked-in redirect list is intentionally not presented as complete.

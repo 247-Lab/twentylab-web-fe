@@ -9,7 +9,6 @@ import { useCart } from '@/components/cart/CartProvider';
 import RelatedProductsSection from '@/components/common/RelatedProductsSection';
 import HtmlDescription from '@/components/common/HtmlDescription';
 import { resolveImageUrl } from '@/lib/api';
-import { shouldBypassImageOptimization } from '@/lib/image';
 import TestingServiceCard from './components/TestingServiceCard';
 
 function parsePrice(value) {
@@ -302,7 +301,6 @@ export default React.memo(function TestingServiceDetailsPage({
 												src={categoryImage}
 												alt={categoryName}
 												fill
-												unoptimized={shouldBypassImageOptimization(categoryImage)}
 												sizes="(max-width: 768px) 100vw, 45vw"
 												className="object-cover"
 											/>
@@ -368,7 +366,6 @@ export default React.memo(function TestingServiceDetailsPage({
 													src={productImage}
 													alt={productName}
 													fill
-													unoptimized={shouldBypassImageOptimization(productImage)}
 													sizes="(max-width: 768px) 100vw, 45vw"
 													className="object-cover"
 												/>

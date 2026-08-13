@@ -1,5 +1,6 @@
 import SignatureField from '@/components/forms/SignatureField';
 import { inputClassName, safeT } from './utils';
+import { fieldMaxLength } from './validationConstraints';
 
 export default function FormFieldRenderer({ field, value, fieldError, values, t, onChange }) {
 	if (typeof field.showWhen === 'function' && !field.showWhen(values)) {
@@ -8,6 +9,7 @@ export default function FormFieldRenderer({ field, value, fieldError, values, t,
 
 	const isFullWidth = field.span === 'full';
 	const wrapperClass = isFullWidth ? 'md:col-span-2' : '';
+	const maxLength = fieldMaxLength(field.name);
 
 	if (field.type === 'notice') {
 		return (
@@ -100,6 +102,7 @@ export default function FormFieldRenderer({ field, value, fieldError, values, t,
 				{field.label}
 				<textarea
 					rows={field.rows || 4}
+					maxLength={maxLength}
 					className={inputClassName}
 					value={value}
 					onChange={(event) => onChange(field.name, event.target.value)}
@@ -128,6 +131,7 @@ export default function FormFieldRenderer({ field, value, fieldError, values, t,
 			<input
 				type={field.type === 'date' ? 'date' : field.type === 'tel' ? 'tel' : field.type === 'email' ? 'email' : 'text'}
 				className={inputClassName}
+				maxLength={maxLength}
 				value={value}
 				onChange={(event) => onChange(field.name, event.target.value)}
 			/>

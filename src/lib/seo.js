@@ -1,13 +1,15 @@
 import { ENDPOINTS } from './api';
+import { SENSITIVE_NOINDEX_ROUTES } from './publicRoutes';
 
 const DEFAULT_METADATA = {
 	title: '24-7 Labs',
 	description: '',
 };
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '');
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://24-7labs.com').replace(/\/$/, '');
+const SENSITIVE_NOINDEX_PATHS = new Set(SENSITIVE_NOINDEX_ROUTES);
 
-function normalizePath(path) {
+export function normalizePath(path) {
 	const normalized = `/${String(path || '/')
 		.trim()
 		.replace(/^\/+/, '')
@@ -16,39 +18,62 @@ function normalizePath(path) {
 	return normalized === '/' ? '/' : normalized;
 }
 
-function toMetadata(meta, fallback = DEFAULT_METADATA) {
+export const normalizeRedirectPath = normalizePath;
+
+export function buildMetadata(meta, fallback = DEFAULT_METADATA, requestedPath = meta?.path || '/') {
+	const path = normalizePath(requestedPath);
+	const robots = SENSITIVE_NOINDEX_PATHS.has(path)
+		? {
+				index: false,
+				follow: false,
+				nocache: true,
+				googleBot: {
+					index: false,
+					follow: false,
+					noimageindex: true,
+				},
+			}
+		: undefined;
+
 	return {
 		title: meta?.title || fallback.title || DEFAULT_METADATA.title,
 		description: meta?.description || fallback.description || DEFAULT_METADATA.description,
+		alternates: {
+			canonical: path,
+		},
+		...(robots ? { robots } : {}),
 	};
 }
 
-export async function fetchAllMetadata() {
-	try {
-		const url = `${ENDPOINTS.SEO}/all`;
+export function buildMetadataUrl(endpoint, path) {
+	const url = new URL(endpoint);
+	url.searchParams.set('path', normalizePath(path));
+	return url.toString();
+}
 
-		const res = await fetch(url, { next: { revalidate: 60 } });
+// Server-side helper for the intentionally public, single-path SEO endpoint.
+// The list endpoint is administrator-only and must never be used by public pages.
+export async function fetchMetadata(path, { endpoint, fetchImplementation = fetch } = {}) {
+	try {
+		const url = buildMetadataUrl(endpoint || ENDPOINTS.SEO, path);
+
+		const res = await fetchImplementation(url, {
+			next: { revalidate: 60 },
+			signal: AbortSignal.timeout(5000),
+		});
 
 		if (!res.ok) return null;
 		const json = await res.json();
-		return Array.isArray(json) ? json : [];
-	} catch (err) {
-		// swallow and return null so pages can fallback
+		return json && typeof json === 'object' && !Array.isArray(json) ? json : null;
+	} catch {
+		// Swallow and return null so pages can use route-specific fallback metadata.
 		return null;
 	}
 }
 
-// Server-side helper to resolve SEO metadata from the backend list API.
-export async function fetchMetadata(path) {
-	const rows = await fetchAllMetadata();
-	const normalizedPath = normalizePath(path);
-
-	return rows?.find((entry) => normalizePath(entry?.path) === normalizedPath) || null;
-}
-
 export async function resolveMetadata(path, fallback) {
 	const meta = await fetchMetadata(path);
-	return toMetadata(meta, fallback);
+	return buildMetadata(meta, fallback, path);
 }
 
 // Returns an async `generateMetadata` function bound to `path` for easy reuse in pages
