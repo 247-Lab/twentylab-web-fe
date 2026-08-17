@@ -144,7 +144,9 @@ jobs:
             test "$attempt" -lt 30
             sleep 1
           done
-          curl --fail --silent "http://127.0.0.1:${port}/" | grep --quiet '<!DOCTYPE html>'
+          home_page="${RUNNER_TEMP}/storefront-home.html"
+          curl --fail --silent --output "$home_page" "http://127.0.0.1:${port}/"
+          grep --quiet '<!DOCTYPE html>' "$home_page"
 
       - name: Scan repository history for secrets
         env:
