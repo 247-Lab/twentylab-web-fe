@@ -20,4 +20,3 @@ part of a code review.
 
 If requirements or scope are unclear, open a draft pull request and list the
 question rather than assuming production behavior.
-

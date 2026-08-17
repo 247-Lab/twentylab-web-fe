@@ -23,4 +23,3 @@
 ## Scope and authorization
 
 <!-- Identify the existing approved scope. Leave the PR in draft if scope is disputed. -->
-
