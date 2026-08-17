@@ -5,6 +5,15 @@ const dockerfile = fs.readFileSync(new URL('../Dockerfile', import.meta.url), 'u
 const workflow = fs.readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8');
 
 describe('production container boundary', () => {
+	it('builds Next output natively and installs runtime dependencies for the target platform', () => {
+		expect(dockerfile).toMatch(/^FROM --platform=\$BUILDPLATFORM node:[^\n]+ AS build-dependencies$/m);
+		expect(dockerfile).toMatch(/^FROM --platform=\$BUILDPLATFORM node:[^\n]+ AS builder$/m);
+		expect(dockerfile).toMatch(/^FROM node:[^\n]+ AS runtime-dependencies$/m);
+		expect(dockerfile).toContain('rm -rf .next/standalone/node_modules');
+		expect(dockerfile).toContain('COPY --from=runtime-dependencies');
+		expect(dockerfile).not.toMatch(/^FROM --platform=\$BUILDPLATFORM node:[^\n]+ AS (?:runtime-dependencies|runner)$/m);
+	});
+
 	it('removes npm build tooling from the final runtime stage', () => {
 		const runtime = dockerfile.slice(dockerfile.lastIndexOf(' AS runner'));
 
