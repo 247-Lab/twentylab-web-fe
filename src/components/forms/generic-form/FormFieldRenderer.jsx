@@ -1,5 +1,6 @@
 import SignatureField from '@/components/forms/SignatureField';
 import { inputClassName, safeT } from './utils';
+import { fieldMaxLength } from './validationConstraints';
 
 export default function FormFieldRenderer({ field, value, fieldError, values, t, onChange }) {
 	if (typeof field.showWhen === 'function' && !field.showWhen(values)) {
@@ -8,6 +9,7 @@ export default function FormFieldRenderer({ field, value, fieldError, values, t,
 
 	const isFullWidth = field.span === 'full';
 	const wrapperClass = isFullWidth ? 'md:col-span-2' : '';
+	const maxLength = fieldMaxLength(field.name);
 
 	if (field.type === 'notice') {
 		return (
@@ -100,6 +102,7 @@ export default function FormFieldRenderer({ field, value, fieldError, values, t,
 				{field.label}
 				<textarea
 					rows={field.rows || 4}
+					maxLength={maxLength}
 					className={inputClassName}
 					value={value}
 					onChange={(event) => onChange(field.name, event.target.value)}
@@ -117,6 +120,21 @@ export default function FormFieldRenderer({ field, value, fieldError, values, t,
 				value={value}
 				error={fieldError}
 				clearLabel={safeT(t, 'common.clearSignature', 'Clear Signature')}
+				drawModeLabel={safeT(t, 'common.signature.drawMode', 'Draw signature')}
+				typeModeLabel={safeT(t, 'common.signature.typeMode', 'Type signature')}
+				typedNameLabel={safeT(t, 'common.signature.typedNameLabel', 'Full legal name')}
+				typedNameHelp={safeT(
+					t,
+					'common.signature.typedNameHelp',
+					'Typing your full legal name applies it as your electronic signature.'
+				)}
+				applyTypedLabel={safeT(t, 'common.signature.applyTyped', 'Apply typed signature')}
+				typedAppliedLabel={safeT(t, 'common.signature.typedApplied', 'Typed signature applied.')}
+				typedNameError={safeT(
+					t,
+					'common.signature.typedNameError',
+					'Enter your full legal name using 2 to 150 characters.'
+				)}
 				onChange={(nextValue) => onChange(field.name, nextValue)}
 			/>
 		);
@@ -128,6 +146,7 @@ export default function FormFieldRenderer({ field, value, fieldError, values, t,
 			<input
 				type={field.type === 'date' ? 'date' : field.type === 'tel' ? 'tel' : field.type === 'email' ? 'email' : 'text'}
 				className={inputClassName}
+				maxLength={maxLength}
 				value={value}
 				onChange={(event) => onChange(field.name, event.target.value)}
 			/>

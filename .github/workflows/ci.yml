@@ -1,0 +1,167 @@
+name: Frontend Fast Checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-fast-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend-fast:
+    name: Frontend Fast Checks
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 25
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      NEXT_PUBLIC_MODE: prod
+      NEXT_PUBLIC_PROD_API_URL: http://127.0.0.1:9
+      NEXT_PUBLIC_SITE_URL: https://24-7labs.com
+      CONTAINER_IMAGE: twentylab-web-fe:${{ github.sha }}
+      SYFT_IMAGE: anchore/syft:v1.38.0@sha256:825cad3a952c87676a6d07e9a3bb05ac9c401d598360070e970aa46d54c1727e
+      TRIVY_IMAGE: aquasec/trivy:0.68.2@sha256:05d0126976bdedcd0782a0336f77832dbea1c81b9cc5e4b3a5ea5d2ec863aca7
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.23.2
+          cache: npm
+
+      - name: Pin npm
+        run: npm install --global npm@10.9.8
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Check formatting of changed files
+        env:
+          FORMAT_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: npm run format:check
+
+      - name: Verify versioned consent text
+        env:
+          CONSENT_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: npm run verify:consent-manifest
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build and verify development-mode browser configuration
+        shell: bash
+        env:
+          NEXT_PUBLIC_MODE: dev
+          NEXT_PUBLIC_DEV_API_URL: http://127.0.0.1:8
+          NEXT_PUBLIC_SITE_URL: http://127.0.0.1:4000
+        run: |
+          set -euo pipefail
+          rm -rf .next
+          npm run build
+          npm run verify:client-config
+
+      - name: Build and verify production-mode browser configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .next
+          npm run build
+          npm run verify:client-config
+
+      - name: Audit all dependencies
+        run: npm run audit
+
+      - name: Audit production dependencies
+        run: npm run audit:prod
+
+      - name: Build production container
+        id: container_build
+        run: >-
+          docker build
+          --build-arg NEXT_PUBLIC_MODE=prod
+          --build-arg NEXT_PUBLIC_PROD_API_URL=http://127.0.0.1:9
+          --build-arg NEXT_PUBLIC_SITE_URL=https://24-7labs.com
+          --tag "$CONTAINER_IMAGE" .
+
+      - name: Generate container SBOM
+        shell: bash
+        run: |
+          set -euo pipefail
+          report_dir="${RUNNER_TEMP}/security-artifacts"
+          mkdir -p "$report_dir"
+          docker run --rm \
+            --volume /var/run/docker.sock:/var/run/docker.sock:ro \
+            "$SYFT_IMAGE" scan "docker:${CONTAINER_IMAGE}" --output cyclonedx-json \
+            > "${report_dir}/container-sbom.cdx.json"
+          test -s "${report_dir}/container-sbom.cdx.json"
+
+      - name: Scan production container
+        shell: bash
+        run: |
+          set -euo pipefail
+          trivy_cache="${RUNNER_TEMP}/trivy-cache"
+          mkdir -p "$trivy_cache"
+          docker run --rm \
+            --volume /var/run/docker.sock:/var/run/docker.sock:ro \
+            --volume "${RUNNER_TEMP}/security-artifacts:/reports" \
+            --volume "${trivy_cache}:/root/.cache/trivy" \
+            "$TRIVY_IMAGE" image \
+            --scanners vuln \
+            --format json \
+            --output /reports/container-scan.json \
+            "$CONTAINER_IMAGE"
+          docker run --rm \
+            --volume /var/run/docker.sock:/var/run/docker.sock:ro \
+            --volume "${trivy_cache}:/root/.cache/trivy" \
+            "$TRIVY_IMAGE" image \
+            --scanners vuln \
+            --skip-db-update \
+            --severity HIGH,CRITICAL \
+            --exit-code 1 \
+            "$CONTAINER_IMAGE"
+
+      - name: Smoke production container
+        shell: bash
+        run: |
+          set -euo pipefail
+          container="twentylab-web-fe-smoke-${GITHUB_RUN_ID}"
+          trap 'docker rm --force "$container" >/dev/null 2>&1 || true' EXIT
+          docker run --detach --name "$container" --publish 127.0.0.1::4000 "$CONTAINER_IMAGE"
+          port="$(docker port "$container" 4000/tcp | sed 's/.*://')"
+          for attempt in {1..30}; do
+            if curl --fail --silent "http://127.0.0.1:${port}/api/health" >/dev/null; then break; fi
+            test "$attempt" -lt 30
+            sleep 1
+          done
+          home_page="${RUNNER_TEMP}/storefront-home.html"
+          curl --fail --silent --output "$home_page" "http://127.0.0.1:${port}/"
+          grep --quiet '<!DOCTYPE html>' "$home_page"
+
+      - name: Scan repository history for secrets
+        env:
+          GITLEAKS_IMAGE: zricethezav/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f
+        run: >-
+          docker run --rm
+          --volume "$GITHUB_WORKSPACE:/repo:ro"
+          "$GITLEAKS_IMAGE"
+          git /repo --redact --no-banner --exit-code 1
+
+      - name: Upload security evidence
+        if: ${{ always() && steps.container_build.outcome == 'success' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: container-security-${{ github.sha }}
+          path: ${{ runner.temp }}/security-artifacts
+          if-no-files-found: error
+          retention-days: 30

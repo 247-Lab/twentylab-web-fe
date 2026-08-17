@@ -6,7 +6,6 @@ import { useTranslations } from 'next-intl';
 import { CalendarDays, ChevronLeft } from 'lucide-react';
 
 import { formatBlogDate } from '@/lib/blog-content';
-import { shouldBypassImageOptimization } from '@/lib/image';
 import BlogContentRenderer from './BlogContentRenderer';
 import RelatedProductsSection from '@/components/common/RelatedProductsSection';
 import TestingServiceCard from '@/components/testing-services/components/TestingServiceCard';
@@ -39,7 +38,6 @@ export default function BlogDetailPage({
 							alt={blog.title || t('cardImageAlt')}
 							fill
 							sizes="(min-width: 768px) 960px, 100vw"
-							unoptimized={shouldBypassImageOptimization(blog.thumbnailimage)}
 							className="h-full w-full object-cover"
 						/>
 					</div>

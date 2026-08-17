@@ -2,27 +2,13 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { Minus, Plus, ShoppingCart, Trash2, X } from 'lucide-react';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useCart } from '@/components/cart/CartProvider';
-import { shouldBypassImageOptimization } from '@/lib/image';
-
-function toCurrency(value, locale) {
-	if (!Number.isFinite(value)) {
-		return null;
-	}
-
-	return new Intl.NumberFormat(locale === 'es' ? 'es-US' : 'en-US', {
-		style: 'currency',
-		currency: 'USD',
-		maximumFractionDigits: 2,
-	}).format(value);
-}
 
 export default function CartDrawer({ open, onClose }) {
 	const t = useTranslations('CartDrawer');
-	const locale = useLocale();
 	const { cart, removeFromCart, setQuantity } = useCart();
 
 	useEffect(() => {
@@ -37,12 +23,6 @@ export default function CartDrawer({ open, onClose }) {
 			document.body.style.overflow = previousBodyOverflow;
 		};
 	}, [open]);
-
-	const totals = useMemo(() => {
-		return {
-			subtotal: toCurrency(cart.subtotal, locale),
-		};
-	}, [cart.subtotal, locale]);
 
 	if (!open) {
 		return null;
@@ -95,9 +75,6 @@ export default function CartDrawer({ open, onClose }) {
 					) : (
 						<ul className="space-y-3">
 							{cart.items.map((item) => {
-								const unitPrice = toCurrency(item.price || 0, locale);
-								const subtotal = toCurrency((item.price || 0) * item.quantity, locale);
-
 								return (
 									<li
 										key={item.key}
@@ -105,14 +82,7 @@ export default function CartDrawer({ open, onClose }) {
 									>
 										<div className="grid grid-cols-[76px_1fr] gap-3">
 											<div className="relative h-[76px] w-[76px] overflow-hidden rounded-xl bg-slate-100">
-												<Image
-													src={item.image}
-													alt={item.name}
-													fill
-													className="object-cover"
-													sizes="76px"
-													unoptimized={shouldBypassImageOptimization(item.image)}
-												/>
+												<Image src={item.image} alt={item.name} fill className="object-cover" sizes="76px" />
 											</div>
 											<div className="min-w-0">
 												<h3 className="truncate text-sm font-bold text-[var(--tl-metallic-black)]">{item.name}</h3>
@@ -120,10 +90,7 @@ export default function CartDrawer({ open, onClose }) {
 													<p className="mt-0.5 truncate text-xs font-semibold text-slate-500">{item.variantLabel}</p>
 												) : null}
 												<p className="mt-1 text-xs font-semibold text-slate-500">
-													{t('unitPrice')}: {unitPrice || t('contactUs')}
-												</p>
-												<p className="font-display mt-1 text-lg font-black text-[var(--tl-metallic-black)]">
-													{subtotal || t('contactUs')}
+													{t('quantity', { count: item.quantity })}
 												</p>
 											</div>
 										</div>
@@ -167,19 +134,16 @@ export default function CartDrawer({ open, onClose }) {
 
 				{cart.items.length > 0 ? (
 					<footer className="border-t border-slate-200 bg-white/90 px-5 py-4">
-						<div className="mb-3 flex items-center justify-between">
-							<span className="text-sm font-semibold text-slate-600">{t('subtotal')}</span>
-							<span className="font-display text-2xl font-black text-[var(--tl-metallic-black)]">
-								{totals.subtotal}
-							</span>
+						<div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+							{t('unavailableNotice')}
 						</div>
 						<div className="grid gap-2 sm:grid-cols-2">
 							<Link
-								href="/checkout"
+								href="/contact"
 								onClick={onClose}
 								className="inline-flex items-center justify-center rounded-full bg-[var(--tl-primary)] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[var(--tl-primary-strong)]"
 							>
-								{t('checkout')}
+								{t('contactLabs')}
 							</Link>
 							<button
 								type="button"

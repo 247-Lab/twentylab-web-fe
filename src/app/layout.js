@@ -6,6 +6,7 @@ import SiteNavbar from '@/components/common/SiteNavbar';
 import SiteFooter from '@/components/common/SiteFooter';
 import FloatingLocaleSwitcher from '@/components/common/FloatingLocaleSwitcher';
 import { CartProvider } from '@/components/cart/CartProvider';
+import { SITE_URL } from '@/lib/seo';
 import './globals.css';
 
 const montserrat = Montserrat({
@@ -20,9 +21,13 @@ const manrope = Manrope({
 });
 
 export const metadata = {
+	metadataBase: new URL(SITE_URL),
 	title: '24-7 Labs | Tampa Testing Services',
 	description:
-		'24-7 Labs homepage rebuilt with Next.js and Tailwind CSS, featuring diagnostics services, scheduling, reviews, and contact details.',
+		'Convenient diagnostic testing, appointment scheduling, and laboratory services in Tampa from 24-7 Labs.',
+	alternates: {
+		canonical: '/',
+	},
 };
 
 export default async function RootLayout({ children }) {

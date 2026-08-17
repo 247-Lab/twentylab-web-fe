@@ -1,5 +1,6 @@
 import { submitPatientIntakeForm } from '@/lib/api';
-import { normalizePhone, safeT, toIsoDate } from '../utils';
+import { buildConsentEvidence } from '../consentEvidence';
+import { normalizeDateOnly, normalizePhone, safeT } from '../utils';
 
 export function createPatientIntakeConfig(t, shared) {
 	const { yesNoOptions, declarationContent, termsContent, sharedPersonal } = shared;
@@ -66,12 +67,12 @@ export function createPatientIntakeConfig(t, shared) {
 				],
 			},
 		],
-		buildPayload: (values) => ({
+		buildPayload: (values, { locale } = {}) => ({
 			form_type: 'patient_intake',
 			firstname: values.firstname,
 			lastname: values.lastname,
 			phonenumber: normalizePhone(values.phone),
-			dateofbirth: toIsoDate(values.dateofbirth),
+			dateofbirth: normalizeDateOnly(values.dateofbirth),
 			emailaddress: values.email,
 			address: values.address,
 			city: values.city,
@@ -81,7 +82,8 @@ export function createPatientIntakeConfig(t, shared) {
 			may_contact_number: values.may_contact_number === 'yes',
 			may_contact_email: values.may_contact_email === 'yes',
 			may_forward_results: values.may_forward_results === 'yes',
-			self_declaration: Boolean(values.declaration_agreed) && Boolean(values.terms_agreed),
+			self_declaration: values.declaration_agreed === true && values.terms_agreed === true,
+			...buildConsentEvidence(values, locale),
 			digital_signature: values.digital_signature,
 		}),
 		submit: submitPatientIntakeForm,

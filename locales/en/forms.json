@@ -11,6 +11,15 @@
 			"lookupLoadError": "Failed to load form options.",
 			"agreeTo": "I have read and agree.",
 			"clearSignature": "Clear Signature",
+			"signature": {
+				"drawMode": "Draw signature",
+				"typeMode": "Type signature",
+				"typedNameLabel": "Full legal name",
+				"typedNameHelp": "Typing your full legal name applies it as your electronic signature.",
+				"applyTyped": "Apply typed signature",
+				"typedApplied": "Typed signature applied.",
+				"typedNameError": "Enter your full legal name using 2 to 150 characters."
+			},
 			"declarationTitle": "Declaration",
 			"termsTitle": "Terms of Service",
 			"noticeTitle": "Important Notice",
@@ -31,7 +40,7 @@
 				"zipCode": "Zip Code",
 				"state": "State",
 				"location": "Location",
-				"dateTime": "Choose Date",
+				"dateTime": "Preferred Date",
 				"symptomsTests": "Symptoms / Tests",
 				"message": "Message",
 				"digitalSignature": "Digital Signature"
@@ -39,7 +48,10 @@
 			"validation": {
 				"required": "This field is required.",
 				"invalidEmail": "Please enter a valid email address.",
-				"invalidPhone": "Please enter a valid phone number.",
+				"invalidPhone": "Please enter a phone number with 10 to 15 digits.",
+				"invalidDate": "Please enter a valid date.",
+				"tooLong": "Use {max} characters or fewer.",
+				"signatureTooLarge": "The signature is too large. Clear it and sign again.",
 				"mustAgree": "You must agree before submitting.",
 				"fixErrors": "Please fix the errors above before submitting."
 			},
@@ -96,16 +108,16 @@
 		},
 		"scheduleAppointment": {
 			"metadata": {
-				"title": "Schedule Appointment | 24-7 Labs",
-				"description": "Book a same-day appointment for diagnostics testing in Tampa."
+				"title": "Request an Appointment | 24-7 Labs",
+				"description": "Request a preferred date for diagnostic testing in Tampa. Staff will confirm availability."
 			},
 			"eyebrow": "Appointments",
-			"title": "Schedule Appointment",
-			"subtitle": "Book a same-day appointment for diagnostics testing. Our staff is ready to help.",
-			"formTitle": "Schedule Appointment",
-			"submitLabel": "Send",
-			"successMessage": "Appointment scheduled successfully.",
-			"errorMessage": "Failed to schedule appointment. Please try again."
+			"title": "Request an Appointment",
+			"subtitle": "Send your preferred date for diagnostic testing. This is a request; staff will contact you to confirm availability.",
+			"formTitle": "Appointment Request",
+			"submitLabel": "Submit Request",
+			"successMessage": "Appointment request received. Staff will contact you to confirm availability.",
+			"errorMessage": "Failed to send the appointment request. Please try again."
 		},
 		"patientIntake": {
 			"metadata": {

@@ -1,12 +1,28 @@
-function resolveApiOrigin() {
-	const base =
-		process.env.NEXT_PUBLIC_MODE === 'dev' ? process.env.NEXT_PUBLIC_DEV_API_URL : process.env.NEXT_PUBLIC_PROD_API_URL;
+const COMPILED_PUBLIC_API_CONFIG = {
+	mode: process.env.NEXT_PUBLIC_MODE,
+	devApiUrl: process.env.NEXT_PUBLIC_DEV_API_URL,
+	prodApiUrl: process.env.NEXT_PUBLIC_PROD_API_URL,
+};
 
-	return base + '/api';
+export function resolvePublicApiBase(config = COMPILED_PUBLIC_API_CONFIG) {
+	const publicBase = config.mode === 'dev' ? config.devApiUrl : config.prodApiUrl;
+	if (!publicBase) throw new Error('Public API origin is not configured');
+	return publicBase.replace(/\/$/, '');
 }
 
-const API_ORIGIN = resolveApiOrigin();
+export function resolveApiOrigin(config) {
+	const publicBase = resolvePublicApiBase(config);
+	const internalApiUrl = typeof window === 'undefined' ? config?.internalApiUrl || process.env.INTERNAL_API_URL : null;
+	const base = internalApiUrl || publicBase;
+
+	if (!base) throw new Error('API origin is not configured');
+	return `${base.replace(/\/$/, '')}/api`;
+}
+
 const CONTENT_REVALIDATE_SECONDS = 300;
+const CONTENT_FETCH_TIMEOUT_MS = 5000;
+const PRODUCT_PAGE_SIZE = 100;
+const MAX_PRODUCT_PAGE_REQUESTS = 10_000;
 
 const PATH_MAP = {
 	BLOGS: 'blogs',
@@ -20,7 +36,7 @@ const PATH_MAP = {
 };
 
 export const ENDPOINTS = new Proxy(PATH_MAP, {
-	get: (target, prop) => (prop in target ? `${API_ORIGIN}/${target[prop]}` : target[prop]),
+	get: (target, prop) => (prop in target ? `${resolveApiOrigin()}/${target[prop]}` : target[prop]),
 });
 
 async function parseJsonResponse(response) {
@@ -43,10 +59,15 @@ function withJsonOptions(body) {
 }
 
 function withFormSubmissionOptions(formType, payload) {
-	return withJsonOptions({
-		...payload,
-		form_type: formType,
-	});
+	return {
+		...withJsonOptions({
+			...payload,
+			form_type: formType,
+		}),
+		cache: 'no-store',
+		credentials: 'omit',
+		referrerPolicy: 'no-referrer',
+	};
 }
 
 function resolveLocalizedText(value, locale = 'en') {
@@ -103,7 +124,7 @@ export function extractProducts(payload) {
 	return [];
 }
 
-export function resolveImageUrl(value) {
+export function resolveImageUrl(value, config = COMPILED_PUBLIC_API_CONFIG) {
 	if (!value) {
 		return '/images/placeholder.png';
 	}
@@ -117,10 +138,55 @@ export function resolveImageUrl(value) {
 	}
 
 	if (value.startsWith('/')) {
-		return `${API_ORIGIN}${value}`;
+		return `${new URL(resolvePublicApiBase(config)).origin}${value}`;
 	}
 
-	return `${API_ORIGIN}/${value}`;
+	return `${new URL(resolvePublicApiBase(config)).origin}/${value}`;
+}
+
+export async function collectProductPages(fetchPage) {
+	const products = [];
+	let expectedTotal;
+	let expectedPages;
+
+	for (let page = 1; page <= MAX_PRODUCT_PAGE_REQUESTS; page += 1) {
+		const payload = await fetchPage(page, PRODUCT_PAGE_SIZE);
+		if (
+			!payload ||
+			!Array.isArray(payload.products) ||
+			!Number.isSafeInteger(payload.total) ||
+			payload.total < 0 ||
+			!Number.isSafeInteger(payload.pages) ||
+			payload.pages < 0 ||
+			payload.page !== page ||
+			!Number.isSafeInteger(payload.limit) ||
+			payload.limit < 1 ||
+			payload.limit > PRODUCT_PAGE_SIZE ||
+			payload.pages !== Math.ceil(payload.total / payload.limit) ||
+			payload.products.length > payload.limit
+		) {
+			throw new Error('Product API returned an invalid pagination envelope');
+		}
+
+		expectedTotal ??= payload.total;
+		expectedPages ??= payload.pages;
+		if (payload.total !== expectedTotal || payload.pages !== expectedPages) {
+			throw new Error('Product API pagination changed during traversal');
+		}
+		if (payload.pages > MAX_PRODUCT_PAGE_REQUESTS) {
+			throw new Error('Product API pagination exceeds the safe traversal limit');
+		}
+
+		products.push(...payload.products);
+		if (page >= payload.pages) {
+			if (products.length !== payload.total) {
+				throw new Error('Product API pagination was incomplete');
+			}
+			return products;
+		}
+	}
+
+	throw new Error('Product API pagination exceeds the safe traversal limit');
 }
 
 export function normalizeProduct(product, locale = 'en') {
@@ -181,24 +247,28 @@ export function normalizeBlog(blog, locale = 'en') {
 }
 
 export async function fetchProducts(locale = 'en') {
-	const response = await fetch(withLocaleQuery(ENDPOINTS.PRODUCTS, locale), {
-		next: {
-			revalidate: CONTENT_REVALIDATE_SECONDS,
-			tags: [`products:${locale}`],
-		},
-		headers: {
-			Accept: 'application/json',
-		},
+	const products = await collectProductPages(async (page, limit) => {
+		const url = new URL(withLocaleQuery(ENDPOINTS.PRODUCTS, locale));
+		url.searchParams.set('page', String(page));
+		url.searchParams.set('limit', String(limit));
+		const response = await fetch(url, {
+			next: {
+				revalidate: CONTENT_REVALIDATE_SECONDS,
+				tags: [`products:${locale}`],
+			},
+			headers: {
+				Accept: 'application/json',
+			},
+			signal: AbortSignal.timeout(CONTENT_FETCH_TIMEOUT_MS),
+		});
+
+		if (!response.ok) {
+			throw new Error(`Product API failed with status ${response.status}`);
+		}
+		return response.json();
 	});
 
-	if (!response.ok) {
-		throw new Error(`Product API failed with status ${response.status}`);
-	}
-
-	const payload = await response.json();
-	return extractProducts(payload)
-		.map((product) => normalizeProduct(product, locale))
-		.filter(Boolean);
+	return products.map((product) => normalizeProduct(product, locale)).filter(Boolean);
 }
 
 export async function fetchBlogs(locale = 'en') {
@@ -210,6 +280,7 @@ export async function fetchBlogs(locale = 'en') {
 		headers: {
 			Accept: 'application/json',
 		},
+		signal: AbortSignal.timeout(CONTENT_FETCH_TIMEOUT_MS),
 	});
 
 	if (!response.ok) {
@@ -237,6 +308,7 @@ export async function fetchCategories(locale = 'en') {
 		headers: {
 			Accept: 'application/json',
 		},
+		signal: AbortSignal.timeout(CONTENT_FETCH_TIMEOUT_MS),
 	});
 
 	if (!response.ok) {
@@ -319,14 +391,4 @@ export async function validateCoupon(code) {
 	}
 
 	throw new Error(payload?.error || 'Invalid or expired coupon code');
-}
-
-export async function createOrder(payload) {
-	const response = await fetch(ENDPOINTS.ORDERS, withJsonOptions(payload));
-	return parseJsonResponse(response);
-}
-
-export async function processPayment(paymentData) {
-	const response = await fetch(`${ENDPOINTS.PAYMENT}/process`, withJsonOptions(paymentData));
-	return parseJsonResponse(response);
 }

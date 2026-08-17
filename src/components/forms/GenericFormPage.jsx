@@ -1,15 +1,17 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { ArrowRight, Clock3, Loader2, Mail, MapPin, PhoneCall } from 'lucide-react';
 import FormFieldRenderer from '@/components/forms/generic-form/FormFieldRenderer';
 import { buildFormConfig, flattenVisibleFields, initialFieldValues } from '@/components/forms/generic-form/config';
+import { fieldConstraintError } from '@/components/forms/generic-form/validationConstraints';
 import { appData } from '@/lib/static-data';
-import { isEmail, normalizePhone, safeT } from '@/components/forms/generic-form/utils';
+import { normalizeDateOnly, safeT } from '@/components/forms/generic-form/utils';
 
 export default function GenericFormPage({ formKey, initialValues = {} }) {
 	const t = useTranslations('Forms');
+	const locale = useLocale();
 	const { states, locations, infections } = appData;
 	const [values, setValues] = useState(() => ({
 		...initialFieldValues(formKey),
@@ -65,12 +67,18 @@ export default function GenericFormPage({ formKey, initialValues = {} }) {
 				}
 			}
 
-			if (field.validation === 'email' && value && !isEmail(value)) {
-				nextErrors[field.name] = safeT(t, 'common.validation.invalidEmail', 'Please enter a valid email address.');
+			const constraintError = fieldConstraintError(field, value);
+			if (constraintError) {
+				nextErrors[field.name] = safeT(
+					t,
+					`common.validation.${constraintError.key}`,
+					constraintError.fallback,
+					constraintError.values
+				);
 			}
 
-			if (field.validation === 'phone' && value && normalizePhone(value).length < 10) {
-				nextErrors[field.name] = safeT(t, 'common.validation.invalidPhone', 'Please enter a valid phone number.');
+			if (field.validation === 'date' && value && !normalizeDateOnly(value)) {
+				nextErrors[field.name] = safeT(t, 'common.validation.invalidDate', 'Please enter a valid date.');
 			}
 		});
 
@@ -90,7 +98,7 @@ export default function GenericFormPage({ formKey, initialValues = {} }) {
 
 		setIsSubmitting(true);
 		try {
-			const payload = config.buildPayload(values);
+			const payload = config.buildPayload(values, { locale });
 			await config.submit(payload);
 			setSubmitResult({ status: 'success', message: config.successMessage });
 			setValues(initialFieldValues(formKey));

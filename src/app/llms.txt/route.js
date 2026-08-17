@@ -1,15 +1,14 @@
-import { fetchAllMetadata, SITE_URL } from '@/lib/seo';
+import { SITE_URL } from '@/lib/seo';
+import { INDEXABLE_STATIC_ROUTES } from '@/lib/publicRoutes';
 
 function formatPath(path) {
 	return path === '/' ? SITE_URL : `${SITE_URL}${path}`;
 }
 
 export async function GET() {
-	const rows = (await fetchAllMetadata().catch(() => [])) || [];
-	const pages = rows
-		.filter((row) => row?.path && row?.title)
-		.map((row) => `- [${row.title}](${formatPath(row.path)}): ${row.description || '24-7 Labs page.'}`)
-		.join('\n');
+	const pages = INDEXABLE_STATIC_ROUTES.map(
+		({ title, path, description }) => `- [${title}](${formatPath(path)}): ${description}`
+	).join('\n');
 
 	const body = `# 24-7 Labs
 
@@ -17,12 +16,11 @@ export async function GET() {
 
 ## Website
 
-- [Home](${SITE_URL})
 - [Sitemap](${SITE_URL}/sitemap.xml)
 
 ## Pages
 
-${pages || '- [24-7 Labs](' + SITE_URL + '): Diagnostic and testing services in Tampa.'}
+${pages}
 `;
 
 	return new Response(body, {

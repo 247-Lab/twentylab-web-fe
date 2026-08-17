@@ -8,7 +8,7 @@ export async function generateMetadata({ params }) {
 	const [{ id }, messages] = await Promise.all([params, getMessages()]);
 
 	// Always fetch English categories to get English name for metadata
-	const categories = await fetchCategories('en');
+	const categories = await fetchCategories('en').catch(() => []);
 	const category = categories.find((cat) => String(cat.id) === String(id));
 
 	const categoryName = category?.name || messages?.CategoryDetailPage?.fallbackTitle || 'Category Details';

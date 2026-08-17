@@ -125,7 +125,10 @@
 		"remove": "Remove",
 		"subtotal": "Subtotal",
 		"checkout": "Checkout",
-		"continueShopping": "Continue shopping"
+		"continueShopping": "Continue shopping",
+		"quantity": "Quantity: {count}",
+		"unavailableNotice": "Online checkout is unavailable. No price or order total is quoted from this cart.",
+		"contactLabs": "Contact 24-7 Labs"
 	},
 	"CheckoutPage": {
 		"metadata": {
@@ -133,6 +136,11 @@
 			"description": "Review your selected tests, apply discount codes, and place your order with 24-7 Labs."
 		},
 		"title": "Checkout",
+		"unavailableTitle": "Online checkout unavailable",
+		"unavailableMessage": "Online checkout is temporarily unavailable while payment safety controls are being completed.",
+		"selectionStatus": "{count, plural, =0 {No order has been submitted and this page does not collect customer information.} one {Your selected service will remain in this browser cart. No order has been submitted and this page does not collect customer information.} other {Your # selected services will remain in this browser cart. No order has been submitted and this page does not collect customer information.}}",
+		"contactLabs": "Contact 24-7 Labs",
+		"returnToServices": "Return to testing services",
 		"subtitle": "Review your order and complete your contact and shipping details.",
 		"formTitle": "Contact and shipping information",
 		"summaryTitle": "Order summary",

@@ -1,35 +1,34 @@
 /** @type {import('next').NextConfig} */
 
 import createNextIntlPlugin from 'next-intl/plugin';
+import { buildApiImagePattern, buildSecurityHeaders, validatePublicBuildConfig } from './config/securityHeaders.mjs';
+import { LEGACY_REDIRECTS } from './config/legacyRedirects.mjs';
+
+validatePublicBuildConfig();
+const apiImagePattern = buildApiImagePattern();
 
 const nextConfig = {
-	allowedDevOrigins: ['**.*', 'localhost', '*.localhost', '[::1]'],
+	allowedDevOrigins: ['localhost', '*.localhost', '[::1]'],
+	output: 'standalone',
+	poweredByHeader: false,
+	async redirects() {
+		return LEGACY_REDIRECTS;
+	},
+	async headers() {
+		return [
+			{
+				source: '/:path*',
+				headers: buildSecurityHeaders(),
+			},
+		];
+	},
 	images: {
+		// Synthetic images use browser-loopback media URLs that are not reachable
+		// from the optimizer process inside the storefront container.
+		unoptimized: process.env.NEXT_PUBLIC_MODE === 'dev',
 		minimumCacheTTL: 86400,
 		remotePatterns: [
-			{
-				protocol: 'https',
-				hostname: '247labstage.spctek.com',
-				pathname: '/**',
-			},
-			{
-				protocol: 'https',
-				hostname: '247labstage.spctek.com',
-				port: '9000',
-				pathname: '/uploads/**',
-			},
-			{
-				protocol: 'http',
-				hostname: 'localhost',
-				port: '3000',
-				pathname: '/uploads/**',
-			},
-			{
-				protocol: 'http',
-				hostname: '127.0.0.1',
-				port: '3000',
-				pathname: '/uploads/**',
-			},
+			...(apiImagePattern ? [apiImagePattern] : []),
 			{
 				protocol: 'https',
 				hostname: '24-7labs.com',

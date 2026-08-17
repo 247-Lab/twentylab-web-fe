@@ -125,7 +125,10 @@
 		"remove": "Eliminar",
 		"subtotal": "Subtotal",
 		"checkout": "Finalizar compra",
-		"continueShopping": "Seguir comprando"
+		"continueShopping": "Seguir comprando",
+		"quantity": "Cantidad: {count}",
+		"unavailableNotice": "La compra en línea no está disponible. Este carrito no muestra precios ni un total del pedido.",
+		"contactLabs": "Contactar a 24-7 Labs"
 	},
 	"CheckoutPage": {
 		"metadata": {
@@ -133,6 +136,11 @@
 			"description": "Revisa tus pruebas seleccionadas, aplica cupones de descuento y envia tu pedido con 24-7 Labs."
 		},
 		"title": "Finalizar compra",
+		"unavailableTitle": "La compra en línea no está disponible",
+		"unavailableMessage": "La compra en línea no está disponible temporalmente mientras se completan los controles de seguridad de pagos.",
+		"selectionStatus": "{count, plural, =0 {No se ha enviado ningún pedido y esta página no recopila información del cliente.} one {El servicio seleccionado permanecerá en el carrito de este navegador. No se ha enviado ningún pedido y esta página no recopila información del cliente.} other {Los # servicios seleccionados permanecerán en el carrito de este navegador. No se ha enviado ningún pedido y esta página no recopila información del cliente.}}",
+		"contactLabs": "Contactar a 24-7 Labs",
+		"returnToServices": "Volver a servicios de pruebas",
 		"subtitle": "Revisa tu pedido y completa tus datos de contacto y envio.",
 		"formTitle": "Informacion de contacto y envio",
 		"summaryTitle": "Resumen del pedido",

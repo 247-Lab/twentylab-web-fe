@@ -7,7 +7,6 @@ import { ArrowLeft } from 'lucide-react';
 import HtmlDescription from '@/components/common/HtmlDescription';
 import TestingServiceCard from '@/components/testing-services/components/TestingServiceCard';
 import { resolveImageUrl } from '@/lib/api';
-import { shouldBypassImageOptimization } from '@/lib/image';
 
 export default function CategoryDetailPage({ category, products = [] }) {
 	const t = useTranslations('CategoryDetailPage');
@@ -38,7 +37,6 @@ export default function CategoryDetailPage({ category, products = [] }) {
 									fill
 									className="object-cover"
 									sizes="(max-width: 1024px) 100vw, 50vw"
-									unoptimized={shouldBypassImageOptimization(resolvedCategoryImage)}
 									priority
 								/>
 							</div>

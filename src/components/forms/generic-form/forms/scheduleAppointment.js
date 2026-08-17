@@ -1,5 +1,5 @@
 import { submitAppointmentForm } from '@/lib/api';
-import { normalizePhone, safeT, toIsoDate } from '../utils';
+import { normalizeDateOnly, normalizePhone, safeT } from '../utils';
 
 export function createScheduleAppointmentConfig(t, optionSets) {
 	return {
@@ -45,6 +45,7 @@ export function createScheduleAppointmentConfig(t, optionSets) {
 						type: 'date',
 						label: safeT(t, 'common.fields.dateTime', 'Choose Date'),
 						required: true,
+						validation: 'date',
 					},
 					{
 						name: 'symptoms',
@@ -64,7 +65,7 @@ export function createScheduleAppointmentConfig(t, optionSets) {
 			emailaddress: values.email,
 			phonenumber: normalizePhone(values.phone),
 			symptoms_tests: values.symptoms,
-			datetime: toIsoDate(values.datetime),
+			datetime: normalizeDateOnly(values.datetime),
 			lablocation: values.location,
 		}),
 		submit: submitAppointmentForm,
