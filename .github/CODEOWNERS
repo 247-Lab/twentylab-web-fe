@@ -1,0 +1,6 @@
+# Company review is requested for every proposed change.
+* @thezach-png
+
+# CI and repository-governance changes require company review.
+.github/ @thezach-png
+
