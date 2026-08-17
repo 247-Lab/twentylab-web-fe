@@ -120,6 +120,21 @@ export default function FormFieldRenderer({ field, value, fieldError, values, t,
 				value={value}
 				error={fieldError}
 				clearLabel={safeT(t, 'common.clearSignature', 'Clear Signature')}
+				drawModeLabel={safeT(t, 'common.signature.drawMode', 'Draw signature')}
+				typeModeLabel={safeT(t, 'common.signature.typeMode', 'Type signature')}
+				typedNameLabel={safeT(t, 'common.signature.typedNameLabel', 'Full legal name')}
+				typedNameHelp={safeT(
+					t,
+					'common.signature.typedNameHelp',
+					'Typing your full legal name applies it as your electronic signature.'
+				)}
+				applyTypedLabel={safeT(t, 'common.signature.applyTyped', 'Apply typed signature')}
+				typedAppliedLabel={safeT(t, 'common.signature.typedApplied', 'Typed signature applied.')}
+				typedNameError={safeT(
+					t,
+					'common.signature.typedNameError',
+					'Enter your full legal name using 2 to 150 characters.'
+				)}
 				onChange={(nextValue) => onChange(field.name, nextValue)}
 			/>
 		);

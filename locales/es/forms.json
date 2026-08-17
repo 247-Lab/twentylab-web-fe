@@ -11,6 +11,15 @@
 			"lookupLoadError": "No se pudieron cargar las opciones del formulario.",
 			"agreeTo": "He leido y acepto.",
 			"clearSignature": "Limpiar firma",
+			"signature": {
+				"drawMode": "Dibujar firma",
+				"typeMode": "Escribir firma",
+				"typedNameLabel": "Nombre legal completo",
+				"typedNameHelp": "Escribir tu nombre legal completo lo aplica como tu firma electronica.",
+				"applyTyped": "Aplicar firma escrita",
+				"typedApplied": "Firma escrita aplicada.",
+				"typedNameError": "Ingresa tu nombre legal completo con 2 a 150 caracteres."
+			},
 			"declarationTitle": "Declaracion",
 			"termsTitle": "Terminos de servicio",
 			"noticeTitle": "Aviso importante",

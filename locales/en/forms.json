@@ -11,6 +11,15 @@
 			"lookupLoadError": "Failed to load form options.",
 			"agreeTo": "I have read and agree.",
 			"clearSignature": "Clear Signature",
+			"signature": {
+				"drawMode": "Draw signature",
+				"typeMode": "Type signature",
+				"typedNameLabel": "Full legal name",
+				"typedNameHelp": "Typing your full legal name applies it as your electronic signature.",
+				"applyTyped": "Apply typed signature",
+				"typedApplied": "Typed signature applied.",
+				"typedNameError": "Enter your full legal name using 2 to 150 characters."
+			},
 			"declarationTitle": "Declaration",
 			"termsTitle": "Terms of Service",
 			"noticeTitle": "Important Notice",
