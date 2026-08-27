@@ -6,10 +6,12 @@ import { useTranslations } from 'next-intl';
 import { Minus, Plus, ShoppingCart, Trash2, X } from 'lucide-react';
 import { useEffect } from 'react';
 import { useCart } from '@/components/cart/CartProvider';
+import { isPublicCheckoutEnabled } from '@/lib/checkout';
 
 export default function CartDrawer({ open, onClose }) {
 	const t = useTranslations('CartDrawer');
 	const { cart, removeFromCart, setQuantity } = useCart();
+	const checkoutEnabled = isPublicCheckoutEnabled();
 
 	useEffect(() => {
 		if (!open) {
@@ -134,17 +136,28 @@ export default function CartDrawer({ open, onClose }) {
 
 				{cart.items.length > 0 ? (
 					<footer className="border-t border-slate-200 bg-white/90 px-5 py-4">
-						<div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-							{t('unavailableNotice')}
-						</div>
+						{checkoutEnabled ? null : (
+							<div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+								{t('unavailableNotice')}
+							</div>
+						)}
 						<div className="grid gap-2 sm:grid-cols-2">
-							<Link
-								href="/contact"
-								onClick={onClose}
-								className="inline-flex items-center justify-center rounded-full bg-[var(--tl-primary)] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[var(--tl-primary-strong)]"
-							>
-								{t('contactLabs')}
-							</Link>
+							{checkoutEnabled ? (
+								<a
+									href="/checkout"
+									className="inline-flex items-center justify-center rounded-full bg-[var(--tl-primary)] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[var(--tl-primary-strong)]"
+								>
+									{t('checkout')}
+								</a>
+							) : (
+								<Link
+									href="/contact"
+									onClick={onClose}
+									className="inline-flex items-center justify-center rounded-full bg-[var(--tl-primary)] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[var(--tl-primary-strong)]"
+								>
+									{t('contactLabs')}
+								</Link>
+							)}
 							<button
 								type="button"
 								onClick={onClose}

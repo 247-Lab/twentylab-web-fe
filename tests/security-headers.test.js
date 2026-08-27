@@ -28,6 +28,32 @@ describe('security headers', () => {
 		expect(headers.has('Strict-Transport-Security')).toBe(false);
 	});
 
+	it('adds only the selected hosted payment script and frame origins when checkout is enabled', () => {
+		const sandbox = headerMap({
+			NODE_ENV: 'production',
+			NEXT_PUBLIC_MODE: 'prod',
+			NEXT_PUBLIC_PROD_API_URL: 'https://api.24-7labs.com',
+			NEXT_PUBLIC_CHECKOUT_ENABLED: 'true',
+			NEXT_PUBLIC_AUTHORIZE_NET_ENVIRONMENT: 'sandbox',
+			NEXT_PUBLIC_AUTHORIZE_NET_API_LOGIN_ID: 'synthetic-login',
+			NEXT_PUBLIC_AUTHORIZE_NET_CLIENT_KEY: 'synthetic-client-key',
+		});
+		const sandboxPolicy = sandbox.get('Content-Security-Policy');
+		expect(sandboxPolicy).toContain("script-src 'self' 'unsafe-inline' https://jstest.authorize.net");
+		expect(sandboxPolicy).toContain(
+			"frame-src 'self' https://maps.google.com https://www.google.com https://jstest.authorize.net"
+		);
+		expect(sandboxPolicy).not.toContain('https://js.authorize.net');
+
+		const disabledPolicy = headerMap({
+			NODE_ENV: 'production',
+			NEXT_PUBLIC_MODE: 'prod',
+			NEXT_PUBLIC_PROD_API_URL: 'https://api.24-7labs.com',
+			NEXT_PUBLIC_CHECKOUT_ENABLED: 'false',
+		}).get('Content-Security-Policy');
+		expect(disabledPolicy).not.toContain('authorize.net');
+	});
+
 	it('derives the Next image host from the configured API', () => {
 		expect(
 			buildApiImagePattern({
@@ -62,6 +88,23 @@ describe('security headers', () => {
 			})
 		).not.toThrow();
 		expect(() => validatePublicBuildConfig({ NEXT_PUBLIC_MODE: 'preview' })).toThrow('dev or prod');
+		expect(() =>
+			validatePublicBuildConfig({
+				NEXT_PUBLIC_MODE: 'prod',
+				NEXT_PUBLIC_PROD_API_URL: 'https://api.24-7labs.com',
+				NEXT_PUBLIC_SITE_URL: 'https://24-7labs.com',
+				NEXT_PUBLIC_CHECKOUT_ENABLED: 'yes',
+			})
+		).toThrow('true or false');
+		expect(() =>
+			validatePublicBuildConfig({
+				NEXT_PUBLIC_MODE: 'prod',
+				NEXT_PUBLIC_PROD_API_URL: 'https://api.24-7labs.com',
+				NEXT_PUBLIC_SITE_URL: 'https://24-7labs.com',
+				NEXT_PUBLIC_CHECKOUT_ENABLED: 'true',
+				NEXT_PUBLIC_AUTHORIZE_NET_ENVIRONMENT: 'production',
+			})
+		).toThrow('API_LOGIN_ID');
 
 		for (const value of [
 			'https://api.24-7labs.com/v1',

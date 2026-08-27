@@ -58,6 +58,112 @@ function withJsonOptions(body) {
 	};
 }
 
+async function parsePublicJsonResponse(response) {
+	let payload = null;
+	try {
+		payload = await response.json();
+	} catch {
+		payload = null;
+	}
+	return { response, payload };
+}
+
+export class PublicApiError extends Error {
+	constructor(message, status) {
+		super(message);
+		this.name = 'PublicApiError';
+		this.status = status;
+	}
+}
+
+export async function createCheckoutCapability(payload, fetchImplementation = fetch) {
+	const { response, payload: responsePayload } = await parsePublicJsonResponse(
+		await fetchImplementation(`${ENDPOINTS.PAYMENT}/checkout`, {
+			...withJsonOptions(payload),
+			cache: 'no-store',
+			credentials: 'omit',
+			referrerPolicy: 'no-referrer',
+		})
+	);
+
+	if (!response.ok) {
+		throw new PublicApiError(responsePayload?.error || 'Checkout is temporarily unavailable', response.status);
+	}
+	const data = responsePayload?.data;
+	const validItems =
+		Array.isArray(data?.items) &&
+		data.items.length >= 1 &&
+		data.items.every(
+			(item) =>
+				Number.isSafeInteger(item?.productId) &&
+				item.productId > 0 &&
+				Number.isSafeInteger(item?.quantity) &&
+				item.quantity >= 1 &&
+				item.quantity <= 100 &&
+				Number.isSafeInteger(item?.unitPriceCents) &&
+				item.unitPriceCents >= 1 &&
+				Number.isSafeInteger(item?.lineTotalCents) &&
+				item.lineTotalCents === item.unitPriceCents * item.quantity
+		);
+	if (
+		response.status !== 201 ||
+		responsePayload?.success !== true ||
+		typeof data?.checkoutToken !== 'string' ||
+		!/^[A-Za-z0-9_-]{43}$/.test(data.checkoutToken) ||
+		!Number.isSafeInteger(data.amountCents) ||
+		data.amountCents < 1 ||
+		data.currency !== 'USD' ||
+		!validItems ||
+		!Number.isFinite(Date.parse(data.expiresAt))
+	) {
+		throw new PublicApiError('Checkout returned an invalid response', 502);
+	}
+	return Object.freeze({
+		checkoutToken: data.checkoutToken,
+		expiresAt: data.expiresAt,
+		amountCents: data.amountCents,
+		currency: data.currency,
+		items: data.items,
+	});
+}
+
+export async function processCheckoutPayment(payload, fetchImplementation = fetch) {
+	const { response, payload: responsePayload } = await parsePublicJsonResponse(
+		await fetchImplementation(`${ENDPOINTS.PAYMENT}/process`, {
+			...withJsonOptions(payload),
+			cache: 'no-store',
+			credentials: 'omit',
+			referrerPolicy: 'no-referrer',
+		})
+	);
+
+	if (
+		response.status === 200 &&
+		responsePayload?.success === true &&
+		Number.isSafeInteger(responsePayload?.data?.orderId) &&
+		responsePayload.data.orderId > 0 &&
+		responsePayload.data.status === 'processing'
+	) {
+		return Object.freeze({ outcome: 'succeeded', orderId: responsePayload.data.orderId });
+	}
+	if (
+		response.status === 402 &&
+		responsePayload?.success === false &&
+		responsePayload?.error === 'Payment was declined'
+	) {
+		return Object.freeze({ outcome: 'declined' });
+	}
+	if (
+		response.status === 202 &&
+		responsePayload?.success === false &&
+		responsePayload?.error === 'Payment is being confirmed. Do not retry.'
+	) {
+		return Object.freeze({ outcome: 'confirmation_required' });
+	}
+
+	throw new PublicApiError(responsePayload?.error || 'Payment processing is temporarily unavailable', response.status);
+}
+
 function withFormSubmissionOptions(formType, payload) {
 	return {
 		...withJsonOptions({

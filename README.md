@@ -39,3 +39,10 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 Deploy only an image that passed the required `Frontend Fast Checks` branch-protection check. Public `NEXT_PUBLIC_*` values are embedded at build time and must never contain secrets.
 
 Before production DNS cutover, complete the source-backed legacy URL inventory and validation gate in `docs/legacy-url-cutover.md`; the small checked-in redirect list is intentionally not presented as complete.
+
+Checkout remains off unless the production image is explicitly built with
+`NEXT_PUBLIC_CHECKOUT_ENABLED=true` and the selected Authorize.Net environment,
+API Login ID, and Public Client Key. Those values are public browser
+configuration; the Authorize.Net Transaction Key remains backend-only. Enabling
+the storefront does not override the backend payment kill switches or the
+required controlled production acceptance test.

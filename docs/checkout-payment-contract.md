@@ -1,15 +1,31 @@
 # Checkout payment contract
 
-Online checkout is deliberately disabled in this branch. The page does not load
-Authorize.Net, collect card fields, create an order, or call the payment API.
-This matches the backend's fail-closed `503` payment endpoint.
+Checkout is implemented but remains deliberately default-off. With
+`NEXT_PUBLIC_CHECKOUT_ENABLED` absent or `false`, the cart presents the existing
+unavailable message, the checkout page collects no customer information, and no
+Authorize.Net script or payment endpoint is used.
 
-Do not re-enable checkout until the backend owns all pricing, returns a
-high-entropy customer checkout token rather than relying on an integer order ID,
-requires a server-enforced idempotency key, persists payment-attempt states before
-the gateway call, uniquely records provider transaction IDs, and has a tested
-reconciliation path for provider-success/database-failure. Coupon use and order
-notifications must be finalized only after confirmed payment.
+The enabled flow is two-stage:
 
-The production merchant account, webhook/signature contract, refund procedure,
-and sandbox-to-production owner approval also remain external launch gates.
+1. The storefront submits contact, appointment, coupon ID, and numeric product
+   quantities to `/api/payment/checkout`. The backend validates the input,
+   calculates authoritative pricing, and returns a short-lived capability.
+2. Authorize.Net AcceptUI collects card number, expiration, and security code in
+   its hosted form. The storefront sends only the returned one-time nonce, the
+   capability, and one UUID idempotency key to `/api/payment/process`.
+
+The browser never calculates the charge amount, sends raw card data to the
+application, or creates a separate order after payment. A decline permits a new
+payment attempt. Any ambiguous response blocks retry and tells the customer to
+contact 24-7 Labs while backend reconciliation determines the authoritative
+outcome. The capability and nonce remain in memory and expire.
+
+The production image must select exactly one Authorize.Net browser environment;
+the content-security policy then allows only that environment's AcceptUI script
+and hosted iframe origin. The API Login ID and Public Client Key are public
+browser configuration. Transaction credentials remain backend-only.
+
+Production stays disabled until the merchant configuration, webhook and
+transaction-detail reconciliation, adjustment controls, outbox delivery, and
+the controlled production payment/void-or-refund test all pass. The storefront
+flag and backend checkout/payment flags are independent kill switches.
