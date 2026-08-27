@@ -1,0 +1,201 @@
+name: Publish immutable production image
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact current main SHA that passed Frontend Fast Checks
+        required: true
+        type: string
+      ci_run_id:
+        description: Successful main-push Frontend Fast Checks run ID for source_sha
+        required: true
+        type: string
+      confirm_publish:
+        description: Publish this reviewed, checkout-disabled image without deploying it
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  actions: read
+  contents: read
+  id-token: write
+
+concurrency:
+  group: 24-7labs-storefront-production-artifact
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: >-
+      ${{ vars.AWS_ARTIFACT_PUBLISH_ENABLED == 'true' &&
+          inputs.confirm_publish &&
+          github.repository == '247-Lab/twentylab-web-fe' &&
+          github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-24.04-arm
+    environment: production-artifact
+    timeout-minutes: 35
+    env:
+      COMPONENT: storefront
+      ECR_REPOSITORY: 24-7labs-production/web
+      CI_WORKFLOW_PATH: .github/workflows/ci.yml
+      CI_WORKFLOW_NAME: Frontend Fast Checks
+      LOCAL_IMAGE: 24-7labs-storefront-production:${{ inputs.source_sha }}
+      SOURCE_SHA: ${{ inputs.source_sha }}
+      CI_RUN_ID: ${{ inputs.ci_run_id }}
+      SYFT_IMAGE: anchore/syft:v1.38.0@sha256:825cad3a952c87676a6d07e9a3bb05ac9c401d598360070e970aa46d54c1727e
+      TRIVY_IMAGE: aquasec/trivy:0.68.2@sha256:05d0126976bdedcd0782a0336f77832dbea1c81b9cc5e4b3a5ea5d2ec863aca7
+    steps:
+      - name: Check out exact source revision
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.source_sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify current main and successful exact-SHA CI before AWS credentials
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$CI_RUN_ID" =~ ^[1-9][0-9]*$ ]]
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/commits/main" --jq .sha)" = "$SOURCE_SHA"
+
+          run_file="$(mktemp)"
+          artifacts_file="$(mktemp)"
+          trap 'rm -f -- "$run_file" "$artifacts_file"' EXIT
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${CI_RUN_ID}" > "$run_file"
+          jq --exit-status \
+            --arg repository "$GITHUB_REPOSITORY" \
+            --arg source_sha "$SOURCE_SHA" \
+            --arg workflow_path "$CI_WORKFLOW_PATH" \
+            --arg workflow_name "$CI_WORKFLOW_NAME" '
+              .repository.full_name == $repository and
+              .head_repository.full_name == $repository and
+              .head_sha == $source_sha and
+              .head_branch == "main" and
+              .event == "push" and
+              .path == $workflow_path and
+              .name == $workflow_name and
+              .status == "completed" and
+              .conclusion == "success"
+            ' "$run_file" >/dev/null
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${CI_RUN_ID}/artifacts?per_page=100" > "$artifacts_file"
+          jq --exit-status --arg name "container-security-${SOURCE_SHA}" '
+            [.artifacts[] | select(.name == $name and .expired == false and .size_in_bytes > 0)] | length == 1
+          ' "$artifacts_file" >/dev/null
+
+      - name: Build exact checkout-disabled production image
+        run: >-
+          docker build
+          --build-arg NEXT_PUBLIC_MODE=prod
+          --build-arg NEXT_PUBLIC_PROD_API_URL=https://24-7labs.com
+          --build-arg NEXT_PUBLIC_SITE_URL=https://24-7labs.com
+          --build-arg NEXT_PUBLIC_CHECKOUT_ENABLED=false
+          --tag "$LOCAL_IMAGE" .
+
+      - name: Generate SBOM and scan exact image
+        shell: bash
+        run: |
+          set -euo pipefail
+          report_dir="${RUNNER_TEMP}/production-image-evidence"
+          trivy_cache="${RUNNER_TEMP}/trivy-cache"
+          mkdir -p "$report_dir" "$trivy_cache"
+          docker run --rm \
+            --volume /var/run/docker.sock:/var/run/docker.sock:ro \
+            "$SYFT_IMAGE" scan "docker:${LOCAL_IMAGE}" --output cyclonedx-json \
+            > "${report_dir}/container-sbom.cdx.json"
+          test -s "${report_dir}/container-sbom.cdx.json"
+          docker run --rm \
+            --volume /var/run/docker.sock:/var/run/docker.sock:ro \
+            --volume "${report_dir}:/reports" \
+            --volume "${trivy_cache}:/root/.cache/trivy" \
+            "$TRIVY_IMAGE" image --scanners vuln --format json \
+            --output /reports/container-scan.json "$LOCAL_IMAGE"
+          docker run --rm \
+            --volume /var/run/docker.sock:/var/run/docker.sock:ro \
+            --volume "${trivy_cache}:/root/.cache/trivy" \
+            "$TRIVY_IMAGE" image --scanners vuln --skip-db-update \
+            --severity HIGH,CRITICAL --exit-code 1 "$LOCAL_IMAGE"
+
+      - name: Configure repository-scoped artifact publisher
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ARTIFACT_PUBLISH_ROLE_ARN }}
+          aws-region: us-east-1
+          allowed-account-ids: ${{ vars.AWS_ACCOUNT_ID }}
+          mask-aws-account-id: true
+
+      - name: Publish one immutable image and verify registry scan
+        shell: bash
+        env:
+          EXPECTED_AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          [[ "$EXPECTED_AWS_ACCOUNT_ID" =~ ^[0-9]{12}$ ]]
+          test "$EXPECTED_AWS_ACCOUNT_ID" != "958126466188"
+          test "$(aws sts get-caller-identity --query Account --output text)" = "$EXPECTED_AWS_ACCOUNT_ID"
+          image_tag="sha-${SOURCE_SHA}"
+          existing_json="$(mktemp)"
+          existing_error="$(mktemp)"
+          scan_file="$(mktemp)"
+          trap 'rm -f -- "$existing_json" "$existing_error" "$scan_file"' EXIT
+          if aws ecr describe-images --repository-name "$ECR_REPOSITORY" \
+            --image-ids "imageTag=${image_tag}" --output json > "$existing_json" 2> "$existing_error"; then
+            echo '::error::The immutable source tag already exists. Use its reviewed digest; do not republish it.'
+            exit 1
+          fi
+          grep --quiet 'ImageNotFoundException' "$existing_error"
+
+          registry="${EXPECTED_AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com"
+          image_uri="${registry}/${ECR_REPOSITORY}:${image_tag}"
+          aws ecr get-login-password | docker login --username AWS --password-stdin "$registry"
+          docker tag "$LOCAL_IMAGE" "$image_uri"
+          docker push "$image_uri"
+          digest="$(aws ecr describe-images --repository-name "$ECR_REPOSITORY" \
+            --image-ids "imageTag=${image_tag}" --query 'imageDetails[0].imageDigest' --output text)"
+          [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          aws ecr wait image-scan-complete --repository-name "$ECR_REPOSITORY" \
+            --image-id "imageDigest=${digest}"
+          aws ecr describe-image-scan-findings --repository-name "$ECR_REPOSITORY" \
+            --image-id "imageDigest=${digest}" --output json > "$scan_file"
+          jq --exit-status '
+            .imageScanStatus.status == "COMPLETE" and
+            ((.imageScanFindings.findingSeverityCounts.HIGH // 0) == 0) and
+            ((.imageScanFindings.findingSeverityCounts.CRITICAL // 0) == 0)
+          ' "$scan_file" >/dev/null
+
+          report_dir="${RUNNER_TEMP}/production-image-evidence"
+          jq -n --arg component "$COMPONENT" --arg source_sha "$SOURCE_SHA" \
+            --arg image_digest "$digest" --argjson ci_run_id "$CI_RUN_ID" \
+            --arg published_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" '
+              {
+                schema_version: 1,
+                component: $component,
+                source_sha: $source_sha,
+                image_digest: $image_digest,
+                ci_run_id: $ci_run_id,
+                published_at: $published_at,
+                registry_scan: {status: "COMPLETE", high: 0, critical: 0},
+                build_configuration: {checkout_enabled: false},
+                runtime_activation: {performed: false},
+                published: true,
+                deployed: false
+              }
+            ' > "${report_dir}/production-image-receipt.json"
+          sha256sum "${report_dir}/container-sbom.cdx.json" \
+            "${report_dir}/container-scan.json" \
+            "${report_dir}/production-image-receipt.json" \
+            > "${report_dir}/production-image-evidence.sha256"
+
+      - name: Upload immutable publication evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: production-image-storefront-${{ inputs.source_sha }}
+          path: ${{ runner.temp }}/production-image-evidence
+          if-no-files-found: error
+          retention-days: 90
