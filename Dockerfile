@@ -13,10 +13,18 @@ ARG NEXT_PUBLIC_MODE=prod
 ARG NEXT_PUBLIC_DEV_API_URL
 ARG NEXT_PUBLIC_PROD_API_URL
 ARG NEXT_PUBLIC_SITE_URL
+ARG NEXT_PUBLIC_CHECKOUT_ENABLED=false
+ARG NEXT_PUBLIC_AUTHORIZE_NET_ENVIRONMENT
+ARG NEXT_PUBLIC_AUTHORIZE_NET_API_LOGIN_ID
+ARG NEXT_PUBLIC_AUTHORIZE_NET_CLIENT_KEY
 ENV NEXT_PUBLIC_MODE=$NEXT_PUBLIC_MODE \
     NEXT_PUBLIC_DEV_API_URL=$NEXT_PUBLIC_DEV_API_URL \
     NEXT_PUBLIC_PROD_API_URL=$NEXT_PUBLIC_PROD_API_URL \
-    NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+    NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL \
+    NEXT_PUBLIC_CHECKOUT_ENABLED=$NEXT_PUBLIC_CHECKOUT_ENABLED \
+    NEXT_PUBLIC_AUTHORIZE_NET_ENVIRONMENT=$NEXT_PUBLIC_AUTHORIZE_NET_ENVIRONMENT \
+    NEXT_PUBLIC_AUTHORIZE_NET_API_LOGIN_ID=$NEXT_PUBLIC_AUTHORIZE_NET_API_LOGIN_ID \
+    NEXT_PUBLIC_AUTHORIZE_NET_CLIENT_KEY=$NEXT_PUBLIC_AUTHORIZE_NET_CLIENT_KEY
 RUN node --input-type=module -e "import('./config/securityHeaders.mjs').then(({validatePublicBuildConfig}) => validatePublicBuildConfig())" \
     && npm run build \
     && npm run verify:client-config \
@@ -34,7 +42,8 @@ ENV HOSTNAME=0.0.0.0 \
     NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=4000
-RUN rm -rf /usr/local/lib/node_modules/npm \
+RUN apk upgrade --no-cache libcrypto3 libssl3 \
+    && rm -rf /usr/local/lib/node_modules/npm \
     && rm -f /usr/local/bin/npm /usr/local/bin/npx \
     && addgroup --system --gid 1001 nodejs \
     && adduser --system --uid 1001 nextjs

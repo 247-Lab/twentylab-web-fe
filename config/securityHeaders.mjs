@@ -8,21 +8,61 @@ function httpOrigin(value) {
 	}
 }
 
+const AUTHORIZE_NET_BROWSER_ORIGINS = Object.freeze({
+	sandbox: 'https://jstest.authorize.net',
+	production: 'https://js.authorize.net',
+});
+
+function publicValue(environment, name) {
+	const value = environment[name];
+	if (typeof value !== 'string' || !value.trim() || value.length > 256 || /[\u0000-\u001f\u007f]/u.test(value)) {
+		throw new Error(`${name} must be a non-empty public browser value`);
+	}
+	return value.trim();
+}
+
+export function resolveAuthorizeNetBrowserConfig(environment = process.env) {
+	const enabled = environment.NEXT_PUBLIC_CHECKOUT_ENABLED;
+	if (enabled !== undefined && enabled !== 'false' && enabled !== 'true') {
+		throw new Error('NEXT_PUBLIC_CHECKOUT_ENABLED must be true or false');
+	}
+	if (enabled !== 'true') return Object.freeze({ enabled: false });
+
+	const origin = AUTHORIZE_NET_BROWSER_ORIGINS[environment.NEXT_PUBLIC_AUTHORIZE_NET_ENVIRONMENT];
+	if (!origin) {
+		throw new Error('NEXT_PUBLIC_AUTHORIZE_NET_ENVIRONMENT must be sandbox or production');
+	}
+	return Object.freeze({
+		enabled: true,
+		environment: environment.NEXT_PUBLIC_AUTHORIZE_NET_ENVIRONMENT,
+		origin,
+		apiLoginId: publicValue(environment, 'NEXT_PUBLIC_AUTHORIZE_NET_API_LOGIN_ID'),
+		clientKey: publicValue(environment, 'NEXT_PUBLIC_AUTHORIZE_NET_CLIENT_KEY'),
+	});
+}
+
 export function buildSecurityHeaders(environment = process.env) {
 	const isDevelopment = environment.NODE_ENV === 'development' || environment.NEXT_PUBLIC_MODE === 'dev';
 	const apiUrl =
 		environment.NEXT_PUBLIC_MODE === 'dev' ? environment.NEXT_PUBLIC_DEV_API_URL : environment.NEXT_PUBLIC_PROD_API_URL;
 	const apiOrigin = httpOrigin(apiUrl);
+	const payment = resolveAuthorizeNetBrowserConfig(environment);
 	const connectSources = ["'self'", apiOrigin].filter(Boolean).join(' ');
 	const imageSources = ["'self'", 'blob:', 'data:', apiOrigin, 'https://24-7labs.com'].filter(Boolean).join(' ');
+	const scriptSources = ["'self'", "'unsafe-inline'", isDevelopment ? "'unsafe-eval'" : null, payment.origin]
+		.filter(Boolean)
+		.join(' ');
+	const frameSources = ["'self'", 'https://maps.google.com', 'https://www.google.com', payment.origin]
+		.filter(Boolean)
+		.join(' ');
 	const directives = [
 		"default-src 'self'",
-		`script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ''}`,
+		`script-src ${scriptSources}`,
 		"style-src 'self' 'unsafe-inline'",
 		`img-src ${imageSources}`,
 		"font-src 'self' data:",
 		`connect-src ${connectSources}`,
-		"frame-src 'self' https://maps.google.com https://www.google.com",
+		`frame-src ${frameSources}`,
 		"object-src 'none'",
 		"base-uri 'self'",
 		"form-action 'self'",
@@ -81,4 +121,5 @@ export function validatePublicBuildConfig(environment = process.env) {
 			throw new Error(`${name} must use HTTPS (HTTP is allowed only for loopback development or smoke tests)`);
 		}
 	}
+	resolveAuthorizeNetBrowserConfig(environment);
 }

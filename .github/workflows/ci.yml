@@ -22,6 +22,7 @@ jobs:
       NEXT_PUBLIC_MODE: prod
       NEXT_PUBLIC_PROD_API_URL: http://127.0.0.1:9
       NEXT_PUBLIC_SITE_URL: https://24-7labs.com
+      NEXT_PUBLIC_CHECKOUT_ENABLED: 'false'
       CONTAINER_IMAGE: twentylab-web-fe:${{ github.sha }}
       SYFT_IMAGE: anchore/syft:v1.38.0@sha256:825cad3a952c87676a6d07e9a3bb05ac9c401d598360070e970aa46d54c1727e
       TRIVY_IMAGE: aquasec/trivy:0.68.2@sha256:05d0126976bdedcd0782a0336f77832dbea1c81b9cc5e4b3a5ea5d2ec863aca7
@@ -79,6 +80,19 @@ jobs:
           npm run build
           npm run verify:client-config
 
+      - name: Build and verify synthetic enabled-checkout browser configuration
+        shell: bash
+        env:
+          NEXT_PUBLIC_CHECKOUT_ENABLED: 'true'
+          NEXT_PUBLIC_AUTHORIZE_NET_ENVIRONMENT: sandbox
+          NEXT_PUBLIC_AUTHORIZE_NET_API_LOGIN_ID: synthetic-public-login
+          NEXT_PUBLIC_AUTHORIZE_NET_CLIENT_KEY: synthetic-public-client-key
+        run: |
+          set -euo pipefail
+          rm -rf .next
+          npm run build
+          npm run verify:client-config
+
       - name: Audit all dependencies
         run: npm run audit
 
@@ -92,6 +106,7 @@ jobs:
           --build-arg NEXT_PUBLIC_MODE=prod
           --build-arg NEXT_PUBLIC_PROD_API_URL=http://127.0.0.1:9
           --build-arg NEXT_PUBLIC_SITE_URL=https://24-7labs.com
+          --build-arg NEXT_PUBLIC_CHECKOUT_ENABLED=false
           --tag "$CONTAINER_IMAGE" .
 
       - name: Generate container SBOM
