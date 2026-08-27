@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { cwd } from 'node:process';
 import { describe, expect, it } from 'vitest';
 
-const workflow = readFileSync(join(process.cwd(), '.github', 'workflows', 'publish-production-image.yml'), 'utf8');
+const workflow = readFileSync(join(cwd(), '.github', 'workflows', 'publish-production-image.yml'), 'utf8');
 
 describe('immutable production image publisher', () => {
 	it('is default-off, protected, current-main, and CI-bound', () => {
