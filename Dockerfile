@@ -42,7 +42,8 @@ ENV HOSTNAME=0.0.0.0 \
     NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=4000
-RUN rm -rf /usr/local/lib/node_modules/npm \
+RUN apk upgrade --no-cache libcrypto3 libssl3 \
+    && rm -rf /usr/local/lib/node_modules/npm \
     && rm -f /usr/local/bin/npm /usr/local/bin/npx \
     && addgroup --system --gid 1001 nodejs \
     && adduser --system --uid 1001 nextjs
