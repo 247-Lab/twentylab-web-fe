@@ -1,5 +1,6 @@
 import { fetchBlogs, fetchCategories, fetchProducts } from '@/lib/api';
 import { toCanonicalBlogPath } from '@/lib/blogRoutes';
+import { toProductDetailPath } from '@/lib/productRoutes';
 import { INDEXABLE_STATIC_ROUTES } from '@/lib/publicRoutes';
 import { toSitemapEntry } from '@/lib/sitemap';
 
@@ -14,7 +15,11 @@ export default async function sitemap() {
 	for (const { path } of INDEXABLE_STATIC_ROUTES) entries.set(path, toSitemapEntry(path));
 
 	for (const product of products || []) {
-		entries.set(`/testing-services/${product.id}`, toSitemapEntry(`/testing-services/${product.id}`));
+		const path = toProductDetailPath(product.id);
+		entries.set(
+			path,
+			toSitemapEntry(path, product.updated_at || product.updatedAt || product.created_at || product.createdAt)
+		);
 	}
 
 	for (const category of categories || []) {

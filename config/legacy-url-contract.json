@@ -458,6 +458,410 @@
 			"destination": "/privacy-policy"
 		},
 		{
+			"path": "/product/a-b-hiv/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/amylase-serum/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/anemia-panel/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/anti-extractable-nuclear-a-g/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/antinuclear-antibody-ana/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/basic-food-panel/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/basic-sexual-health-panel/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/basic-wellness/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/blood-10-panel-drug-test/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/blood-5-panel-drug-test/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/blood-etg/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/booking-consultation/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/c-reactive-protein-crp/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/cancer-antigen-125-ca-125/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/candida-virus-a-b-igg/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/carcinoembryonic-antigen-cea/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/cardiac-risk-and-heart-health-panel/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/celiac-disease-a-b-screen/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/chlamydia/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/coc-12-panel-drug-test/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/coc-5-panel-drug-test/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/coenzyme-q10/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/complete-blood-count-cbc/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/comprehensive-combination-allergy-panel/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/comprehensive-metabolic-panel-cmp/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/comprehensive-testing-panel/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/comprehensive-thyroid-wellness-panel/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/cortisol/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/covid-19-pcr/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/cyclic-citrullinated-peptide-antibody-ccp/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/diabetes-panels/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/dot-drug-test/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/epstein-barr-virus-ebv-antibodies-to-early-antigen-igg/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/estradiol/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/estrogen-total/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/extractable-nuclear-antigen-antibodies-anti-ssa-anti-ssb/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/family-health-pack/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/fatigue-health-check/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/ferritin/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/fibrinogen/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/follicle-stimulating-hormone-fsh/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/free-thyroxine-free-t4/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/free-triiodothyronine-free-t3/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/fribromyalgia-health-screen-check-up/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/gonorrhea/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/growth-hormones/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/hair-5-panel-drug-test/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/hair-etg/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/hcg-qualitative-quantitative-pregnancy/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/hepatitis-a-hep-a/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/hepatitis-b-surface-antigen-hep-b/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/hepatitis-c-hep-c/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/herpes/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/high-sensativity-cardiac-risk/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/hla-b27-antigen/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/homocysteine-plasma/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/immunization-vaccination-panel/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/immunoglobulins-iga-igg/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/informational-dna/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/instant-10-13-panel-drug-test-alcohol/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/instant-12-panel-drug-test/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/instant-5-panel-drug-test-alcohol/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/instant-5-panel-drug-test/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/k2-spice-designer-testing-panel/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/legal-dna/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/lipase/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/lipid-profile/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/lyme-disease-a-b-quantitative-igm/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/magnesium-serum/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/male-cancer-and-tumor-marker-panel/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/male-health-panels/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/menopause-screening-health-check-up/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/mma-fighters-panel/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/mold-panel-24-allergens/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/osteoporosis-health-screen/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/parasite-examination-op/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/partial-thromboplastin-time-prothrombin-test-ptt-pt/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/pediatric-panel/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/physical-screening/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/prothrombin-time-international-normalized-ratio-pt-inr/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/regional-environmental-panel/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/renal-function-test/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/rheumatoid-factor/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/semen-analysis/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/sexual-health-panels/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/syphilis/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/testosterone-total-test/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/throat-culture-strep-test/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/thyroglobulin-tgb/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/thyroid-panel/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/thyroid-peroxidase-antibody-tpo/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/transferrin-serum/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/trichomonas/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/troponin-heart-protein-test/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/uric-acid/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/urine-etg/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/varicella-zoster-v-a-b-igg/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/vitamin-b12-folate/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/vitamin-d25/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/womens-cancer-tumor-maker-panel/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/product/womens-health/",
+			"disposition": "preserve"
+		},
+		{
 			"path": "/revolutionizing-sexual-health/",
 			"disposition": "redirect",
 			"destination": "/revolutionizing-sexual-health"

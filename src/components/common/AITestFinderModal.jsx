@@ -8,6 +8,7 @@ import { ArrowLeft, Sparkles, X } from 'lucide-react';
 import { TEST_FINDER_TREE } from '@/components/common/ai-test-finder/tree';
 import useRecommendedProducts from '@/components/common/ai-test-finder/useRecommendedProducts';
 import { getCurrentLocale, getLabel } from '@/components/common/ai-test-finder/utils';
+import { toProductDetailPath } from '@/lib/productRoutes';
 
 export default function AITestFinderModal({ isOpen, onClose }) {
 	const t = useTranslations('AITestFinderModal');
@@ -332,7 +333,7 @@ export default function AITestFinderModal({ isOpen, onClose }) {
 								</div>
 								<div className="w-full sm:w-auto">
 									<Link
-										href={`/testing-services/${product.id}`}
+										href={toProductDetailPath(product.id)}
 										onClick={resetAndClose}
 										className="inline-flex w-full items-center justify-center rounded-full bg-[var(--tl-primary)] px-4 py-2.5 text-xs font-bold tracking-wide text-white uppercase transition hover:bg-[var(--tl-primary-strong)] sm:w-auto sm:min-w-[132px]"
 									>

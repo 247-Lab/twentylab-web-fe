@@ -12,9 +12,20 @@ The July 21 final database snapshot contains 129 active blog rows. Its 129 slugs
 
 Sixteen additional paths are source-backed exact route matches: the home page plus 15 existing application routes whose legacy form differs only by the trailing slash. The home page is preserved and the 15 trailing-slash paths are classified as one-hop redirects to the same route without the slash. No semantic alias was inferred for this set.
 
-The remaining 131 page paths are intentionally unclassified. They include 105 product paths and 26 aliased, form, commerce, policy, or retired paths. The final snapshot has product IDs but no authoritative legacy product-slug field, so product routes must remain blocked until a reviewed slug-to-imported-ID mapping is supplied or independently proven. Aliased and retired paths still require explicit destination or `410` review; similar names alone are not approval.
+The product-route evidence pipeline independently binds the 105 public WordPress product paths to the July 21 final database snapshot. `npm run capture:legacy-product-routes` accepts a catalog-only JSON projection on standard input, fetches the fixed public product URLs with redirects disabled, extracts the single Product JSON-LD record, and matches only an exact normalized English name to one published and visible imported product. The output is `config/legacy-product-route-evidence.json`, bound to both the sitemap source-set checksum and final database SHA-256. It contains public product facts only; no users, forms, orders, or customer data are queried or stored.
 
-The redirects in `config/legacyRedirects.mjs` are limited to paths already verified by the transfer team. They are not a complete inventory of the current WordPress site.
+`npm run apply:legacy-product-routes` validates that evidence, updates the URL contract, and regenerates the runtime product-route module. The current evidence binds 101 stable product paths to unique imported product IDs. Those exact WordPress paths remain canonical and serve the imported product directly; internal numeric links for the same products permanently canonicalize back to the stable slug. Four paths remain unresolved and are deliberately not routed because the evidence is absent or ambiguous:
+
+- `/product/basic-combination-allergy-panel/`
+- `/product/expanded-food-panel-90-foods-food-additives/`
+- `/product/hair-10-panel-drug-test/`
+- `/product/prolactin/`
+
+Four otherwise exact identity matches have a changed final-catalog price; that drift is recorded in the evidence rather than used as a slug-matching signal. The imported catalog remains authoritative for the destination price.
+
+Thirty page paths remain intentionally unclassified: the four unresolved product paths plus 26 aliased, form, commerce, policy, or retired paths. Aliased and retired paths still require explicit destination or owner-approved `410` review; similar names alone are not approval.
+
+Runtime canonicalization is resolved by `src/proxy.js` after `skipTrailingSlashRedirect` disables Next.js's automatic pre-routing slash redirect. This prevents the previous `/shop/` → `/shop` → `/testing-services` chain. Known aliases, no-slash or numeric variants of verified product routes, transferred `/blogs/<slug>` paths, and ordinary trailing-slash canonicalization now share one resolver that preserves the query string and emits one permanent `308`. The canonical legacy product path itself is not redirected. The checked-in `npm run smoke:canonical-redirects` command starts the compiled storefront, verifies representative one-hop and preserved-product responses with redirect following disabled, and terminates its exact child process.
 
 Production DNS must not move until an owner captures and reviews a source-backed URL inventory from all of the following:
 

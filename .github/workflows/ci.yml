@@ -79,6 +79,7 @@ jobs:
           rm -rf .next
           npm run build
           npm run verify:client-config
+          npm run smoke:canonical-redirects
 
       - name: Build and verify synthetic enabled-checkout browser configuration
         shell: bash
