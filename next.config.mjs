@@ -1,7 +1,12 @@
 /** @type {import('next').NextConfig} */
 
 import createNextIntlPlugin from 'next-intl/plugin';
-import { buildApiImagePattern, buildSecurityHeaders, validatePublicBuildConfig } from './config/securityHeaders.mjs';
+import {
+	buildApiImagePattern,
+	buildSecurityHeaders,
+	usesUnoptimizedImages,
+	validatePublicBuildConfig,
+} from './config/securityHeaders.mjs';
 
 validatePublicBuildConfig();
 const apiImagePattern = buildApiImagePattern();
@@ -20,9 +25,9 @@ const nextConfig = {
 		];
 	},
 	images: {
-		// Synthetic images use browser-loopback media URLs that are not reachable
-		// from the optimizer process inside the storefront container.
-		unoptimized: process.env.NEXT_PUBLIC_MODE === 'dev',
+		// The optimizer cannot forward the browser's private-preview session. Let
+		// the browser request same-origin media directly through the protected edge.
+		unoptimized: usesUnoptimizedImages(),
 		minimumCacheTTL: 86400,
 		remotePatterns: [
 			...(apiImagePattern ? [apiImagePattern] : []),

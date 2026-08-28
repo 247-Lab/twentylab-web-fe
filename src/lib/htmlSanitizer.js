@@ -3,6 +3,7 @@
  */
 
 import sanitizeHtmlLibrary from 'sanitize-html';
+import { normalizeSameOriginMediaUrl } from './api';
 
 const ALLOWED_TAGS = [
 	'a',
@@ -60,6 +61,10 @@ export function sanitizeCmsHtml(html) {
 		},
 		allowProtocolRelative: false,
 		transformTags: {
+			img: (tagName, attribs) => ({
+				tagName,
+				attribs: { ...attribs, src: normalizeSameOriginMediaUrl(attribs.src) },
+			}),
 			a: (tagName, attribs) => {
 				const safeAttributes = { ...attribs };
 				const target = String(attribs.target || '').toLowerCase();

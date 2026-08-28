@@ -47,7 +47,7 @@ const syntheticProduct = {
 	published: true,
 	visible: true,
 	variant_of: null,
-	main_image: null,
+	main_image: 'https://24-7labs.com/uploads/products/synthetic-preview.png',
 	categories: [],
 	variants: [],
 };
@@ -75,7 +75,7 @@ const child = spawn(process.execPath, [nextBinary, 'start', '--hostname', HOST, 
 		...process.env,
 		NEXT_TELEMETRY_DISABLED: '1',
 		NEXT_PUBLIC_MODE: 'prod',
-		NEXT_PUBLIC_PROD_API_URL: 'http://127.0.0.1:9',
+		NEXT_PUBLIC_PROD_API_URL: 'same-origin',
 		NEXT_PUBLIC_SITE_URL: 'https://24-7labs.com',
 		NEXT_PUBLIC_CHECKOUT_ENABLED: 'false',
 		INTERNAL_API_URL: `http://${HOST}:${API_PORT}`,
@@ -164,15 +164,27 @@ try {
 		if (response.status !== 200) {
 			throw new Error('CANONICAL_RENDERED_PAGE_STATUS_INVALID');
 		}
-		if (canonicalFromHtml(await response.text()) !== renderedCase.canonical) {
+		const html = await response.text();
+		if (canonicalFromHtml(html) !== renderedCase.canonical) {
 			throw new Error('CANONICAL_RENDERED_PAGE_METADATA_INVALID');
 		}
+		if (renderedCase.path.startsWith('/product/')) {
+			if (!html.includes('src="/uploads/products/synthetic-preview.png"') || html.includes('/_next/image?')) {
+				throw new Error('PREVIEW_MEDIA_MUST_RENDER_AS_BROWSER_SAME_ORIGIN');
+			}
+		}
+	}
+	const sitemapResponse = await fetch(`${ORIGIN}/sitemap.xml`, { signal: AbortSignal.timeout(15_000) });
+	if (!sitemapResponse.ok || !(await sitemapResponse.text()).includes('https://24-7labs.com/product/a-b-hiv/')) {
+		throw new Error('SITEMAP_MUST_INCLUDE_RUNTIME_CONTENT_WITH_CANONICAL_HOST');
 	}
 	process.stdout.write(
 		`${JSON.stringify({
 			valid: true,
 			one_hop_redirect_count: redirectCases.length,
 			rendered_canonical_page_count: renderedCases.length,
+			preview_media_same_origin: true,
+			sitemap_runtime_content: true,
 		})}\n`
 	);
 } catch (error) {

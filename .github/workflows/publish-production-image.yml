@@ -120,7 +120,7 @@ jobs:
           set -euo pipefail
           build_args=(
             --build-arg NEXT_PUBLIC_MODE=prod
-            --build-arg NEXT_PUBLIC_PROD_API_URL=https://24-7labs.com
+            --build-arg NEXT_PUBLIC_PROD_API_URL=same-origin
             --build-arg NEXT_PUBLIC_SITE_URL=https://24-7labs.com
           )
           checkout_enabled=false

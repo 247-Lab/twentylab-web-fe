@@ -20,7 +20,7 @@ jobs:
     env:
       NEXT_TELEMETRY_DISABLED: '1'
       NEXT_PUBLIC_MODE: prod
-      NEXT_PUBLIC_PROD_API_URL: http://127.0.0.1:9
+      NEXT_PUBLIC_PROD_API_URL: same-origin
       NEXT_PUBLIC_SITE_URL: https://24-7labs.com
       NEXT_PUBLIC_CHECKOUT_ENABLED: 'false'
       CONTAINER_IMAGE: twentylab-web-fe:${{ github.sha }}
@@ -105,7 +105,7 @@ jobs:
         run: >-
           docker build
           --build-arg NEXT_PUBLIC_MODE=prod
-          --build-arg NEXT_PUBLIC_PROD_API_URL=http://127.0.0.1:9
+          --build-arg NEXT_PUBLIC_PROD_API_URL=same-origin
           --build-arg NEXT_PUBLIC_SITE_URL=https://24-7labs.com
           --build-arg NEXT_PUBLIC_CHECKOUT_ENABLED=false
           --tag "$CONTAINER_IMAGE" .

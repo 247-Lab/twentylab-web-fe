@@ -1,11 +1,39 @@
 import { describe, expect, it } from 'vitest';
-import { buildApiImagePattern, buildSecurityHeaders, validatePublicBuildConfig } from '../config/securityHeaders.mjs';
+import {
+	buildApiImagePattern,
+	buildSecurityHeaders,
+	usesUnoptimizedImages,
+	validatePublicBuildConfig,
+} from '../config/securityHeaders.mjs';
 
 function headerMap(environment) {
 	return new Map(buildSecurityHeaders(environment).map(({ key, value }) => [key, value]));
 }
 
 describe('security headers', () => {
+	it('supports same-origin production API/media without allowing the pre-cutover public site', () => {
+		const environment = {
+			NODE_ENV: 'production',
+			NEXT_PUBLIC_MODE: 'prod',
+			NEXT_PUBLIC_PROD_API_URL: 'same-origin',
+			NEXT_PUBLIC_SITE_URL: 'https://24-7labs.com',
+		};
+		expect(() => validatePublicBuildConfig(environment)).not.toThrow();
+		const policy = headerMap(environment).get('Content-Security-Policy');
+		expect(policy).toContain("connect-src 'self';");
+		expect(policy).toContain("img-src 'self' blob: data:;");
+		expect(policy).not.toContain('24-7labs.com');
+		expect(buildApiImagePattern(environment)).toBeNull();
+		expect(usesUnoptimizedImages(environment)).toBe(true);
+		expect(
+			usesUnoptimizedImages({ NEXT_PUBLIC_MODE: 'prod', NEXT_PUBLIC_PROD_API_URL: 'https://api.example.test' })
+		).toBe(false);
+		expect(() => validatePublicBuildConfig({ ...environment, NEXT_PUBLIC_SITE_URL: 'same-origin' })).toThrow();
+		expect(() =>
+			validatePublicBuildConfig({ ...environment, NEXT_PUBLIC_MODE: 'dev', NEXT_PUBLIC_DEV_API_URL: 'same-origin' })
+		).toThrow();
+	});
+
 	it('allows the configured production API without retaining SPCTEK as the only connect origin', () => {
 		const headers = headerMap({
 			NODE_ENV: 'production',
