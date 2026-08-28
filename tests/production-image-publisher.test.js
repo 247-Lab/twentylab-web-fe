@@ -17,7 +17,7 @@ describe('immutable production image publisher', () => {
 
 	it('publishes only an immutable profile-bound image and cannot deploy', () => {
 		expect(workflow).toMatch(/ECR_REPOSITORY: 24-7labs-production\/web/);
-		expect(workflow).toMatch(/private_validation[\s\S]*launch_candidate/);
+		expect(workflow).toMatch(/private_validation[\s\S]*launch_candidate[\s\S]*payment_paused/);
 		expect(workflow).toMatch(/confirm_launch_candidate/);
 		expect(workflow).toMatch(/NEXT_PUBLIC_CHECKOUT_ENABLED=\$\{checkout_enabled\}/);
 		expect(workflow).toMatch(/NEXT_PUBLIC_AUTHORIZE_NET_ENVIRONMENT=production/);

@@ -1,9 +1,11 @@
 # Production image publication
 
 `Publish immutable production image` creates a reviewed storefront artifact;
-it does not deploy it. The required build profile is either
-`private_validation` (checkout compiled off) or `launch_candidate` (the
-company-owned production Authorize.Net browser configuration compiled in).
+it does not deploy it. The required build profile is `private_validation`
+(checkout compiled off), `launch_candidate` (the company-owned production
+Authorize.Net browser configuration compiled in), or `payment_paused`
+(checkout compiled off for an incident-safe public rollback while backend
+reconciliation and queued delivery continue).
 
 The workflow remains skipped unless the repository variable
 `AWS_ARTIFACT_PUBLISH_ENABLED` is exactly `true`, the operator confirms the
