@@ -23,7 +23,19 @@ The product-route evidence pipeline independently binds the 105 public WordPress
 
 Four otherwise exact identity matches have a changed final-catalog price; that drift is recorded in the evidence rather than used as a slug-matching signal. The imported catalog remains authoritative for the destination price.
 
-Thirty page paths remain intentionally unclassified: the four unresolved product paths plus 26 aliased, form, commerce, policy, or retired paths. Aliased and retired paths still require explicit destination or owner-approved `410` review; similar names alone are not approval.
+`config/legacy-page-alias-evidence.json` records a separate public capture for 13 manually reviewed semantic aliases. `npm run capture:legacy-page-aliases` fetches only the fixed paths in `config/legacyPageAliases.mjs`, rejects redirects, non-HTML or non-`200` responses, cross-origin canonicals, oversized responses, and malformed identity metadata, then stores only the public title, first heading, canonical URL, and their checksum. It does not store full page content, form submissions, accounts, carts, orders, or customer data. `npm run apply:legacy-page-aliases` binds that evidence to the URL contract.
+
+The reviewed aliases cover renamed About, accreditation/trust, Allergy Testing, Blog, Business Opportunities, DNA Testing, Drug Testing, Privacy Policy, Telemedicine, Prescription Consent, Appointment, and two shop/listing routes. Each goes directly to an existing application route; sensitive form destinations remain `noindex`. Runtime tests verify both the slash and no-slash source forms, query preservation, and one-hop behavior. The Privacy Policy destination also has a compiled render smoke because its transferred page contained an undefined locale reference that source compilation alone did not detect.
+
+Seventeen page paths remain intentionally unclassified:
+
+- four unmatched product paths listed above;
+- `/247-new-page/`, `/covid-19-form/`, `/pregnancy-testing/`, and `/std-form/`, whose similar names do not prove form or product equivalence;
+- `/cart/`, `/my-account/`, and the three transactional thank-you routes, whose destination and access semantics must be reviewed with the replacement checkout/account flow;
+- `/refund-and-returns-policy/` and `/terms-of-service/`, whose current public copy requires owner/legal review before it is preserved in the new application; and
+- `/frequently-asked-questions/` and `/sexually-transmitted-diseases-testing/`, which currently return `404` but still require traffic evidence and owner approval before redirect or `410` classification.
+
+No unresolved path is routed by inference. Retired paths still require an explicit reviewed destination or an owner-approved `410`.
 
 Runtime canonicalization is resolved by `src/proxy.js` after `skipTrailingSlashRedirect` disables Next.js's automatic pre-routing slash redirect. This prevents the previous `/shop/` → `/shop` → `/testing-services` chain. Known aliases, no-slash or numeric variants of verified product routes, transferred `/blogs/<slug>` paths, and ordinary trailing-slash canonicalization now share one resolver that preserves the query string and emits one permanent `308`. The canonical legacy product path itself is not redirected. The checked-in `npm run smoke:canonical-redirects` command starts the compiled storefront, verifies representative one-hop and preserved-product responses with redirect following disabled, and terminates its exact child process.
 

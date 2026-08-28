@@ -1,11 +1,11 @@
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { generateMetadataFor } from '@/lib/seo';
 
 export const generateMetadata = generateMetadataFor('/privacy-policy');
 
 export default async function PrivacyPolicyPage() {
-	const t = await getTranslations('PrivacyPolicyPage');
+	const [locale, t] = await Promise.all([getLocale(), getTranslations('PrivacyPolicyPage')]);
 	const sections = t.raw('sections');
 
 	return (

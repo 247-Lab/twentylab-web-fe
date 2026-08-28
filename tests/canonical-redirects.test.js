@@ -6,6 +6,9 @@ describe('canonical redirect resolver', () => {
 	it.each([
 		['/shop', '/testing-services'],
 		['/shop/', '/testing-services'],
+		['/shop-2/', '/testing-services'],
+		['/about-us/', '/about'],
+		['/prescription-medication-consent-form/', '/prescription-consent-form'],
 		['/contact-2/', '/contact'],
 		['/product/a-b-hiv', '/product/a-b-hiv/'],
 		['/testing-services/28', '/product/a-b-hiv/'],
@@ -25,7 +28,7 @@ describe('canonical redirect resolver', () => {
 	);
 
 	it('loads every explicit semantic redirect once', () => {
-		expect(legacyRedirectCount()).toBe(4);
+		expect(legacyRedirectCount()).toBe(16);
 	});
 
 	it.each(['relative', '//other.example/path', '/path?secret=1', '/path#fragment', '/bad\\path'])(
