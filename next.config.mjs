@@ -2,7 +2,6 @@
 
 import createNextIntlPlugin from 'next-intl/plugin';
 import { buildApiImagePattern, buildSecurityHeaders, validatePublicBuildConfig } from './config/securityHeaders.mjs';
-import { LEGACY_REDIRECTS } from './config/legacyRedirects.mjs';
 
 validatePublicBuildConfig();
 const apiImagePattern = buildApiImagePattern();
@@ -11,9 +10,7 @@ const nextConfig = {
 	allowedDevOrigins: ['localhost', '*.localhost', '[::1]'],
 	output: 'standalone',
 	poweredByHeader: false,
-	async redirects() {
-		return LEGACY_REDIRECTS;
-	},
+	skipTrailingSlashRedirect: true,
 	async headers() {
 		return [
 			{
