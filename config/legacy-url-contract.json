@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"source_set_sha256": "4f6ff806da5989e10fceff127cee20588fb5889f7c91163c5ac07260c8333bd8",
+	"status": "review_required",
+	"page_classifications": [],
+	"asset_preservation": {
+		"status": "review_required",
+		"path_prefix": "/wp-content/uploads/",
+		"validated_unique_path_count": 0,
+		"origin_behavior": "not_configured"
+	}
+}
