@@ -158,10 +158,10 @@ describe('legacy URL source inventory', () => {
 		expect(() => validateLegacySourceInventory(inventory)).not.toThrow();
 		expect(validateLegacyUrlContract(contract, inventory)).toMatchObject({
 			complete: false,
-			classifiedPageCount: 259,
-			unclassifiedPageCount: 17,
+			classifiedPageCount: 260,
+			unclassifiedPageCount: 16,
 		});
-		expect(contract.page_classifications).toHaveLength(259);
+		expect(contract.page_classifications).toHaveLength(260);
 
 		const exactApplicationPaths = new Set([
 			...INDEXABLE_STATIC_ROUTES.map(({ path }) => path),
@@ -177,7 +177,7 @@ describe('legacy URL source inventory', () => {
 		}
 
 		const productEntries = contract.page_classifications.filter(({ path }) => path.startsWith('/product/'));
-		expect(productEntries).toHaveLength(101);
+		expect(productEntries).toHaveLength(102);
 		for (const entry of productEntries) {
 			expect(entry).toEqual({
 				path: expect.stringMatching(/^\/product\/[a-z0-9]+(?:-[a-z0-9]+)*\/$/),
