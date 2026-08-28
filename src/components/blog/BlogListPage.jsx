@@ -6,6 +6,7 @@ import { useDeferredValue, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { CalendarDays, Search } from 'lucide-react';
 import { extractBlogSnippet, formatBlogDate } from '@/lib/blog-content';
+import { toCanonicalBlogPath } from '@/lib/blogRoutes';
 
 const ITEMS_PER_PAGE = 6;
 
@@ -180,7 +181,7 @@ export default function BlogListPage({ blogs = [], categories = [], locale = 'en
 										</p>
 
 										<Link
-											href={`/blogs/${post.slug}`}
+											href={toCanonicalBlogPath(post.slug)}
 											className="mt-5 inline-flex items-center rounded-full bg-[var(--tl-primary)] px-4 py-2 text-sm font-bold text-white transition hover:bg-[var(--tl-primary-strong)]"
 										>
 											{t('readArticle')}
@@ -236,7 +237,7 @@ export default function BlogListPage({ blogs = [], categories = [], locale = 'en
 							{recentPosts.map((post) => (
 								<li key={`recent-${post.id}`} className="border-b border-sky-100 pb-3 last:border-b-0 last:pb-0">
 									<Link
-										href={`/blogs/${post.slug}`}
+										href={toCanonicalBlogPath(post.slug)}
 										className="text-sm font-bold text-slate-700 transition hover:text-[var(--tl-primary)]"
 									>
 										{post.title}

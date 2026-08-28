@@ -8,6 +8,12 @@ The current capture contains 276 page entries and 276 unique page URLs. The imag
 
 `npm run validate:legacy-url-contract` validates the checked-in source evidence without network access. `npm run validate:legacy-url-release` is the fail-closed release gate and is expected to fail until the full contract is reviewed. A capture is evidence, not approval.
 
+The July 21 final database snapshot contains 129 active blog rows. Its 129 slugs match 129 captured legacy root paths exactly, with no database-only or sitemap-only blog slugs. Those entries are now classified as one-hop redirects from the WordPress trailing-slash URL to the same root slug without a trailing slash. Root blog pages are canonical; the transferred application's interim `/blogs/<slug>` detail route permanently redirects to the historical root path. This classification is bound to the reviewed snapshot with SHA-256 `5462ff2be8913b29385e0e74816963617db5f4149f5888ce2da8bbc829694772`.
+
+Sixteen additional paths are source-backed exact route matches: the home page plus 15 existing application routes whose legacy form differs only by the trailing slash. The home page is preserved and the 15 trailing-slash paths are classified as one-hop redirects to the same route without the slash. No semantic alias was inferred for this set.
+
+The remaining 131 page paths are intentionally unclassified. They include 105 product paths and 26 aliased, form, commerce, policy, or retired paths. The final snapshot has product IDs but no authoritative legacy product-slug field, so product routes must remain blocked until a reviewed slug-to-imported-ID mapping is supplied or independently proven. Aliased and retired paths still require explicit destination or `410` review; similar names alone are not approval.
+
 The redirects in `config/legacyRedirects.mjs` are limited to paths already verified by the transfer team. They are not a complete inventory of the current WordPress site.
 
 Production DNS must not move until an owner captures and reviews a source-backed URL inventory from all of the following:

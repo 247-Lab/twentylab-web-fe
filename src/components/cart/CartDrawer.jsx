@@ -143,12 +143,13 @@ export default function CartDrawer({ open, onClose }) {
 						)}
 						<div className="grid gap-2 sm:grid-cols-2">
 							{checkoutEnabled ? (
-								<a
+								<Link
 									href="/checkout"
+									onClick={onClose}
 									className="inline-flex items-center justify-center rounded-full bg-[var(--tl-primary)] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[var(--tl-primary-strong)]"
 								>
 									{t('checkout')}
-								</a>
+								</Link>
 							) : (
 								<Link
 									href="/contact"
