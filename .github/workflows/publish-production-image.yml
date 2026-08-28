@@ -11,8 +11,21 @@ on:
         description: Successful main-push Frontend Fast Checks run ID for source_sha
         required: true
         type: string
+      build_profile:
+        description: Exact compiled production feature profile
+        required: true
+        default: private_validation
+        type: choice
+        options:
+          - private_validation
+          - launch_candidate
       confirm_publish:
-        description: Publish this reviewed, checkout-disabled image without deploying it
+        description: Publish this reviewed immutable image without deploying it
+        required: true
+        default: false
+        type: boolean
+      confirm_launch_candidate:
+        description: Acknowledge that launch_candidate compiles production Authorize.Net checkout into the public bundle
         required: true
         default: false
         type: boolean
@@ -44,6 +57,8 @@ jobs:
       LOCAL_IMAGE: 24-7labs-storefront-production:${{ inputs.source_sha }}
       SOURCE_SHA: ${{ inputs.source_sha }}
       CI_RUN_ID: ${{ inputs.ci_run_id }}
+      BUILD_PROFILE: ${{ inputs.build_profile }}
+      CONFIRM_LAUNCH_CANDIDATE: ${{ inputs.confirm_launch_candidate }}
       SYFT_IMAGE: anchore/syft:v1.38.0@sha256:825cad3a952c87676a6d07e9a3bb05ac9c401d598360070e970aa46d54c1727e
       TRIVY_IMAGE: aquasec/trivy:0.68.2@sha256:05d0126976bdedcd0782a0336f77832dbea1c81b9cc5e4b3a5ea5d2ec863aca7
     steps:
@@ -62,6 +77,12 @@ jobs:
           set -euo pipefail
           [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
           [[ "$CI_RUN_ID" =~ ^[1-9][0-9]*$ ]]
+          [[ "$BUILD_PROFILE" =~ ^(private_validation|launch_candidate)$ ]]
+          if test "$BUILD_PROFILE" = launch_candidate; then
+            test "$CONFIRM_LAUNCH_CANDIDATE" = true
+          else
+            test "$CONFIRM_LAUNCH_CANDIDATE" = false
+          fi
           test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
           test "$(gh api "repos/${GITHUB_REPOSITORY}/commits/main" --jq .sha)" = "$SOURCE_SHA"
 
@@ -89,14 +110,35 @@ jobs:
             [.artifacts[] | select(.name == $name and .expired == false and .size_in_bytes > 0)] | length == 1
           ' "$artifacts_file" >/dev/null
 
-      - name: Build exact checkout-disabled production image
-        run: >-
-          docker build
-          --build-arg NEXT_PUBLIC_MODE=prod
-          --build-arg NEXT_PUBLIC_PROD_API_URL=https://24-7labs.com
-          --build-arg NEXT_PUBLIC_SITE_URL=https://24-7labs.com
-          --build-arg NEXT_PUBLIC_CHECKOUT_ENABLED=false
-          --tag "$LOCAL_IMAGE" .
+      - name: Build exact profile-bound production image
+        shell: bash
+        env:
+          AUTHORIZE_NET_PUBLIC_API_LOGIN_ID: ${{ vars.AUTHORIZE_NET_PUBLIC_API_LOGIN_ID }}
+          AUTHORIZE_NET_PUBLIC_CLIENT_KEY: ${{ vars.AUTHORIZE_NET_PUBLIC_CLIENT_KEY }}
+        run: |
+          set -euo pipefail
+          build_args=(
+            --build-arg NEXT_PUBLIC_MODE=prod
+            --build-arg NEXT_PUBLIC_PROD_API_URL=https://24-7labs.com
+            --build-arg NEXT_PUBLIC_SITE_URL=https://24-7labs.com
+          )
+          checkout_enabled=false
+          if test "$BUILD_PROFILE" = launch_candidate; then
+            test -n "$AUTHORIZE_NET_PUBLIC_API_LOGIN_ID"
+            test -n "$AUTHORIZE_NET_PUBLIC_CLIENT_KEY"
+            test "${#AUTHORIZE_NET_PUBLIC_API_LOGIN_ID}" -le 256
+            test "${#AUTHORIZE_NET_PUBLIC_CLIENT_KEY}" -le 256
+            [[ "$AUTHORIZE_NET_PUBLIC_API_LOGIN_ID" != *$'\n'* && "$AUTHORIZE_NET_PUBLIC_API_LOGIN_ID" != *$'\r'* ]]
+            [[ "$AUTHORIZE_NET_PUBLIC_CLIENT_KEY" != *$'\n'* && "$AUTHORIZE_NET_PUBLIC_CLIENT_KEY" != *$'\r'* ]]
+            checkout_enabled=true
+            build_args+=(
+              --build-arg NEXT_PUBLIC_AUTHORIZE_NET_ENVIRONMENT=production
+              --build-arg "NEXT_PUBLIC_AUTHORIZE_NET_API_LOGIN_ID=${AUTHORIZE_NET_PUBLIC_API_LOGIN_ID}"
+              --build-arg "NEXT_PUBLIC_AUTHORIZE_NET_CLIENT_KEY=${AUTHORIZE_NET_PUBLIC_CLIENT_KEY}"
+            )
+          fi
+          build_args+=(--build-arg "NEXT_PUBLIC_CHECKOUT_ENABLED=${checkout_enabled}")
+          docker build "${build_args[@]}" --tag "$LOCAL_IMAGE" .
 
       - name: Generate SBOM and scan exact image
         shell: bash
@@ -139,7 +181,7 @@ jobs:
           [[ "$EXPECTED_AWS_ACCOUNT_ID" =~ ^[0-9]{12}$ ]]
           test "$EXPECTED_AWS_ACCOUNT_ID" != "958126466188"
           test "$(aws sts get-caller-identity --query Account --output text)" = "$EXPECTED_AWS_ACCOUNT_ID"
-          image_tag="sha-${SOURCE_SHA}"
+          image_tag="sha-${SOURCE_SHA}-${BUILD_PROFILE}"
           existing_json="$(mktemp)"
           existing_error="$(mktemp)"
           scan_file="$(mktemp)"
@@ -172,7 +214,8 @@ jobs:
           report_dir="${RUNNER_TEMP}/production-image-evidence"
           jq -n --arg component "$COMPONENT" --arg source_sha "$SOURCE_SHA" \
             --arg image_digest "$digest" --argjson ci_run_id "$CI_RUN_ID" \
-            --arg published_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" '
+            --arg published_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg build_profile "$BUILD_PROFILE" '
               {
                 schema_version: 1,
                 component: $component,
@@ -181,7 +224,12 @@ jobs:
                 ci_run_id: $ci_run_id,
                 published_at: $published_at,
                 registry_scan: {status: "COMPLETE", high: 0, critical: 0},
-                build_configuration: {checkout_enabled: false},
+                build_configuration: {
+                  profile: $build_profile,
+                  checkout_enabled: ($build_profile == "launch_candidate"),
+                  authorize_net_environment:
+                    (if $build_profile == "launch_candidate" then "production" else "disabled" end)
+                },
                 runtime_activation: {performed: false},
                 published: true,
                 deployed: false
