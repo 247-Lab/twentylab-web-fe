@@ -10,15 +10,25 @@ const ORIGIN = `http://${HOST}:${PORT}`;
 const START_TIMEOUT_MS = 20_000;
 const redirectCases = [
 	{ source: '/shop/?campaign=1', destination: '/testing-services?campaign=1' },
+	{ source: '/shop-2/?campaign=1', destination: '/testing-services?campaign=1' },
+	{ source: '/about-us/?campaign=1', destination: '/about?campaign=1' },
+	{
+		source: '/prescription-medication-consent-form/?campaign=1',
+		destination: '/prescription-consent-form?campaign=1',
+	},
 	{ source: '/product/a-b-hiv?campaign=1', destination: '/product/a-b-hiv/?campaign=1' },
 	{ source: '/testing-services/28?campaign=1', destination: '/product/a-b-hiv/?campaign=1' },
 	{ source: '/blogs/chlamydia-101/?campaign=1', destination: '/chlamydia-101?campaign=1' },
 	{ source: '/contact/?campaign=1', destination: '/contact?campaign=1' },
 ];
-const preservedCases = [
+const renderedCases = [
 	{
 		path: '/product/a-b-hiv/?campaign=1',
 		canonical: 'https://24-7labs.com/product/a-b-hiv/',
+	},
+	{
+		path: '/privacy-policy?campaign=1',
+		canonical: 'https://24-7labs.com/privacy-policy',
 	},
 ];
 
@@ -115,7 +125,7 @@ async function stopApi() {
 
 function canonicalFromHtml(html) {
 	const match = /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["'][^>]*>/iu.exec(html);
-	if (!match) throw new Error('CANONICAL_PRODUCT_ROUTE_METADATA_MISSING');
+	if (!match) throw new Error('CANONICAL_RENDERED_PAGE_METADATA_MISSING');
 	return new URL(match[1], 'https://24-7labs.com').toString();
 }
 
@@ -146,23 +156,23 @@ try {
 			throw new Error('CANONICAL_REDIRECT_SMOKE_CHAIN_DETECTED');
 		}
 	}
-	for (const preservedCase of preservedCases) {
-		const response = await fetch(`${ORIGIN}${preservedCase.path}`, {
+	for (const renderedCase of renderedCases) {
+		const response = await fetch(`${ORIGIN}${renderedCase.path}`, {
 			redirect: 'manual',
 			signal: AbortSignal.timeout(15_000),
 		});
 		if (response.status !== 200) {
-			throw new Error('CANONICAL_PRODUCT_ROUTE_NOT_PRESERVED');
+			throw new Error('CANONICAL_RENDERED_PAGE_STATUS_INVALID');
 		}
-		if (canonicalFromHtml(await response.text()) !== preservedCase.canonical) {
-			throw new Error('CANONICAL_PRODUCT_ROUTE_METADATA_INVALID');
+		if (canonicalFromHtml(await response.text()) !== renderedCase.canonical) {
+			throw new Error('CANONICAL_RENDERED_PAGE_METADATA_INVALID');
 		}
 	}
 	process.stdout.write(
 		`${JSON.stringify({
 			valid: true,
 			one_hop_redirect_count: redirectCases.length,
-			preserved_product_count: preservedCases.length,
+			rendered_canonical_page_count: renderedCases.length,
 		})}\n`
 	);
 } catch (error) {

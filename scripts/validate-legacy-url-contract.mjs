@@ -3,6 +3,10 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { LEGACY_PRODUCT_ROUTES } from '../config/legacyProductRoutes.mjs';
 import {
+	validateLegacyPageAliasEvidence,
+	validatePageAliasEvidenceContract,
+} from './legacy-page-alias-evidence-lib.mjs';
+import {
 	validateLegacyProductRouteEvidence,
 	validateProductEvidenceContract,
 } from './legacy-product-route-evidence-lib.mjs';
@@ -19,10 +23,15 @@ const contract = JSON.parse(await readFile(resolve(root, 'config', 'legacy-url-c
 const productEvidence = JSON.parse(
 	await readFile(resolve(root, 'config', 'legacy-product-route-evidence.json'), 'utf8')
 );
+const pageAliasEvidence = JSON.parse(
+	await readFile(resolve(root, 'config', 'legacy-page-alias-evidence.json'), 'utf8')
+);
 
 validateLegacySourceInventory(inventory);
 validateLegacyProductRouteEvidence(productEvidence, inventory);
 validateProductEvidenceContract(productEvidence, contract);
+validateLegacyPageAliasEvidence(pageAliasEvidence, inventory);
+validatePageAliasEvidenceContract(pageAliasEvidence, contract);
 if (
 	JSON.stringify(LEGACY_PRODUCT_ROUTES) !==
 	JSON.stringify(productEvidence.mappings.map(({ path, target_product_id: productId }) => ({ path, productId })))
@@ -39,6 +48,7 @@ if (args[0] === '--require-complete' && !result.complete) {
 			unclassified_page_count: result.unclassifiedPageCount,
 			matched_product_count: productEvidence.matched_product_count,
 			unresolved_product_count: productEvidence.unresolved_product_count,
+			verified_page_alias_count: pageAliasEvidence.mapping_count,
 			legacy_media_verified: contract.asset_preservation.status === 'verified',
 		})}\n`
 	);
@@ -52,6 +62,7 @@ if (args[0] === '--require-complete' && !result.complete) {
 			classified_page_count: result.classifiedPageCount,
 			matched_product_count: productEvidence.matched_product_count,
 			unresolved_product_count: productEvidence.unresolved_product_count,
+			verified_page_alias_count: pageAliasEvidence.mapping_count,
 			unique_image_path_count: result.uniqueImagePathCount,
 		})}\n`
 	);

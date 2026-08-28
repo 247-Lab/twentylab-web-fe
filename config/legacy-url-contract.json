@@ -93,6 +93,16 @@
 			"destination": "/about-covid-variants-and-coping-measures"
 		},
 		{
+			"path": "/about-us/",
+			"disposition": "redirect",
+			"destination": "/about"
+		},
+		{
+			"path": "/accreditation-and-certifications/",
+			"disposition": "redirect",
+			"destination": "/trust-standards"
+		},
+		{
 			"path": "/all-about-comprehensive-sexual-health-panel/",
 			"disposition": "redirect",
 			"destination": "/all-about-comprehensive-sexual-health-panel"
@@ -128,6 +138,11 @@
 			"destination": "/all-you-need-to-know-about-vertigo-attack"
 		},
 		{
+			"path": "/allergy-testing-service/",
+			"disposition": "redirect",
+			"destination": "/allergy-testing"
+		},
+		{
 			"path": "/allergy-testing/",
 			"disposition": "redirect",
 			"destination": "/allergy-testing"
@@ -158,9 +173,19 @@
 			"destination": "/basic-understanding-of-trichomonas"
 		},
 		{
+			"path": "/blog/",
+			"disposition": "redirect",
+			"destination": "/blogs"
+		},
+		{
 			"path": "/blood-related-disorders/",
 			"disposition": "redirect",
 			"destination": "/blood-related-disorders"
+		},
+		{
+			"path": "/business-opportunities-old/",
+			"disposition": "redirect",
+			"destination": "/business-opportunities"
 		},
 		{
 			"path": "/business-opportunities/",
@@ -253,6 +278,11 @@
 			"destination": "/difference-between-informational-dna-and-legal-dna-testing-what-is-dna-testing"
 		},
 		{
+			"path": "/dna-testing-services/",
+			"disposition": "redirect",
+			"destination": "/dna-testing"
+		},
+		{
 			"path": "/dna-testing-what-you-need-to-know/",
 			"disposition": "redirect",
 			"destination": "/dna-testing-what-you-need-to-know"
@@ -266,6 +296,11 @@
 			"path": "/do-you-have-high-blood-pressure/",
 			"disposition": "redirect",
 			"destination": "/do-you-have-high-blood-pressure"
+		},
+		{
+			"path": "/drug-alcohol-testing/",
+			"disposition": "redirect",
+			"destination": "/drug-testing"
 		},
 		{
 			"path": "/drug-testing/",
@@ -448,12 +483,22 @@
 			"destination": "/pregnant-you-need-these-basic-lab-tests"
 		},
 		{
+			"path": "/prescription-medication-consent-form/",
+			"disposition": "redirect",
+			"destination": "/prescription-consent-form"
+		},
+		{
 			"path": "/privacy-concerns-3-ways-healthcare-providers-safeguard-your-std-testing/",
 			"disposition": "redirect",
 			"destination": "/privacy-concerns-3-ways-healthcare-providers-safeguard-your-std-testing"
 		},
 		{
 			"path": "/privacy-policy/",
+			"disposition": "redirect",
+			"destination": "/privacy-policy"
+		},
+		{
+			"path": "/privacy/",
 			"disposition": "redirect",
 			"destination": "/privacy-policy"
 		},
@@ -877,6 +922,11 @@
 			"destination": "/safeguard-your-immune-system"
 		},
 		{
+			"path": "/schedule-appointment-after-hours/",
+			"disposition": "redirect",
+			"destination": "/schedule-appointment"
+		},
+		{
 			"path": "/schedule-appointment/",
 			"disposition": "redirect",
 			"destination": "/schedule-appointment"
@@ -890,6 +940,16 @@
 			"path": "/sexually-transmitted-infections-and-the-tests/",
 			"disposition": "redirect",
 			"destination": "/sexually-transmitted-infections-and-the-tests"
+		},
+		{
+			"path": "/shop-2/",
+			"disposition": "redirect",
+			"destination": "/testing-services"
+		},
+		{
+			"path": "/shop/",
+			"disposition": "redirect",
+			"destination": "/testing-services"
 		},
 		{
 			"path": "/should-i-stay-with-someone-that-has-an-std/",
@@ -945,6 +1005,11 @@
 			"path": "/talking-to-your-partner-about-std-testing-tips-for-a-safe-open-conversation/",
 			"disposition": "redirect",
 			"destination": "/talking-to-your-partner-about-std-testing-tips-for-a-safe-open-conversation"
+		},
+		{
+			"path": "/telemedicine-service/",
+			"disposition": "redirect",
+			"destination": "/telemedicine"
 		},
 		{
 			"path": "/testing-services/",

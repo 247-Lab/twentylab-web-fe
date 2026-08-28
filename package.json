@@ -15,6 +15,8 @@
 		"capture:legacy-url-inventory": "node scripts/capture-legacy-url-inventory.mjs --write",
 		"capture:legacy-product-routes": "node scripts/capture-legacy-product-route-evidence.mjs --catalog-stdin --write",
 		"apply:legacy-product-routes": "node scripts/apply-legacy-product-route-evidence.mjs --write",
+		"capture:legacy-page-aliases": "node scripts/capture-legacy-page-alias-evidence.mjs --write",
+		"apply:legacy-page-aliases": "node scripts/apply-legacy-page-alias-evidence.mjs --write",
 		"validate:legacy-url-contract": "node scripts/validate-legacy-url-contract.mjs --source-only",
 		"validate:legacy-url-release": "node scripts/validate-legacy-url-contract.mjs --require-complete",
 		"acceptance:legacy-urls": "node scripts/run-legacy-url-acceptance.mjs --execute",
