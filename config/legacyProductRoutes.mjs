@@ -186,6 +186,10 @@ export const LEGACY_PRODUCT_ROUTES = Object.freeze([
 		productId: 86,
 	},
 	{
+		path: '/product/hair-10-panel-drug-test/',
+		productId: 117,
+	},
+	{
 		path: '/product/hair-5-panel-drug-test/',
 		productId: 116,
 	},

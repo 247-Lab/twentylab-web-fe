@@ -12,13 +12,14 @@ The July 21 final database snapshot contains 129 active blog rows. Its 129 slugs
 
 Sixteen additional paths are source-backed exact route matches: the home page plus 15 existing application routes whose legacy form differs only by the trailing slash. The home page is preserved and the 15 trailing-slash paths are classified as one-hop redirects to the same route without the slash. No semantic alias was inferred for this set.
 
-The product-route evidence pipeline independently binds the 105 public WordPress product paths to the July 21 final database snapshot. `npm run capture:legacy-product-routes` accepts a catalog-only JSON projection on standard input, fetches the fixed public product URLs with redirects disabled, extracts the single Product JSON-LD record, and matches only an exact normalized English name to one published and visible imported product. The output is `config/legacy-product-route-evidence.json`, bound to both the sitemap source-set checksum and final database SHA-256. It contains public product facts only; no users, forms, orders, or customer data are queried or stored.
+The product-route evidence pipeline independently binds the 105 public WordPress product paths to the July 21 final database snapshot. `npm run capture:legacy-product-routes` accepts a catalog-only JSON projection on standard input, fetches the fixed public product URLs with redirects disabled, and extracts the single Product JSON-LD record. The default matcher requires an exact normalized English name and one published and visible imported product. The output is `config/legacy-product-route-evidence.json`, bound to both the sitemap source-set checksum and final database SHA-256. It contains public product facts only; no users, forms, orders, or customer data are queried or stored.
 
-`npm run apply:legacy-product-routes` validates that evidence, updates the URL contract, and regenerates the runtime product-route module. The current evidence binds 101 stable product paths to unique imported product IDs. Those exact WordPress paths remain canonical and serve the imported product directly; internal numeric links for the same products permanently canonicalize back to the stable slug. Four paths remain unresolved and are deliberately not routed because the evidence is absent or ambiguous:
+One narrow reviewed exception is stored in `config/legacyProductEquivalences.mjs`: the public product “Hair Ten Panel Drug Test” and final-catalog product “Hair 10 Panel Drug Test” have the same $299.00 price and resolve to one published, visible, non-variant target. Capture fails unless every part of that exact exception remains true; it is not a general fuzzy-name rule.
+
+`npm run apply:legacy-product-routes` validates that evidence, updates the URL contract, and regenerates the runtime product-route module. The current evidence binds 102 stable product paths to unique imported product IDs. Those exact WordPress paths remain canonical and serve the imported product directly; internal numeric links for the same products permanently canonicalize back to the stable slug. Three paths remain unresolved and are deliberately not routed because no corresponding product exists in the final catalog:
 
 - `/product/basic-combination-allergy-panel/`
 - `/product/expanded-food-panel-90-foods-food-additives/`
-- `/product/hair-10-panel-drug-test/`
 - `/product/prolactin/`
 
 Four otherwise exact identity matches have a changed final-catalog price; that drift is recorded in the evidence rather than used as a slug-matching signal. The imported catalog remains authoritative for the destination price.
@@ -27,9 +28,9 @@ Four otherwise exact identity matches have a changed final-catalog price; that d
 
 The reviewed aliases cover renamed About, accreditation/trust, Allergy Testing, Blog, Business Opportunities, DNA Testing, Drug Testing, Privacy Policy, Telemedicine, Prescription Consent, Appointment, and two shop/listing routes. Each goes directly to an existing application route; sensitive form destinations remain `noindex`. Runtime tests verify both the slash and no-slash source forms, query preservation, and one-hop behavior. The Privacy Policy destination also has a compiled render smoke because its transferred page contained an undefined locale reference that source compilation alone did not detect.
 
-Seventeen page paths remain intentionally unclassified:
+Sixteen page paths remain intentionally unclassified:
 
-- four unmatched product paths listed above;
+- three unmatched product paths listed above;
 - `/247-new-page/`, `/covid-19-form/`, `/pregnancy-testing/`, and `/std-form/`, whose similar names do not prove form or product equivalence;
 - `/cart/`, `/my-account/`, and the three transactional thank-you routes, whose destination and access semantics must be reviewed with the replacement checkout/account flow;
 - `/refund-and-returns-policy/` and `/terms-of-service/`, whose current public copy requires owner/legal review before it is preserved in the new application; and

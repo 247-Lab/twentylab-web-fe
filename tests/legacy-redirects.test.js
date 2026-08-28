@@ -24,7 +24,7 @@ describe('verified legacy redirects', () => {
 	});
 
 	it('keeps verified product paths separate from semantic redirects', () => {
-		expect(LEGACY_PRODUCT_ROUTES).toHaveLength(101);
+		expect(LEGACY_PRODUCT_ROUTES).toHaveLength(102);
 		expect(LEGACY_REDIRECTS).toHaveLength(16);
 	});
 });

@@ -19,6 +19,7 @@ describe('stable product routes', () => {
 		expect(canonicalProductPathForPathname('/product/a-b-hiv')).toBe('/product/a-b-hiv/');
 		expect(canonicalProductPathForPathname('/product/a-b-hiv/')).toBe('/product/a-b-hiv/');
 		expect(toProductDetailPath(28)).toBe('/product/a-b-hiv/');
+		expect(canonicalProductPathForId(117)).toBe('/product/hair-10-panel-drug-test/');
 	});
 
 	it('keeps an unmapped imported product on the numeric fallback route', () => {
@@ -35,6 +36,6 @@ describe('stable product routes', () => {
 	});
 
 	it('contains every exact legacy product mapping once', () => {
-		expect(legacyProductRouteCount()).toBe(101);
+		expect(legacyProductRouteCount()).toBe(102);
 	});
 });

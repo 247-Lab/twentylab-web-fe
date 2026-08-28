@@ -1,10 +1,14 @@
 import { createHash } from 'node:crypto';
 
+import { REVIEWED_LEGACY_PRODUCT_EQUIVALENCES } from '../config/legacyProductEquivalences.mjs';
 import { LEGACY_SITE_ORIGIN, validateLegacySourceInventory } from './legacy-url-inventory-lib.mjs';
 
 export const FINAL_DATABASE_SHA256 = '5462ff2be8913b29385e0e74816963617db5f4149f5888ce2da8bbc829694772';
 export const FINAL_DATABASE_SIZE_BYTES = 695773;
-export const PRODUCT_MATCH_POLICY = 'normalized_exact_english_name_prefer_unique_parent_v1';
+export const PRODUCT_MATCH_POLICY = 'normalized_exact_then_reviewed_name_price_equivalence_v2';
+
+const EXACT_MATCH_BASIS = 'normalized_exact_english_name';
+const REVIEWED_MATCH_BASIS = 'reviewed_name_price_equivalence';
 
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 const PRICE_PATTERN = /^(?:0|[1-9][0-9]{0,7})\.[0-9]{2}$/;
@@ -218,6 +222,61 @@ function validateCatalog(catalog) {
 	return catalog;
 }
 
+function validateReviewedProductEquivalences() {
+	const paths = new Set();
+	for (const rule of REVIEWED_LEGACY_PRODUCT_EQUIVALENCES) {
+		exactKeys(
+			rule,
+			['path', 'legacyName', 'targetName', 'requiredPrice', 'reviewBasis'],
+			'LEGACY_PRODUCT_EQUIVALENCE_SHAPE_INVALID'
+		);
+		const path = normalizeLegacyProductPath(rule.path);
+		if (
+			paths.has(path) ||
+			normalizeLegacyProductName(rule.legacyName) === normalizeLegacyProductName(rule.targetName) ||
+			normalizePrice(rule.requiredPrice) !== rule.requiredPrice ||
+			rule.reviewBasis !== 'numeric_token_spelling_equivalence'
+		) {
+			fail('LEGACY_PRODUCT_EQUIVALENCE_INVALID');
+		}
+		paths.add(path);
+	}
+	if (
+		JSON.stringify(REVIEWED_LEGACY_PRODUCT_EQUIVALENCES.map(({ path }) => path)) !==
+		JSON.stringify([...REVIEWED_LEGACY_PRODUCT_EQUIVALENCES.map(({ path }) => path)].sort())
+	) {
+		fail('LEGACY_PRODUCT_EQUIVALENCE_ORDER_INVALID');
+	}
+	return REVIEWED_LEGACY_PRODUCT_EQUIVALENCES;
+}
+
+function uniquePreferredProduct(candidates) {
+	const parents = candidates.filter((product) => product.variant_of === null);
+	return parents.length === 1 ? parents[0] : candidates.length === 1 ? candidates[0] : null;
+}
+
+function reviewedEquivalentProduct(path, legacy, catalog) {
+	const rule = REVIEWED_LEGACY_PRODUCT_EQUIVALENCES.find((entry) => entry.path === path);
+	if (!rule) return null;
+	if (
+		normalizeLegacyProductName(legacy.legacy_name) !== normalizeLegacyProductName(rule.legacyName) ||
+		legacy.legacy_prices.length !== 1 ||
+		legacy.legacy_prices[0] !== rule.requiredPrice
+	) {
+		fail('LEGACY_PRODUCT_EQUIVALENCE_SOURCE_MISMATCH');
+	}
+	const candidates = catalog.products.filter(
+		(product) =>
+			product.published &&
+			product.visible &&
+			normalizeLegacyProductName(product.name) === normalizeLegacyProductName(rule.targetName) &&
+			(product.sale_price || product.regular_price) === rule.requiredPrice
+	);
+	const target = uniquePreferredProduct(candidates);
+	if (!target) fail('LEGACY_PRODUCT_EQUIVALENCE_TARGET_INVALID');
+	return target;
+}
+
 function priceComparison(facts, product) {
 	if (facts.legacy_prices.length === 0) return 'not_available';
 	return facts.legacy_prices.includes(product.sale_price || product.regular_price) ? 'match' : 'drift';
@@ -230,6 +289,7 @@ function mappingDigest(mappings, unresolved) {
 export function buildLegacyProductRouteEvidence({ capturedAt, inventory, catalog, facts }) {
 	validateLegacySourceInventory(inventory);
 	validateCatalog(catalog);
+	validateReviewedProductEquivalences();
 	if (typeof capturedAt !== 'string' || !Number.isFinite(Date.parse(capturedAt))) {
 		fail('LEGACY_PRODUCT_EVIDENCE_CAPTURE_TIME_INVALID');
 	}
@@ -261,8 +321,8 @@ export function buildLegacyProductRouteEvidence({ capturedAt, inventory, catalog
 				product.visible &&
 				normalizeLegacyProductName(product.name) === normalizeLegacyProductName(legacy.legacy_name)
 		);
-		const parents = candidates.filter((product) => product.variant_of === null);
-		const target = parents.length === 1 ? parents[0] : candidates.length === 1 ? candidates[0] : null;
+		const exactTarget = uniquePreferredProduct(candidates);
+		const target = exactTarget || reviewedEquivalentProduct(path, legacy, catalog);
 		if (!target) {
 			unresolved.push({
 				...legacy,
@@ -272,6 +332,7 @@ export function buildLegacyProductRouteEvidence({ capturedAt, inventory, catalog
 		}
 		mappings.push({
 			...legacy,
+			match_basis: exactTarget ? EXACT_MATCH_BASIS : REVIEWED_MATCH_BASIS,
 			target_product_id: target.id,
 			target_name: target.name,
 			target_regular_price: target.regular_price,
@@ -314,6 +375,7 @@ function validateStoredFacts(entry) {
 
 export function validateLegacyProductRouteEvidence(evidence, inventory) {
 	validateLegacySourceInventory(inventory);
+	validateReviewedProductEquivalences();
 	exactKeys(
 		evidence,
 		[
@@ -356,6 +418,7 @@ export function validateLegacyProductRouteEvidence(evidence, inventory) {
 	const expectedPaths = inventory.sources.pages.paths.filter((path) => path.startsWith('/product/'));
 	const observedPaths = new Set();
 	const targetIds = new Set();
+	const reviewedMappings = new Set();
 	for (const mapping of evidence.mappings) {
 		exactKeys(
 			mapping,
@@ -365,6 +428,7 @@ export function validateLegacyProductRouteEvidence(evidence, inventory) {
 				'legacy_name',
 				'legacy_prices',
 				'legacy_facts_sha256',
+				'match_basis',
 				'target_product_id',
 				'target_name',
 				'target_regular_price',
@@ -374,15 +438,28 @@ export function validateLegacyProductRouteEvidence(evidence, inventory) {
 			'LEGACY_PRODUCT_EVIDENCE_MAPPING_SHAPE_INVALID'
 		);
 		validateStoredFacts(mapping);
+		const rule = REVIEWED_LEGACY_PRODUCT_EQUIVALENCES.find(({ path }) => path === mapping.path);
+		const exactNameMatch =
+			normalizeLegacyProductName(mapping.legacy_name) === normalizeLegacyProductName(mapping.target_name);
+		const reviewedMatch =
+			mapping.match_basis === REVIEWED_MATCH_BASIS &&
+			rule &&
+			normalizeLegacyProductName(mapping.legacy_name) === normalizeLegacyProductName(rule.legacyName) &&
+			normalizeLegacyProductName(mapping.target_name) === normalizeLegacyProductName(rule.targetName) &&
+			mapping.legacy_prices.length === 1 &&
+			mapping.legacy_prices[0] === rule.requiredPrice &&
+			(mapping.target_sale_price || mapping.target_regular_price) === rule.requiredPrice &&
+			mapping.price_comparison === 'match';
 		if (
 			observedPaths.has(mapping.path) ||
 			targetIds.has(mapping.target_product_id) ||
 			!Number.isSafeInteger(mapping.target_product_id) ||
 			mapping.target_product_id < 1 ||
-			normalizeLegacyProductName(mapping.legacy_name) !== normalizeLegacyProductName(mapping.target_name)
+			!((mapping.match_basis === EXACT_MATCH_BASIS && exactNameMatch && !rule) || reviewedMatch)
 		) {
 			fail('LEGACY_PRODUCT_EVIDENCE_MAPPING_INVALID');
 		}
+		if (reviewedMatch) reviewedMappings.add(mapping.path);
 		normalizePrice(mapping.target_regular_price);
 		normalizePrice(mapping.target_sale_price, { nullable: true });
 		if (
@@ -419,7 +496,8 @@ export function validateLegacyProductRouteEvidence(evidence, inventory) {
 			JSON.stringify([...evidence.mappings.map(({ path }) => path)].sort()) ||
 		JSON.stringify(evidence.unresolved.map(({ path }) => path)) !==
 			JSON.stringify([...evidence.unresolved.map(({ path }) => path)].sort()) ||
-		evidence.mapping_set_sha256 !== mappingDigest(evidence.mappings, evidence.unresolved)
+		evidence.mapping_set_sha256 !== mappingDigest(evidence.mappings, evidence.unresolved) ||
+		REVIEWED_LEGACY_PRODUCT_EQUIVALENCES.some(({ path }) => expectedPaths.includes(path) && !reviewedMappings.has(path))
 	) {
 		fail('LEGACY_PRODUCT_EVIDENCE_SET_INVALID');
 	}
