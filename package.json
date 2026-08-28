@@ -12,6 +12,9 @@
 		"build": "next build",
 		"verify:client-config": "node scripts/verify-client-config.mjs",
 		"verify:consent-manifest": "node scripts/verify-consent-manifest.mjs",
+		"capture:legacy-url-inventory": "node scripts/capture-legacy-url-inventory.mjs --write",
+		"validate:legacy-url-contract": "node scripts/validate-legacy-url-contract.mjs --source-only",
+		"validate:legacy-url-release": "node scripts/validate-legacy-url-contract.mjs --require-complete",
 		"start": "next start",
 		"dev": "next dev -p 4000",
 		"format": "prettier --write .",
@@ -20,7 +23,7 @@
 		"test:watch": "vitest",
 		"audit": "npm audit --audit-level=high",
 		"audit:prod": "npm audit --omit=dev --audit-level=high",
-		"ci": "npm run format:check && npm run verify:consent-manifest && npm run lint && npm test && npm run build && npm run verify:client-config"
+		"ci": "npm run format:check && npm run verify:consent-manifest && npm run validate:legacy-url-contract && npm run lint && npm test && npm run build && npm run verify:client-config"
 	},
 	"dependencies": {
 		"lucide-react": "^0.577.0",
