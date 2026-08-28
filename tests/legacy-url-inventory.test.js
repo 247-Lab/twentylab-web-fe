@@ -180,8 +180,7 @@ describe('legacy URL source inventory', () => {
 		for (const entry of productEntries) {
 			expect(entry).toEqual({
 				path: expect.stringMatching(/^\/product\/[a-z0-9]+(?:-[a-z0-9]+)*\/$/),
-				disposition: 'redirect',
-				destination: expect.stringMatching(/^\/testing-services\/[1-9][0-9]*$/),
+				disposition: 'preserve',
 			});
 		}
 

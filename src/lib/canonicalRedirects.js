@@ -1,6 +1,8 @@
 import { LEGACY_REDIRECTS } from '../../config/legacyRedirects.mjs';
+import { canonicalProductPathForId, canonicalProductPathForPathname } from './productRoutes';
 
 const BLOG_PATH_PATTERN = /^\/blogs\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/;
+const NUMERIC_PRODUCT_PATH_PATTERN = /^\/testing-services\/([1-9][0-9]*)\/?$/;
 const redirectByPath = new Map();
 
 function normalizedAliasPath(path) {
@@ -48,6 +50,14 @@ export function resolveCanonicalRedirect(pathname) {
 	if (pathname === '/') return null;
 
 	const aliasPath = normalizedAliasPath(pathname);
+	const canonicalProductPath = canonicalProductPathForPathname(pathname);
+	if (canonicalProductPath) return pathname === canonicalProductPath ? null : canonicalProductPath;
+	const numericProductMatch = NUMERIC_PRODUCT_PATH_PATTERN.exec(pathname);
+	if (numericProductMatch) {
+		const stableProductPath = canonicalProductPathForId(numericProductMatch[1]);
+		if (stableProductPath) return stableProductPath;
+	}
+
 	const explicitDestination = redirectByPath.get(aliasPath);
 	if (explicitDestination) return explicitDestination;
 

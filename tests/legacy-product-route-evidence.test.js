@@ -72,7 +72,7 @@ describe('legacy product route evidence', () => {
 		expect(evidence).toMatchObject({ matched_product_count: 1, unresolved_product_count: 0 });
 		expect(evidence.mappings[0]).toMatchObject({
 			path: '/product/example/',
-			destination: '/testing-services/7',
+			target_product_id: 7,
 			price_comparison: 'match',
 		});
 	});
@@ -85,9 +85,9 @@ describe('legacy product route evidence', () => {
 			catalog: catalogFixture(),
 			facts: [factsFixture()],
 		});
-		evidence.mappings[0].destination = '/testing-services/8';
+		evidence.mappings[0].target_product_id = 8;
 		expect(() => validateLegacyProductRouteEvidence(evidence, inventory)).toThrow(
-			'LEGACY_PRODUCT_EVIDENCE_MAPPING_INVALID'
+			'LEGACY_PRODUCT_EVIDENCE_SET_INVALID'
 		);
 	});
 
@@ -104,8 +104,9 @@ describe('legacy product route evidence', () => {
 		expect(evidence).toMatchObject({ matched_product_count: 101, unresolved_product_count: 4 });
 		expect(evidence.mappings.filter(({ price_comparison }) => price_comparison === 'drift')).toHaveLength(4);
 		for (const mapping of evidence.mappings) {
-			expect(resolveCanonicalRedirect(mapping.path)).toBe(mapping.destination);
-			expect(resolveCanonicalRedirect(mapping.destination)).toBeNull();
+			expect(resolveCanonicalRedirect(mapping.path)).toBeNull();
+			expect(resolveCanonicalRedirect(mapping.path.slice(0, -1))).toBe(mapping.path);
+			expect(resolveCanonicalRedirect(`/testing-services/${mapping.target_product_id}`)).toBe(mapping.path);
 		}
 	});
 });

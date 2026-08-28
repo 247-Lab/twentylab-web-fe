@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { LEGACY_PRODUCT_REDIRECTS } from '../config/legacyProductRedirects.mjs';
+import { LEGACY_PRODUCT_ROUTES } from '../config/legacyProductRoutes.mjs';
 import {
 	validateLegacyProductRouteEvidence,
 	validateProductEvidenceContract,
@@ -24,10 +24,10 @@ validateLegacySourceInventory(inventory);
 validateLegacyProductRouteEvidence(productEvidence, inventory);
 validateProductEvidenceContract(productEvidence, contract);
 if (
-	JSON.stringify(LEGACY_PRODUCT_REDIRECTS) !==
-	JSON.stringify(productEvidence.mappings.map(({ path, destination }) => ({ source: path, destination })))
+	JSON.stringify(LEGACY_PRODUCT_ROUTES) !==
+	JSON.stringify(productEvidence.mappings.map(({ path, target_product_id: productId }) => ({ path, productId })))
 ) {
-	throw new Error('LEGACY_PRODUCT_REDIRECT_MODULE_MISMATCH');
+	throw new Error('LEGACY_PRODUCT_ROUTE_MODULE_MISMATCH');
 }
 const result = validateLegacyUrlContract(contract, inventory);
 if (args[0] === '--require-complete' && !result.complete) {

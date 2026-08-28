@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LEGACY_PRODUCT_REDIRECTS } from '../config/legacyProductRedirects.mjs';
+import { LEGACY_PRODUCT_ROUTES } from '../config/legacyProductRoutes.mjs';
 import { EXPLICIT_LEGACY_REDIRECTS, LEGACY_REDIRECTS } from '../config/legacyRedirects.mjs';
 
 describe('verified legacy redirects', () => {
@@ -12,11 +12,8 @@ describe('verified legacy redirects', () => {
 		expect(EXPLICIT_LEGACY_REDIRECTS).toContainEqual({ source, destination, permanent: true });
 	});
 
-	it('combines the four explicit aliases with every verified product redirect', () => {
-		expect(LEGACY_PRODUCT_REDIRECTS).toHaveLength(101);
-		expect(LEGACY_REDIRECTS).toHaveLength(105);
-		for (const redirect of LEGACY_PRODUCT_REDIRECTS) {
-			expect(LEGACY_REDIRECTS).toContainEqual({ ...redirect, permanent: true });
-		}
+	it('keeps verified product paths separate from the four semantic redirects', () => {
+		expect(LEGACY_PRODUCT_ROUTES).toHaveLength(101);
+		expect(LEGACY_REDIRECTS).toHaveLength(4);
 	});
 });

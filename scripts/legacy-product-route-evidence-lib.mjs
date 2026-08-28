@@ -272,7 +272,6 @@ export function buildLegacyProductRouteEvidence({ capturedAt, inventory, catalog
 		}
 		mappings.push({
 			...legacy,
-			destination: `/testing-services/${target.id}`,
 			target_product_id: target.id,
 			target_name: target.name,
 			target_regular_price: target.regular_price,
@@ -366,7 +365,6 @@ export function validateLegacyProductRouteEvidence(evidence, inventory) {
 				'legacy_name',
 				'legacy_prices',
 				'legacy_facts_sha256',
-				'destination',
 				'target_product_id',
 				'target_name',
 				'target_regular_price',
@@ -381,7 +379,6 @@ export function validateLegacyProductRouteEvidence(evidence, inventory) {
 			targetIds.has(mapping.target_product_id) ||
 			!Number.isSafeInteger(mapping.target_product_id) ||
 			mapping.target_product_id < 1 ||
-			mapping.destination !== `/testing-services/${mapping.target_product_id}` ||
 			normalizeLegacyProductName(mapping.legacy_name) !== normalizeLegacyProductName(mapping.target_name)
 		) {
 			fail('LEGACY_PRODUCT_EVIDENCE_MAPPING_INVALID');
@@ -433,12 +430,7 @@ export function validateProductEvidenceContract(evidence, contract) {
 	const byPath = new Map(contract.page_classifications.map((entry) => [entry.path, entry]));
 	for (const mapping of evidence.mappings) {
 		const entry = byPath.get(mapping.path);
-		if (
-			!entry ||
-			entry.disposition !== 'redirect' ||
-			entry.destination !== mapping.destination ||
-			Object.keys(entry).length !== 3
-		) {
+		if (!entry || entry.disposition !== 'preserve' || Object.keys(entry).length !== 2) {
 			fail('LEGACY_PRODUCT_EVIDENCE_CONTRACT_MISMATCH');
 		}
 	}

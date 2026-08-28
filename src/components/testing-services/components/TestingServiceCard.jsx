@@ -7,6 +7,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useCart } from '@/components/cart/CartProvider';
 import { summarizeHtml } from '@/lib/htmlSanitizer';
+import { toProductDetailPath } from '@/lib/productRoutes';
 
 function parsePrice(value) {
 	const numericValue = Number(value);
@@ -94,6 +95,7 @@ export default React.memo(function TestingServiceCard({ product }) {
 	const hasVariants = Array.isArray(product.variants) && product.variants.length > 0;
 	const descriptionSummary = useMemo(() => summarizeHtml(product.description, 145), [product.description]);
 	const productImage = product.mainImage || product.image || '/images/placeholder.png';
+	const productPath = toProductDetailPath(product.id);
 
 	useEffect(() => {
 		if (!added) {
@@ -120,11 +122,7 @@ export default React.memo(function TestingServiceCard({ product }) {
 			)}
 
 			<div className="aspect-[4/3] overflow-hidden bg-slate-100">
-				<Link
-					href={`/testing-services/${product.id}`}
-					className="relative block h-full w-full"
-					aria-label={productName}
-				>
+				<Link href={productPath} className="relative block h-full w-full" aria-label={productName}>
 					<Image
 						src={productImage}
 						alt={productName}
@@ -140,7 +138,7 @@ export default React.memo(function TestingServiceCard({ product }) {
 					{categoryNames}
 				</p>
 				<h2 className="font-display mt-2 text-xl leading-snug font-extrabold text-[var(--tl-metallic-black)]">
-					<Link href={`/testing-services/${product.id}`} className="transition hover:text-[var(--tl-primary)]">
+					<Link href={productPath} className="transition hover:text-[var(--tl-primary)]">
 						{productName}
 					</Link>
 				</h2>
@@ -183,7 +181,7 @@ export default React.memo(function TestingServiceCard({ product }) {
 					<div className="mt-3 flex justify-center">
 						{hasVariants ? (
 							<Link
-								href={`/testing-services/${product.id}`}
+								href={productPath}
 								className="inline-flex max-w-full items-center justify-center gap-2 rounded-full bg-[var(--tl-primary)] px-4 py-2.5 text-center text-sm font-bold text-white transition hover:bg-[var(--tl-primary-strong)] sm:px-5 sm:whitespace-nowrap"
 							>
 								{t('viewOptions')}

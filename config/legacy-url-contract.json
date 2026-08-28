@@ -459,508 +459,407 @@
 		},
 		{
 			"path": "/product/a-b-hiv/",
-			"disposition": "redirect",
-			"destination": "/testing-services/28"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/amylase-serum/",
-			"disposition": "redirect",
-			"destination": "/testing-services/44"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/anemia-panel/",
-			"disposition": "redirect",
-			"destination": "/testing-services/34"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/anti-extractable-nuclear-a-g/",
-			"disposition": "redirect",
-			"destination": "/testing-services/45"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/antinuclear-antibody-ana/",
-			"disposition": "redirect",
-			"destination": "/testing-services/46"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/basic-food-panel/",
-			"disposition": "redirect",
-			"destination": "/testing-services/16"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/basic-sexual-health-panel/",
-			"disposition": "redirect",
-			"destination": "/testing-services/30"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/basic-wellness/",
-			"disposition": "redirect",
-			"destination": "/testing-services/32"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/blood-10-panel-drug-test/",
-			"disposition": "redirect",
-			"destination": "/testing-services/119"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/blood-5-panel-drug-test/",
-			"disposition": "redirect",
-			"destination": "/testing-services/118"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/blood-etg/",
-			"disposition": "redirect",
-			"destination": "/testing-services/100"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/booking-consultation/",
-			"disposition": "redirect",
-			"destination": "/testing-services/111"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/c-reactive-protein-crp/",
-			"disposition": "redirect",
-			"destination": "/testing-services/55"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/cancer-antigen-125-ca-125/",
-			"disposition": "redirect",
-			"destination": "/testing-services/47"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/candida-virus-a-b-igg/",
-			"disposition": "redirect",
-			"destination": "/testing-services/48"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/carcinoembryonic-antigen-cea/",
-			"disposition": "redirect",
-			"destination": "/testing-services/49"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/cardiac-risk-and-heart-health-panel/",
-			"disposition": "redirect",
-			"destination": "/testing-services/93"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/celiac-disease-a-b-screen/",
-			"disposition": "redirect",
-			"destination": "/testing-services/50"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/chlamydia/",
-			"disposition": "redirect",
-			"destination": "/testing-services/29"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/coc-12-panel-drug-test/",
-			"disposition": "redirect",
-			"destination": "/testing-services/115"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/coc-5-panel-drug-test/",
-			"disposition": "redirect",
-			"destination": "/testing-services/114"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/coenzyme-q10/",
-			"disposition": "redirect",
-			"destination": "/testing-services/51"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/complete-blood-count-cbc/",
-			"disposition": "redirect",
-			"destination": "/testing-services/52"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/comprehensive-combination-allergy-panel/",
-			"disposition": "redirect",
-			"destination": "/testing-services/20"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/comprehensive-metabolic-panel-cmp/",
-			"disposition": "redirect",
-			"destination": "/testing-services/53"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/comprehensive-testing-panel/",
-			"disposition": "redirect",
-			"destination": "/testing-services/12"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/comprehensive-thyroid-wellness-panel/",
-			"disposition": "redirect",
-			"destination": "/testing-services/2"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/cortisol/",
-			"disposition": "redirect",
-			"destination": "/testing-services/54"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/covid-19-pcr/",
-			"disposition": "redirect",
-			"destination": "/testing-services/99"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/cyclic-citrullinated-peptide-antibody-ccp/",
-			"disposition": "redirect",
-			"destination": "/testing-services/56"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/diabetes-panels/",
-			"disposition": "redirect",
-			"destination": "/testing-services/94"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/dot-drug-test/",
-			"disposition": "redirect",
-			"destination": "/testing-services/26"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/epstein-barr-virus-ebv-antibodies-to-early-antigen-igg/",
-			"disposition": "redirect",
-			"destination": "/testing-services/36"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/estradiol/",
-			"disposition": "redirect",
-			"destination": "/testing-services/57"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/estrogen-total/",
-			"disposition": "redirect",
-			"destination": "/testing-services/58"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/extractable-nuclear-antigen-antibodies-anti-ssa-anti-ssb/",
-			"disposition": "redirect",
-			"destination": "/testing-services/59"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/family-health-pack/",
-			"disposition": "redirect",
-			"destination": "/testing-services/35"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/fatigue-health-check/",
-			"disposition": "redirect",
-			"destination": "/testing-services/31"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/ferritin/",
-			"disposition": "redirect",
-			"destination": "/testing-services/60"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/fibrinogen/",
-			"disposition": "redirect",
-			"destination": "/testing-services/61"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/follicle-stimulating-hormone-fsh/",
-			"disposition": "redirect",
-			"destination": "/testing-services/62"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/free-thyroxine-free-t4/",
-			"disposition": "redirect",
-			"destination": "/testing-services/63"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/free-triiodothyronine-free-t3/",
-			"disposition": "redirect",
-			"destination": "/testing-services/64"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/fribromyalgia-health-screen-check-up/",
-			"disposition": "redirect",
-			"destination": "/testing-services/1"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/gonorrhea/",
-			"disposition": "redirect",
-			"destination": "/testing-services/90"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/growth-hormones/",
-			"disposition": "redirect",
-			"destination": "/testing-services/86"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/hair-5-panel-drug-test/",
-			"disposition": "redirect",
-			"destination": "/testing-services/116"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/hair-etg/",
-			"disposition": "redirect",
-			"destination": "/testing-services/101"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/hcg-qualitative-quantitative-pregnancy/",
-			"disposition": "redirect",
-			"destination": "/testing-services/98"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/hepatitis-a-hep-a/",
-			"disposition": "redirect",
-			"destination": "/testing-services/40"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/hepatitis-b-surface-antigen-hep-b/",
-			"disposition": "redirect",
-			"destination": "/testing-services/39"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/hepatitis-c-hep-c/",
-			"disposition": "redirect",
-			"destination": "/testing-services/41"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/herpes/",
-			"disposition": "redirect",
-			"destination": "/testing-services/89"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/high-sensativity-cardiac-risk/",
-			"disposition": "redirect",
-			"destination": "/testing-services/3"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/hla-b27-antigen/",
-			"disposition": "redirect",
-			"destination": "/testing-services/65"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/homocysteine-plasma/",
-			"disposition": "redirect",
-			"destination": "/testing-services/66"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/immunization-vaccination-panel/",
-			"disposition": "redirect",
-			"destination": "/testing-services/33"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/immunoglobulins-iga-igg/",
-			"disposition": "redirect",
-			"destination": "/testing-services/67"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/informational-dna/",
-			"disposition": "redirect",
-			"destination": "/testing-services/24"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/instant-10-13-panel-drug-test-alcohol/",
-			"disposition": "redirect",
-			"destination": "/testing-services/104"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/instant-12-panel-drug-test/",
-			"disposition": "redirect",
-			"destination": "/testing-services/113"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/instant-5-panel-drug-test-alcohol/",
-			"disposition": "redirect",
-			"destination": "/testing-services/103"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/instant-5-panel-drug-test/",
-			"disposition": "redirect",
-			"destination": "/testing-services/112"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/k2-spice-designer-testing-panel/",
-			"disposition": "redirect",
-			"destination": "/testing-services/25"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/legal-dna/",
-			"disposition": "redirect",
-			"destination": "/testing-services/23"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/lipase/",
-			"disposition": "redirect",
-			"destination": "/testing-services/68"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/lipid-profile/",
-			"disposition": "redirect",
-			"destination": "/testing-services/69"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/lyme-disease-a-b-quantitative-igm/",
-			"disposition": "redirect",
-			"destination": "/testing-services/37"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/magnesium-serum/",
-			"disposition": "redirect",
-			"destination": "/testing-services/70"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/male-cancer-and-tumor-marker-panel/",
-			"disposition": "redirect",
-			"destination": "/testing-services/85"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/male-health-panels/",
-			"disposition": "redirect",
-			"destination": "/testing-services/87"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/menopause-screening-health-check-up/",
-			"disposition": "redirect",
-			"destination": "/testing-services/97"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/mma-fighters-panel/",
-			"disposition": "redirect",
-			"destination": "/testing-services/83"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/mold-panel-24-allergens/",
-			"disposition": "redirect",
-			"destination": "/testing-services/21"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/osteoporosis-health-screen/",
-			"disposition": "redirect",
-			"destination": "/testing-services/96"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/parasite-examination-op/",
-			"disposition": "redirect",
-			"destination": "/testing-services/38"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/partial-thromboplastin-time-prothrombin-test-ptt-pt/",
-			"disposition": "redirect",
-			"destination": "/testing-services/71"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/pediatric-panel/",
-			"disposition": "redirect",
-			"destination": "/testing-services/22"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/physical-screening/",
-			"disposition": "redirect",
-			"destination": "/testing-services/43"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/prothrombin-time-international-normalized-ratio-pt-inr/",
-			"disposition": "redirect",
-			"destination": "/testing-services/73"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/regional-environmental-panel/",
-			"disposition": "redirect",
-			"destination": "/testing-services/17"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/renal-function-test/",
-			"disposition": "redirect",
-			"destination": "/testing-services/74"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/rheumatoid-factor/",
-			"disposition": "redirect",
-			"destination": "/testing-services/75"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/semen-analysis/",
-			"disposition": "redirect",
-			"destination": "/testing-services/84"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/sexual-health-panels/",
-			"disposition": "redirect",
-			"destination": "/testing-services/88"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/syphilis/",
-			"disposition": "redirect",
-			"destination": "/testing-services/42"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/testosterone-total-test/",
-			"disposition": "redirect",
-			"destination": "/testing-services/120"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/throat-culture-strep-test/",
-			"disposition": "redirect",
-			"destination": "/testing-services/5"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/thyroglobulin-tgb/",
-			"disposition": "redirect",
-			"destination": "/testing-services/4"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/thyroid-panel/",
-			"disposition": "redirect",
-			"destination": "/testing-services/95"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/thyroid-peroxidase-antibody-tpo/",
-			"disposition": "redirect",
-			"destination": "/testing-services/76"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/transferrin-serum/",
-			"disposition": "redirect",
-			"destination": "/testing-services/77"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/trichomonas/",
-			"disposition": "redirect",
-			"destination": "/testing-services/27"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/troponin-heart-protein-test/",
-			"disposition": "redirect",
-			"destination": "/testing-services/78"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/uric-acid/",
-			"disposition": "redirect",
-			"destination": "/testing-services/79"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/urine-etg/",
-			"disposition": "redirect",
-			"destination": "/testing-services/102"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/varicella-zoster-v-a-b-igg/",
-			"disposition": "redirect",
-			"destination": "/testing-services/80"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/vitamin-b12-folate/",
-			"disposition": "redirect",
-			"destination": "/testing-services/81"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/vitamin-d25/",
-			"disposition": "redirect",
-			"destination": "/testing-services/82"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/womens-cancer-tumor-maker-panel/",
-			"disposition": "redirect",
-			"destination": "/testing-services/91"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/product/womens-health/",
-			"disposition": "redirect",
-			"destination": "/testing-services/92"
+			"disposition": "preserve"
 		},
 		{
 			"path": "/revolutionizing-sexual-health/",
