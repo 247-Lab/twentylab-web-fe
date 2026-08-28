@@ -1,4 +1,5 @@
 import { fetchBlogs, fetchCategories, fetchProducts } from '@/lib/api';
+import { toCanonicalBlogPath } from '@/lib/blogRoutes';
 import { INDEXABLE_STATIC_ROUTES } from '@/lib/publicRoutes';
 import { toSitemapEntry } from '@/lib/sitemap';
 
@@ -22,7 +23,8 @@ export default async function sitemap() {
 
 	for (const blog of blogs || []) {
 		if (blog?.slug) {
-			entries.set(`/blogs/${blog.slug}`, toSitemapEntry(`/blogs/${blog.slug}`, blog.updated_at || blog.created_at));
+			const path = toCanonicalBlogPath(blog.slug);
+			entries.set(path, toSitemapEntry(path, blog.updated_at || blog.created_at));
 		}
 	}
 

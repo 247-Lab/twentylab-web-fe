@@ -7,6 +7,7 @@ import {
 	validateLegacySourceInventory,
 	validateLegacyUrlContract,
 } from '../scripts/legacy-url-inventory-lib.mjs';
+import { INDEXABLE_STATIC_ROUTES, SENSITIVE_NOINDEX_ROUTES } from '../src/lib/publicRoutes';
 
 function xml(...locations) {
 	return `<?xml version="1.0"?><urlset>${locations.map((location) => `<url><loc>${location}</loc></url>`).join('')}</urlset>`;
@@ -154,6 +155,34 @@ describe('legacy URL source inventory', () => {
 		);
 		const contract = JSON.parse(await readFile(new URL('../config/legacy-url-contract.json', import.meta.url)));
 		expect(() => validateLegacySourceInventory(inventory)).not.toThrow();
-		expect(validateLegacyUrlContract(contract, inventory).complete).toBe(false);
+		expect(validateLegacyUrlContract(contract, inventory)).toMatchObject({
+			complete: false,
+			classifiedPageCount: 145,
+			unclassifiedPageCount: 131,
+		});
+		expect(contract.page_classifications).toHaveLength(145);
+
+		const exactApplicationPaths = new Set([
+			...INDEXABLE_STATIC_ROUTES.map(({ path }) => path),
+			...SENSITIVE_NOINDEX_ROUTES,
+		]);
+		const exactRouteEntries = contract.page_classifications.filter(
+			(entry) => entry.path === '/' || exactApplicationPaths.has(entry.path.slice(0, -1))
+		);
+		expect(exactRouteEntries).toHaveLength(16);
+		expect(exactRouteEntries).toContainEqual({ path: '/', disposition: 'preserve' });
+		for (const entry of exactRouteEntries.filter(({ path }) => path !== '/')) {
+			expect(entry).toEqual({ path: entry.path, disposition: 'redirect', destination: entry.path.slice(0, -1) });
+		}
+
+		const blogEntries = contract.page_classifications.filter((entry) => !exactRouteEntries.includes(entry));
+		expect(blogEntries).toHaveLength(129);
+		for (const entry of blogEntries) {
+			expect(entry).toEqual({
+				path: expect.stringMatching(/^\/[a-z0-9]+(?:-[a-z0-9]+)*\/$/),
+				disposition: 'redirect',
+				destination: entry.path.slice(0, -1),
+			});
+		}
 	});
 });

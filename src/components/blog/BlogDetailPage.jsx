@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { CalendarDays, ChevronLeft } from 'lucide-react';
 
 import { formatBlogDate } from '@/lib/blog-content';
+import { toCanonicalBlogPath } from '@/lib/blogRoutes';
 import BlogContentRenderer from './BlogContentRenderer';
 import RelatedProductsSection from '@/components/common/RelatedProductsSection';
 import TestingServiceCard from '@/components/testing-services/components/TestingServiceCard';
@@ -78,7 +79,7 @@ export default function BlogDetailPage({
 							{recentPosts.map((post) => (
 								<li key={`recent-${post.id}`} className="border-b border-sky-100 pb-3 last:border-b-0 last:pb-0">
 									<Link
-										href={`/blogs/${post.slug}`}
+										href={toCanonicalBlogPath(post.slug)}
 										className="text-sm font-bold text-slate-700 transition hover:text-[var(--tl-primary)]"
 									>
 										{post.title}

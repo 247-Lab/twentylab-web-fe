@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 
 function normalizeHeroDescriptionLines(lines) {
 	if (!Array.isArray(lines)) {
@@ -156,12 +157,12 @@ export function TestingServiceHero({ t, pageKey, heroImages }) {
 					</div>
 
 					<div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
-						<a
+						<Link
 							href="/schedule-appointment"
 							className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-extrabold tracking-wide text-[var(--tl-primary-strong)] uppercase transition hover:-translate-y-0.5 hover:bg-sky-50 hover:shadow-lg"
 						>
 							{heroCta.primaryLabel}
-						</a>
+						</Link>
 						<a
 							href="tel:8139323741"
 							className="inline-flex items-center justify-center rounded-full border border-white/45 bg-transparent px-6 py-3 text-sm font-bold tracking-wide text-white uppercase transition hover:-translate-y-0.5 hover:bg-white/12"

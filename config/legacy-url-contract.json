@@ -2,7 +2,732 @@
 	"schema_version": 1,
 	"source_set_sha256": "4f6ff806da5989e10fceff127cee20588fb5889f7c91163c5ac07260c8333bd8",
 	"status": "review_required",
-	"page_classifications": [],
+	"page_classifications": [
+		{
+			"path": "/",
+			"disposition": "preserve"
+		},
+		{
+			"path": "/10-spring-break-rules-to-follow/",
+			"disposition": "redirect",
+			"destination": "/10-spring-break-rules-to-follow"
+		},
+		{
+			"path": "/2024-new-habits-a-guide-to-std-testing-for-a-healthier-future/",
+			"disposition": "redirect",
+			"destination": "/2024-new-habits-a-guide-to-std-testing-for-a-healthier-future"
+		},
+		{
+			"path": "/24-7-labs-from-sample-collection-to-analysis-demystifying-the-medical-lab-process/",
+			"disposition": "redirect",
+			"destination": "/24-7-labs-from-sample-collection-to-analysis-demystifying-the-medical-lab-process"
+		},
+		{
+			"path": "/3-facts-you-definitely-need-to-know-about-stds/",
+			"disposition": "redirect",
+			"destination": "/3-facts-you-definitely-need-to-know-about-stds"
+		},
+		{
+			"path": "/3-important-reasons-to-get-tested-for-stds/",
+			"disposition": "redirect",
+			"destination": "/3-important-reasons-to-get-tested-for-stds"
+		},
+		{
+			"path": "/4-causes-of-fatigue-you-should-be-aware-of/",
+			"disposition": "redirect",
+			"destination": "/4-causes-of-fatigue-you-should-be-aware-of"
+		},
+		{
+			"path": "/5-important-signs-you-are-lactose-intolerant/",
+			"disposition": "redirect",
+			"destination": "/5-important-signs-you-are-lactose-intolerant"
+		},
+		{
+			"path": "/8-ways-to-control-diabetes/",
+			"disposition": "redirect",
+			"destination": "/8-ways-to-control-diabetes"
+		},
+		{
+			"path": "/9-telltale-signs-you-have-a-gluten-intolerance/",
+			"disposition": "redirect",
+			"destination": "/9-telltale-signs-you-have-a-gluten-intolerance"
+		},
+		{
+			"path": "/a-beginners-guide-to-fibromyalgia/",
+			"disposition": "redirect",
+			"destination": "/a-beginners-guide-to-fibromyalgia"
+		},
+		{
+			"path": "/a-complete-guide-to-breast-cancer/",
+			"disposition": "redirect",
+			"destination": "/a-complete-guide-to-breast-cancer"
+		},
+		{
+			"path": "/a-guide-to-alzheimers-disease/",
+			"disposition": "redirect",
+			"destination": "/a-guide-to-alzheimers-disease"
+		},
+		{
+			"path": "/a-guide-to-arthritis/",
+			"disposition": "redirect",
+			"destination": "/a-guide-to-arthritis"
+		},
+		{
+			"path": "/a-guide-to-jaundice/",
+			"disposition": "redirect",
+			"destination": "/a-guide-to-jaundice"
+		},
+		{
+			"path": "/a-quick-guide-to-allergies/",
+			"disposition": "redirect",
+			"destination": "/a-quick-guide-to-allergies"
+		},
+		{
+			"path": "/abortions-and-miscarriages-in-teens/",
+			"disposition": "redirect",
+			"destination": "/abortions-and-miscarriages-in-teens"
+		},
+		{
+			"path": "/about-covid-variants-and-coping-measures/",
+			"disposition": "redirect",
+			"destination": "/about-covid-variants-and-coping-measures"
+		},
+		{
+			"path": "/all-about-comprehensive-sexual-health-panel/",
+			"disposition": "redirect",
+			"destination": "/all-about-comprehensive-sexual-health-panel"
+		},
+		{
+			"path": "/all-you-need-to-know-about-allergies/",
+			"disposition": "redirect",
+			"destination": "/all-you-need-to-know-about-allergies"
+		},
+		{
+			"path": "/all-you-need-to-know-about-blood-pressure/",
+			"disposition": "redirect",
+			"destination": "/all-you-need-to-know-about-blood-pressure"
+		},
+		{
+			"path": "/all-you-need-to-know-about-eating-disorders/",
+			"disposition": "redirect",
+			"destination": "/all-you-need-to-know-about-eating-disorders"
+		},
+		{
+			"path": "/all-you-need-to-know-about-legal-and-illegal-dna-testing/",
+			"disposition": "redirect",
+			"destination": "/all-you-need-to-know-about-legal-and-illegal-dna-testing"
+		},
+		{
+			"path": "/all-you-need-to-know-about-menstrual-cups/",
+			"disposition": "redirect",
+			"destination": "/all-you-need-to-know-about-menstrual-cups"
+		},
+		{
+			"path": "/all-you-need-to-know-about-vertigo-attack/",
+			"disposition": "redirect",
+			"destination": "/all-you-need-to-know-about-vertigo-attack"
+		},
+		{
+			"path": "/allergy-testing/",
+			"disposition": "redirect",
+			"destination": "/allergy-testing"
+		},
+		{
+			"path": "/an-introduction-to-herpes/",
+			"disposition": "redirect",
+			"destination": "/an-introduction-to-herpes"
+		},
+		{
+			"path": "/asthma-types-symptoms-and-treatment/",
+			"disposition": "redirect",
+			"destination": "/asthma-types-symptoms-and-treatment"
+		},
+		{
+			"path": "/attention-deficit-hyperactivity-disorder-adhd-symptoms-and-treatment/",
+			"disposition": "redirect",
+			"destination": "/attention-deficit-hyperactivity-disorder-adhd-symptoms-and-treatment"
+		},
+		{
+			"path": "/basic-sexual-health-panel-all-you-need-to-know-about/",
+			"disposition": "redirect",
+			"destination": "/basic-sexual-health-panel-all-you-need-to-know-about"
+		},
+		{
+			"path": "/basic-understanding-of-trichomonas/",
+			"disposition": "redirect",
+			"destination": "/basic-understanding-of-trichomonas"
+		},
+		{
+			"path": "/blood-related-disorders/",
+			"disposition": "redirect",
+			"destination": "/blood-related-disorders"
+		},
+		{
+			"path": "/business-opportunities/",
+			"disposition": "redirect",
+			"destination": "/business-opportunities"
+		},
+		{
+			"path": "/business-solutions/",
+			"disposition": "redirect",
+			"destination": "/business-solutions"
+		},
+		{
+			"path": "/can-stds-be-treated-heres-what-you-should-know/",
+			"disposition": "redirect",
+			"destination": "/can-stds-be-treated-heres-what-you-should-know"
+		},
+		{
+			"path": "/checkout/",
+			"disposition": "redirect",
+			"destination": "/checkout"
+		},
+		{
+			"path": "/chlamydia-101/",
+			"disposition": "redirect",
+			"destination": "/chlamydia-101"
+		},
+		{
+			"path": "/code-red-whats-going-on-with-ozempic/",
+			"disposition": "redirect",
+			"destination": "/code-red-whats-going-on-with-ozempic"
+		},
+		{
+			"path": "/complete-blood-count-test/",
+			"disposition": "redirect",
+			"destination": "/complete-blood-count-test"
+		},
+		{
+			"path": "/comprehensive-drug-testing-benefits-5-10-12-instant-testing-panels/",
+			"disposition": "redirect",
+			"destination": "/comprehensive-drug-testing-benefits-5-10-12-instant-testing-panels"
+		},
+		{
+			"path": "/contact/",
+			"disposition": "redirect",
+			"destination": "/contact"
+		},
+		{
+			"path": "/could-a-mineral-supplement-help-your-symptoms/",
+			"disposition": "redirect",
+			"destination": "/could-a-mineral-supplement-help-your-symptoms"
+		},
+		{
+			"path": "/covid-19/",
+			"disposition": "redirect",
+			"destination": "/covid-19"
+		},
+		{
+			"path": "/covid-screening-form/",
+			"disposition": "redirect",
+			"destination": "/covid-screening-form"
+		},
+		{
+			"path": "/cracking-the-code-understanding-cmp-testing-with-24-7labs/",
+			"disposition": "redirect",
+			"destination": "/cracking-the-code-understanding-cmp-testing-with-24-7labs"
+		},
+		{
+			"path": "/debunking-common-healthcare-myths/",
+			"disposition": "redirect",
+			"destination": "/debunking-common-healthcare-myths"
+		},
+		{
+			"path": "/debunking-myths-about-covid-vaccines-2/",
+			"disposition": "redirect",
+			"destination": "/debunking-myths-about-covid-vaccines-2"
+		},
+		{
+			"path": "/debunking-myths-about-covid-vaccines/",
+			"disposition": "redirect",
+			"destination": "/debunking-myths-about-covid-vaccines"
+		},
+		{
+			"path": "/did-not-get-your-periods-this-month-it-might-be-menopause/",
+			"disposition": "redirect",
+			"destination": "/did-not-get-your-periods-this-month-it-might-be-menopause"
+		},
+		{
+			"path": "/difference-between-informational-dna-and-legal-dna-testing-what-is-dna-testing/",
+			"disposition": "redirect",
+			"destination": "/difference-between-informational-dna-and-legal-dna-testing-what-is-dna-testing"
+		},
+		{
+			"path": "/dna-testing-what-you-need-to-know/",
+			"disposition": "redirect",
+			"destination": "/dna-testing-what-you-need-to-know"
+		},
+		{
+			"path": "/dna-testing-why-should-you-get-one-done/",
+			"disposition": "redirect",
+			"destination": "/dna-testing-why-should-you-get-one-done"
+		},
+		{
+			"path": "/do-you-have-high-blood-pressure/",
+			"disposition": "redirect",
+			"destination": "/do-you-have-high-blood-pressure"
+		},
+		{
+			"path": "/drug-testing/",
+			"disposition": "redirect",
+			"destination": "/drug-testing"
+		},
+		{
+			"path": "/everything-to-know-about-psoriasis-in-adults/",
+			"disposition": "redirect",
+			"destination": "/everything-to-know-about-psoriasis-in-adults"
+		},
+		{
+			"path": "/everything-you-need-to-know-about-sinus-infection/",
+			"disposition": "redirect",
+			"destination": "/everything-you-need-to-know-about-sinus-infection"
+		},
+		{
+			"path": "/everything-you-never-knew-about-anemia/",
+			"disposition": "redirect",
+			"destination": "/everything-you-never-knew-about-anemia"
+		},
+		{
+			"path": "/everything-you-should-know-about-prostate-health/",
+			"disposition": "redirect",
+			"destination": "/everything-you-should-know-about-prostate-health"
+		},
+		{
+			"path": "/everything-you-should-know-about-roaches-and-allergies/",
+			"disposition": "redirect",
+			"destination": "/everything-you-should-know-about-roaches-and-allergies"
+		},
+		{
+			"path": "/fear-of-hospitals-what-happens-in-it-and-how-to-cope-up/",
+			"disposition": "redirect",
+			"destination": "/fear-of-hospitals-what-happens-in-it-and-how-to-cope-up"
+		},
+		{
+			"path": "/feeling-a-lump-get-tested-womens-cancer-and-tumor-maker-panel/",
+			"disposition": "redirect",
+			"destination": "/feeling-a-lump-get-tested-womens-cancer-and-tumor-maker-panel"
+		},
+		{
+			"path": "/first-time-std-testing-heres-what-you-need-to-know/",
+			"disposition": "redirect",
+			"destination": "/first-time-std-testing-heres-what-you-need-to-know"
+		},
+		{
+			"path": "/five-food-you-might-have-allergy-to/",
+			"disposition": "redirect",
+			"destination": "/five-food-you-might-have-allergy-to"
+		},
+		{
+			"path": "/gluten-free-items-and-its-alternatives/",
+			"disposition": "redirect",
+			"destination": "/gluten-free-items-and-its-alternatives"
+		},
+		{
+			"path": "/gonorrhea-101/",
+			"disposition": "redirect",
+			"destination": "/gonorrhea-101"
+		},
+		{
+			"path": "/habits-that-are-taking-you-closer-to-cardiac-arrest/",
+			"disposition": "redirect",
+			"destination": "/habits-that-are-taking-you-closer-to-cardiac-arrest"
+		},
+		{
+			"path": "/have-a-safe-date/",
+			"disposition": "redirect",
+			"destination": "/have-a-safe-date"
+		},
+		{
+			"path": "/having-sex-for-the-first-time-make-the-experience-enjoyable-with-these-4-tips/",
+			"disposition": "redirect",
+			"destination": "/having-sex-for-the-first-time-make-the-experience-enjoyable-with-these-4-tips"
+		},
+		{
+			"path": "/health-risks-and-precautions-for-pregnant-women/",
+			"disposition": "redirect",
+			"destination": "/health-risks-and-precautions-for-pregnant-women"
+		},
+		{
+			"path": "/heart-testing/",
+			"disposition": "redirect",
+			"destination": "/heart-testing"
+		},
+		{
+			"path": "/help-i-caught-the-baby-blues/",
+			"disposition": "redirect",
+			"destination": "/help-i-caught-the-baby-blues"
+		},
+		{
+			"path": "/helpful-weight-loss-tips-and-diet-plan/",
+			"disposition": "redirect",
+			"destination": "/helpful-weight-loss-tips-and-diet-plan"
+		},
+		{
+			"path": "/hepatitis-a-b-and-c-whats-the-difference/",
+			"disposition": "redirect",
+			"destination": "/hepatitis-a-b-and-c-whats-the-difference"
+		},
+		{
+			"path": "/home-paternity-test-accuracy-vs-through-the-doctors-office/",
+			"disposition": "redirect",
+			"destination": "/home-paternity-test-accuracy-vs-through-the-doctors-office"
+		},
+		{
+			"path": "/hormone-testing/",
+			"disposition": "redirect",
+			"destination": "/hormone-testing"
+		},
+		{
+			"path": "/how-does-std-home-testing-work/",
+			"disposition": "redirect",
+			"destination": "/how-does-std-home-testing-work"
+		},
+		{
+			"path": "/how-often-should-you-get-tested-for-stds-your-complete-guide/",
+			"disposition": "redirect",
+			"destination": "/how-often-should-you-get-tested-for-stds-your-complete-guide"
+		},
+		{
+			"path": "/how-to-choose-the-right-prenatal-vitamins-during-pregnancy/",
+			"disposition": "redirect",
+			"destination": "/how-to-choose-the-right-prenatal-vitamins-during-pregnancy"
+		},
+		{
+			"path": "/how-to-test-for-stds-without-embarrassment-or-shame/",
+			"disposition": "redirect",
+			"destination": "/how-to-test-for-stds-without-embarrassment-or-shame"
+		},
+		{
+			"path": "/hypothyroidism-checklist/",
+			"disposition": "redirect",
+			"destination": "/hypothyroidism-checklist"
+		},
+		{
+			"path": "/is-caffeine-good-or-bad-for-your-health/",
+			"disposition": "redirect",
+			"destination": "/is-caffeine-good-or-bad-for-your-health"
+		},
+		{
+			"path": "/keep-your-workplace-safer-get-your-employees-drug-tested/",
+			"disposition": "redirect",
+			"destination": "/keep-your-workplace-safer-get-your-employees-drug-tested"
+		},
+		{
+			"path": "/kegel-exercises-for-women/",
+			"disposition": "redirect",
+			"destination": "/kegel-exercises-for-women"
+		},
+		{
+			"path": "/liver-cancer-symptoms-and-treatment/",
+			"disposition": "redirect",
+			"destination": "/liver-cancer-symptoms-and-treatment"
+		},
+		{
+			"path": "/long-life-vs-short-life-what-we-all-aim-for/",
+			"disposition": "redirect",
+			"destination": "/long-life-vs-short-life-what-we-all-aim-for"
+		},
+		{
+			"path": "/menstruation-complications-that-no-one-talks-about/",
+			"disposition": "redirect",
+			"destination": "/menstruation-complications-that-no-one-talks-about"
+		},
+		{
+			"path": "/pancreatic-cancer-causes-symptoms-and-treatment/",
+			"disposition": "redirect",
+			"destination": "/pancreatic-cancer-causes-symptoms-and-treatment"
+		},
+		{
+			"path": "/patient-intake-form/",
+			"disposition": "redirect",
+			"destination": "/patient-intake-form"
+		},
+		{
+			"path": "/pregnant-you-need-these-basic-lab-tests/",
+			"disposition": "redirect",
+			"destination": "/pregnant-you-need-these-basic-lab-tests"
+		},
+		{
+			"path": "/privacy-concerns-3-ways-healthcare-providers-safeguard-your-std-testing/",
+			"disposition": "redirect",
+			"destination": "/privacy-concerns-3-ways-healthcare-providers-safeguard-your-std-testing"
+		},
+		{
+			"path": "/privacy-policy/",
+			"disposition": "redirect",
+			"destination": "/privacy-policy"
+		},
+		{
+			"path": "/revolutionizing-sexual-health/",
+			"disposition": "redirect",
+			"destination": "/revolutionizing-sexual-health"
+		},
+		{
+			"path": "/routine-health-testing/",
+			"disposition": "redirect",
+			"destination": "/routine-health-testing"
+		},
+		{
+			"path": "/safeguard-your-immune-system/",
+			"disposition": "redirect",
+			"destination": "/safeguard-your-immune-system"
+		},
+		{
+			"path": "/schedule-appointment/",
+			"disposition": "redirect",
+			"destination": "/schedule-appointment"
+		},
+		{
+			"path": "/setting-resolutions-that-stick-how-diagnostic-testing-can-help-you-achieve-your-health-goals/",
+			"disposition": "redirect",
+			"destination": "/setting-resolutions-that-stick-how-diagnostic-testing-can-help-you-achieve-your-health-goals"
+		},
+		{
+			"path": "/sexually-transmitted-infections-and-the-tests/",
+			"disposition": "redirect",
+			"destination": "/sexually-transmitted-infections-and-the-tests"
+		},
+		{
+			"path": "/should-i-stay-with-someone-that-has-an-std/",
+			"disposition": "redirect",
+			"destination": "/should-i-stay-with-someone-that-has-an-std"
+		},
+		{
+			"path": "/signs-you-are-allergic-to-grasses-and-plants/",
+			"disposition": "redirect",
+			"destination": "/signs-you-are-allergic-to-grasses-and-plants"
+		},
+		{
+			"path": "/signs-you-have-contracted-a-common-std/",
+			"disposition": "redirect",
+			"destination": "/signs-you-have-contracted-a-common-std"
+		},
+		{
+			"path": "/signs-you-might-have-a-thyroid-disorder/",
+			"disposition": "redirect",
+			"destination": "/signs-you-might-have-a-thyroid-disorder"
+		},
+		{
+			"path": "/signs-you-might-have-aids/",
+			"disposition": "redirect",
+			"destination": "/signs-you-might-have-aids"
+		},
+		{
+			"path": "/simple-ways-to-promote-heart-health/",
+			"disposition": "redirect",
+			"destination": "/simple-ways-to-promote-heart-health"
+		},
+		{
+			"path": "/skin-problems-and-diseases/",
+			"disposition": "redirect",
+			"destination": "/skin-problems-and-diseases"
+		},
+		{
+			"path": "/spring-breaks-in-florida-things-you-need-to-stay-safe/",
+			"disposition": "redirect",
+			"destination": "/spring-breaks-in-florida-things-you-need-to-stay-safe"
+		},
+		{
+			"path": "/stroke-symptoms-and-treatment/",
+			"disposition": "redirect",
+			"destination": "/stroke-symptoms-and-treatment"
+		},
+		{
+			"path": "/suspecting-an-std-here-is-what-to-do-next/",
+			"disposition": "redirect",
+			"destination": "/suspecting-an-std-here-is-what-to-do-next"
+		},
+		{
+			"path": "/talking-to-your-partner-about-std-testing-tips-for-a-safe-open-conversation/",
+			"disposition": "redirect",
+			"destination": "/talking-to-your-partner-about-std-testing-tips-for-a-safe-open-conversation"
+		},
+		{
+			"path": "/testing-services/",
+			"disposition": "redirect",
+			"destination": "/testing-services"
+		},
+		{
+			"path": "/testosterone-free-vs-total-whats-the-difference/",
+			"disposition": "redirect",
+			"destination": "/testosterone-free-vs-total-whats-the-difference"
+		},
+		{
+			"path": "/tests-you-should-do-as-a-mma-fighter/",
+			"disposition": "redirect",
+			"destination": "/tests-you-should-do-as-a-mma-fighter"
+		},
+		{
+			"path": "/the-comprehensive-dot-drug-testing-panel-ensuring-safety-and-compliance-24-7/",
+			"disposition": "redirect",
+			"destination": "/the-comprehensive-dot-drug-testing-panel-ensuring-safety-and-compliance-24-7"
+		},
+		{
+			"path": "/the-differences-between-hepatitis-a-and-b/",
+			"disposition": "redirect",
+			"destination": "/the-differences-between-hepatitis-a-and-b"
+		},
+		{
+			"path": "/the-efficiency-of-barrier-method/",
+			"disposition": "redirect",
+			"destination": "/the-efficiency-of-barrier-method"
+		},
+		{
+			"path": "/the-gift-of-health-why-diagnostic-testing-makes-a-thoughtful-christmas-present/",
+			"disposition": "redirect",
+			"destination": "/the-gift-of-health-why-diagnostic-testing-makes-a-thoughtful-christmas-present"
+		},
+		{
+			"path": "/the-pros-and-cons-of-at-home-std-testing/",
+			"disposition": "redirect",
+			"destination": "/the-pros-and-cons-of-at-home-std-testing"
+		},
+		{
+			"path": "/the-role-of-dairy-in-pcos-pcod/",
+			"disposition": "redirect",
+			"destination": "/the-role-of-dairy-in-pcos-pcod"
+		},
+		{
+			"path": "/the-silent-threat-the-power-of-asymptomatic-testing-in-defending-public-health/",
+			"disposition": "redirect",
+			"destination": "/the-silent-threat-the-power-of-asymptomatic-testing-in-defending-public-health"
+		},
+		{
+			"path": "/the-surprising-link-between-testosterone-and-intimacy-in-marriage/",
+			"disposition": "redirect",
+			"destination": "/the-surprising-link-between-testosterone-and-intimacy-in-marriage"
+		},
+		{
+			"path": "/the-truth-about-chlamydia-it-wont-disappear-without-treatment/",
+			"disposition": "redirect",
+			"destination": "/the-truth-about-chlamydia-it-wont-disappear-without-treatment"
+		},
+		{
+			"path": "/things-you-never-knew-about-pcod/",
+			"disposition": "redirect",
+			"destination": "/things-you-never-knew-about-pcod"
+		},
+		{
+			"path": "/thyroxine-and-disorders/",
+			"disposition": "redirect",
+			"destination": "/thyroxine-and-disorders"
+		},
+		{
+			"path": "/toxic-masculinity-vs-healthy-masculinity-whats-the-difference/",
+			"disposition": "redirect",
+			"destination": "/toxic-masculinity-vs-healthy-masculinity-whats-the-difference"
+		},
+		{
+			"path": "/types-of-autoimmune-diseases/",
+			"disposition": "redirect",
+			"destination": "/types-of-autoimmune-diseases"
+		},
+		{
+			"path": "/types-of-genital-cancers-in-men/",
+			"disposition": "redirect",
+			"destination": "/types-of-genital-cancers-in-men"
+		},
+		{
+			"path": "/uncover-your-vital-health-insights-with-24-7labs-basic-wellness-panel-test/",
+			"disposition": "redirect",
+			"destination": "/uncover-your-vital-health-insights-with-24-7labs-basic-wellness-panel-test"
+		},
+		{
+			"path": "/understanding-pregnancy-hormones/",
+			"disposition": "redirect",
+			"destination": "/understanding-pregnancy-hormones"
+		},
+		{
+			"path": "/understanding-the-achilles-tendon-injury-that-benched-aaron-rodgers/",
+			"disposition": "redirect",
+			"destination": "/understanding-the-achilles-tendon-injury-that-benched-aaron-rodgers"
+		},
+		{
+			"path": "/understanding-the-significance-of-your-thyroid-why-you-should-pay-attention/",
+			"disposition": "redirect",
+			"destination": "/understanding-the-significance-of-your-thyroid-why-you-should-pay-attention"
+		},
+		{
+			"path": "/unveiling-the-truth-the-untold-tale-of-vaping-and-its-impact-on-your-well-being/",
+			"disposition": "redirect",
+			"destination": "/unveiling-the-truth-the-untold-tale-of-vaping-and-its-impact-on-your-well-being"
+		},
+		{
+			"path": "/weight-management-and-nutrition-for-a-new-more-energized-you/",
+			"disposition": "redirect",
+			"destination": "/weight-management-and-nutrition-for-a-new-more-energized-you"
+		},
+		{
+			"path": "/what-does-24-7labs-do-exactly/",
+			"disposition": "redirect",
+			"destination": "/what-does-24-7labs-do-exactly"
+		},
+		{
+			"path": "/what-happens-in-electroconvulsive-therapy/",
+			"disposition": "redirect",
+			"destination": "/what-happens-in-electroconvulsive-therapy"
+		},
+		{
+			"path": "/what-is-a-comprehensive-sexual-health-panel/",
+			"disposition": "redirect",
+			"destination": "/what-is-a-comprehensive-sexual-health-panel"
+		},
+		{
+			"path": "/what-is-bmi/",
+			"disposition": "redirect",
+			"destination": "/what-is-bmi"
+		},
+		{
+			"path": "/what-is-semen-analysis-what-is-its-importance/",
+			"disposition": "redirect",
+			"destination": "/what-is-semen-analysis-what-is-its-importance"
+		},
+		{
+			"path": "/what-is-the-covid-arm/",
+			"disposition": "redirect",
+			"destination": "/what-is-the-covid-arm"
+		},
+		{
+			"path": "/what-you-need-to-know-about-herpes/",
+			"disposition": "redirect",
+			"destination": "/what-you-need-to-know-about-herpes"
+		},
+		{
+			"path": "/what-you-should-know-about-employee-drug-testing/",
+			"disposition": "redirect",
+			"destination": "/what-you-should-know-about-employee-drug-testing"
+		},
+		{
+			"path": "/when-in-doubt-get-yourself-tested/",
+			"disposition": "redirect",
+			"destination": "/when-in-doubt-get-yourself-tested"
+		},
+		{
+			"path": "/why-are-some-women-prone-to-utis/",
+			"disposition": "redirect",
+			"destination": "/why-are-some-women-prone-to-utis"
+		},
+		{
+			"path": "/why-are-you-suffering-from-daily-fatigue/",
+			"disposition": "redirect",
+			"destination": "/why-are-you-suffering-from-daily-fatigue"
+		},
+		{
+			"path": "/why-you-should-test-for-anemia-if-you-have-pcod/",
+			"disposition": "redirect",
+			"destination": "/why-you-should-test-for-anemia-if-you-have-pcod"
+		},
+		{
+			"path": "/women-top-4-signs-you-might-have-an-std/",
+			"disposition": "redirect",
+			"destination": "/women-top-4-signs-you-might-have-an-std"
+		},
+		{
+			"path": "/your-health-your-future-plan-for-2024-with-comprehensive-diagnostic-testing/",
+			"disposition": "redirect",
+			"destination": "/your-health-your-future-plan-for-2024-with-comprehensive-diagnostic-testing"
+		}
+	],
 	"asset_preservation": {
 		"status": "review_required",
 		"path_prefix": "/wp-content/uploads/",
