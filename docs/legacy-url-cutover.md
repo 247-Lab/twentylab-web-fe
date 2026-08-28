@@ -27,3 +27,33 @@ Archive the inventory, mapping, test output, and sign-off with the cutover recor
 - the database, redirect rules, Search Console, analytics, backlink, campaign, and access-log evidence sources must be reconciled;
 - all unique legacy media paths must be present in the reviewed media manifest and served through the dedicated CloudFront legacy-media origin behavior; and
 - the release candidate must pass the live status, destination, canonical, indexing, chain, loop, and unexpected-404 checks.
+
+## Live release-candidate acceptance
+
+`npm run acceptance:legacy-urls` is the default-off live acceptance gate. It does not alter the site, DNS, redirects, data, or AWS resources. It refuses to make its first request unless the checked-in inventory has all required evidence sources reconciled and `config/legacy-url-contract.json` is complete and approved.
+
+Run it first against the authenticated private preview with `noindex` enforced, then again against the public canonical origin after cutover. The private preview token is sent only as `X-24-7Labs-Preview-Authorization` and is never written to the receipt. The public phase accepts only `https://24-7labs.com`, requires indexable responses, and also verifies a one-hop query-preserving `https://www.24-7labs.com` redirect to the apex domain.
+
+For every approved legacy page, the gate verifies the exact trailing-slash-sensitive path and its disposition:
+
+- preserved pages return `200`, do not redirect, and expose exactly one same-origin canonical URL;
+- redirected pages return `301` or `308`, preserve a fixed query-string probe, reach the approved same-origin destination in one hop, and expose the destination canonical URL;
+- removed pages return `410` and are `noindex`; and
+- a fixed unclassified probe returns `404` without a redirect.
+
+The gate uses at most six concurrent requests, one attempt per URL, a ten-second timeout per request, and a 2 MiB streamed HTML limit. A successful run creates a new mode-`0600`, path-free JSON receipt outside the repository. The receipt path must not already exist.
+
+Required environment for the private-preview phase:
+
+```text
+LEGACY_URL_ACCEPTANCE_ENABLED=true
+LEGACY_URL_ACCEPTANCE_CONFIRM=VERIFY_LEGACY_URL_CONTRACT
+LEGACY_URL_ACCEPTANCE_APPROVAL_ID=OPS-<numeric-ticket>
+LEGACY_URL_ACCEPTANCE_ACCESS_MODE=private_preview
+LEGACY_URL_ACCEPTANCE_INDEXING_MODE=noindex
+LEGACY_URL_ACCEPTANCE_TARGET_ORIGIN=https://<approved-preview-origin>
+LEGACY_URL_ACCEPTANCE_PREVIEW_TOKEN=<32-to-256-character-secret>
+LEGACY_URL_ACCEPTANCE_RECEIPT_PATH=<absolute-new-path-outside-repository>
+```
+
+For the public phase, use `LEGACY_URL_ACCEPTANCE_ACCESS_MODE=public`, `LEGACY_URL_ACCEPTANCE_INDEXING_MODE=indexable`, `LEGACY_URL_ACCEPTANCE_TARGET_ORIGIN=https://24-7labs.com`, and an empty `LEGACY_URL_ACCEPTANCE_PREVIEW_TOKEN`. Preserve each receipt with the release evidence. A failed gate writes no receipt and blocks cutover or continued rollout.
