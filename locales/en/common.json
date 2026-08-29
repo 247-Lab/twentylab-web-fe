@@ -7,6 +7,10 @@
 		"relatedUnavailable": "Some related items could not be loaded. The main content is still available.",
 		"submissionCaution": "If you were sending a form or payment, check whether it was received before submitting again."
 	},
+	"CartPersistenceAlert": {
+		"message": "This browser could not safely load or save your full cart. Keep this page open and review the cart before continuing. If you already placed an order, do not submit it again.",
+		"dismiss": "Dismiss cart warning"
+	},
 	"SiteNavbar": {
 		"brand": {
 			"logoAlt": "24-7 Labs"
@@ -173,12 +177,16 @@
 		"authorizeHeader": "Secure card information",
 		"authorizeSubmit": "Use this card",
 		"hostedPaymentNotice": "Card number, expiration date, and security code are collected directly by Authorize.Net and never pass through this website.",
-		"serverPricingNotice": "The total is calculated by the server from current product pricing, the appointment time, and any validated coupon.",
+		"serverPricingNotice": "Your total uses current product prices, the appointment time, and any valid coupon.",
 		"confirmedBeforePayment": "Confirmed before payment",
 		"cartChanged": "Your cart changed. Review the updated order before payment.",
 		"sessionExpired": "Your price confirmation expired. Review the order again before payment.",
 		"cardEntryError": "Secure card entry could not validate the card information. No payment was submitted; check the form and try again.",
 		"paymentDeclined": "The payment was declined. No order was placed. You may use a different card or contact 24-7 Labs.",
+		"paymentNotSubmitted": "No payment request was found. The earlier checkout session expired, so you can review the order again. No payment was submitted from that session.",
+		"startNewOrder": "Start a new order",
+		"newOrderUnavailable": "This browser could not safely close the completed payment record. Do not submit another payment here; reload the page or contact 24-7 Labs.",
+		"completedCartNotCleared": "Your order is confirmed, but this browser could not clear the paid cart. Do not submit it again. Keep this confirmation and try Start a new order again, or contact 24-7 Labs.",
 		"confirmationRequired": "Your payment is not yet confirmed. Do not pay again. Use Check payment status, or contact 24-7 Labs with the payment reference below.",
 		"paymentNeedsConfirmation": "Check this payment before continuing",
 		"checkingPreviousPayment": "Checking for a previous payment…",
@@ -191,6 +199,13 @@
 		"tooManyRequests": "There have been too many requests. Wait a few minutes before reviewing the order again. No payment was submitted by this review.",
 		"paymentLibraryUnavailable": "Secure card entry is temporarily unavailable. No payment was submitted.",
 		"requiredField": "Please complete all required fields.",
+		"productUnavailable": "One or more tests in your cart are no longer available. Return to testing services, remove or replace them, and review the order again. No payment was submitted.",
+		"couponNoLongerValid": "This coupon is no longer valid. Remove it or enter another code, then review the order again. No payment was submitted.",
+		"appointmentInvalid": "Choose a valid appointment date and time, then review the order again. No payment was submitted.",
+		"detailsInvalid": "Some contact or shipping details could not be accepted. Review every required field, correct the information, and try again. No payment was submitted.",
+		"cartInvalid": "The cart could not be accepted. Return to testing services, review your selections and quantities, then try again. No payment was submitted.",
+		"pricingChanged": "A price, discount, or selection changed while the order was being reviewed. Check the updated cart and coupon, then review the order again. No payment was submitted.",
+		"checkoutUnavailable": "Online checkout is temporarily unavailable. No payment was submitted. Keep your cart and try again later, or contact 24-7 Labs for help.",
 		"submitError": "The order total could not be confirmed. Check your details and try reviewing again. No payment was submitted by this review.",
 		"cartEmpty": "Your cart is empty.",
 		"couponRequired": "Please enter a coupon code.",

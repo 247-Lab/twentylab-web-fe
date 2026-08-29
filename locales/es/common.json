@@ -7,6 +7,10 @@
 		"relatedUnavailable": "No se pudieron cargar algunos elementos relacionados. El contenido principal sigue disponible.",
 		"submissionCaution": "Si estabas enviando un formulario o un pago, comprueba si fue recibido antes de enviarlo de nuevo."
 	},
+	"CartPersistenceAlert": {
+		"message": "Este navegador no pudo cargar o guardar de forma segura tu carrito completo. Mantén esta página abierta y revisa el carrito antes de continuar. Si ya realizaste un pedido, no lo envíes de nuevo.",
+		"dismiss": "Cerrar advertencia del carrito"
+	},
 	"SiteNavbar": {
 		"brand": {
 			"logoAlt": "24-7 Labs"
@@ -173,12 +177,16 @@
 		"authorizeHeader": "Informacion segura de la tarjeta",
 		"authorizeSubmit": "Usar esta tarjeta",
 		"hostedPaymentNotice": "Authorize.Net recopila directamente el numero, la fecha de vencimiento y el codigo de seguridad de la tarjeta. Estos datos nunca pasan por este sitio web.",
-		"serverPricingNotice": "El servidor calcula el total con los precios actuales, la hora de la cita y cualquier cupon validado.",
+		"serverPricingNotice": "Tu total usa los precios actuales, la hora de la cita y cualquier cupon valido.",
 		"confirmedBeforePayment": "Se confirma antes del pago",
 		"cartChanged": "Tu carrito cambio. Revisa el pedido actualizado antes del pago.",
 		"sessionExpired": "La confirmacion del precio vencio. Revisa el pedido de nuevo antes del pago.",
 		"cardEntryError": "El ingreso seguro no pudo validar la informacion de la tarjeta. No se envio ningun pago; revisa el formulario e intentalo de nuevo.",
 		"paymentDeclined": "El pago fue rechazado. No se realizo ningun pedido. Puedes usar otra tarjeta o contactar a 24-7 Labs.",
+		"paymentNotSubmitted": "No se encontró una solicitud de pago. La sesión de pago anterior venció, así que puedes revisar el pedido de nuevo. No se envió ningún pago desde esa sesión.",
+		"startNewOrder": "Iniciar un pedido nuevo",
+		"newOrderUnavailable": "Este navegador no pudo cerrar de forma segura el registro del pago completado. No envíes otro pago aquí; vuelve a cargar la página o contacta a 24-7 Labs.",
+		"completedCartNotCleared": "Tu pedido está confirmado, pero este navegador no pudo borrar el carrito pagado. No vuelvas a enviarlo. Conserva esta confirmación e intenta Iniciar un pedido nuevo otra vez, o contacta a 24-7 Labs.",
 		"confirmationRequired": "Tu pago aún no está confirmado. No pagues de nuevo. Consulta el estado del pago o contacta a 24-7 Labs con la referencia que aparece abajo.",
 		"paymentNeedsConfirmation": "Verifica este pago antes de continuar",
 		"checkingPreviousPayment": "Buscando un pago anterior…",
@@ -191,6 +199,13 @@
 		"tooManyRequests": "Se han realizado demasiadas solicitudes. Espera unos minutos antes de revisar el pedido. Esta revisión no envió ningún pago.",
 		"paymentLibraryUnavailable": "La entrada segura de tarjetas no esta disponible temporalmente. No se envio ningun pago.",
 		"requiredField": "Completa todos los campos obligatorios.",
+		"productUnavailable": "Una o más pruebas del carrito ya no están disponibles. Vuelve a los servicios, quítalas o reemplázalas y revisa el pedido de nuevo. No se envió ningún pago.",
+		"couponNoLongerValid": "Este cupón ya no es válido. Quítalo o ingresa otro código y revisa el pedido de nuevo. No se envió ningún pago.",
+		"appointmentInvalid": "Elige una fecha y hora válidas para la cita y revisa el pedido de nuevo. No se envió ningún pago.",
+		"detailsInvalid": "No se pudieron aceptar algunos datos de contacto o envío. Revisa todos los campos obligatorios, corrige la información e intenta de nuevo. No se envió ningún pago.",
+		"cartInvalid": "No se pudo aceptar el carrito. Vuelve a los servicios, revisa las selecciones y cantidades e intenta de nuevo. No se envió ningún pago.",
+		"pricingChanged": "Un precio, descuento o selección cambió mientras se revisaba el pedido. Revisa el carrito y el cupón actualizados y confirma el pedido de nuevo. No se envió ningún pago.",
+		"checkoutUnavailable": "La compra en línea no está disponible temporalmente. No se envió ningún pago. Conserva el carrito e intenta más tarde o contacta a 24-7 Labs.",
 		"submitError": "No se pudo confirmar el total. Revisa los datos e intenta revisar el pedido de nuevo. Esta revisión no envió ningún pago.",
 		"cartEmpty": "Tu carrito esta vacio.",
 		"couponRequired": "Ingresa un codigo de cupon.",

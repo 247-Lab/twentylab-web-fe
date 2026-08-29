@@ -51,6 +51,29 @@ export function clearCheckoutRecovery(ticket, storage) {
 	if (readCheckoutRecovery(target) !== null) throw new Error('Status reference could not be cleared');
 }
 
+// A confirmed provider result remains authoritative even if this browser can no
+// longer remove its saved status ticket. Return any remaining evidence so a
+// declined attempt cannot unlock a second payment while another attempt is
+// still present.
+export function settleCheckoutRecovery(ticket, storage) {
+	try {
+		clearCheckoutRecovery(ticket, storage);
+		return null;
+	} catch {
+		return readCheckoutRecovery(storage);
+	}
+}
+
+// Keep a confirmed success visible across reloads and suspended tabs. It is
+// cleared only when the customer explicitly starts a new order after seeing the
+// confirmed result; an arbitrary timer cannot prove every tab discarded its old
+// cart.
+export function retainSuccessfulCheckoutRecovery(ticket, storage) {
+	if (!validRecoveryTicket(ticket)) throw new Error('Status reference is unavailable');
+	const retained = readCheckoutRecovery(storage);
+	return retained?.statusToken === ticket.statusToken ? retained : { unavailable: true };
+}
+
 export async function withCheckoutLock(run, locks) {
 	let target = locks;
 	if (target === undefined) {

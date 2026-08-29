@@ -5,11 +5,16 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import CheckoutPage from '../src/components/checkout/CheckoutPage';
 import * as api from '../src/lib/api';
 
-const state = vi.hoisted(() => ({ cart: { items: [{ id: 1, key: 'one', quantity: 1, name: 'Synthetic' }] } }));
+const state = vi.hoisted(() => ({
+	cart: { items: [{ id: 1, key: 'one', quantity: 1, name: 'Synthetic' }] },
+	clearCart: vi.fn(() => true),
+}));
 vi.mock('next-intl', () => ({ useLocale: () => 'en', useTranslations: () => (key) => key }));
 vi.mock('next/script', () => ({ default: () => null }));
 vi.mock('next/link', () => ({ default: ({ children, ...props }) => React.createElement('a', props, children) }));
-vi.mock('../src/components/cart/CartProvider', () => ({ useCart: () => ({ cart: state.cart, clearCart: vi.fn() }) }));
+vi.mock('../src/components/cart/CartProvider', () => ({
+	useCart: () => ({ cart: state.cart, clearCart: state.clearCart }),
+}));
 vi.mock('../src/lib/api', () => ({
 	createCheckoutCapability: vi.fn(),
 	processCheckoutPayment: vi.fn(),
@@ -41,6 +46,7 @@ beforeEach(async () => {
 		value: { request: async (_name, _options, run) => run({}) },
 	});
 	state.cart = { items: [{ id: 1, key: 'one', quantity: 1, name: 'Synthetic' }] };
+	state.clearCart.mockReset().mockReturnValue(true);
 	api.createCheckoutCapability.mockResolvedValue({
 		checkoutToken: 'a'.repeat(43),
 		amountCents: 2500,
@@ -97,4 +103,71 @@ it('keeps an in-flight or unconfirmed payment blocked after quote expiry, cart c
 	expect(container.textContent).toContain('confirmationRequired');
 	expect(container.textContent).toContain('PAY-17');
 	expect(api.processCheckoutPayment).toHaveBeenCalledTimes(1);
+});
+
+it('allows a new review only after the server proves the expired session never started payment', async () => {
+	let payment;
+	await act(async () => {
+		payment = window.twentyFourSevenLabsAcceptUiResponseHandler({
+			messages: { resultCode: 'Ok' },
+			opaqueData: { dataDescriptor: 'COMMON.ACCEPT.INAPP.PAYMENT', dataValue: 'synthetic-nonce' },
+		});
+	});
+	await act(async () => {
+		finishPayment({ outcome: 'confirmation_required' });
+		await payment;
+	});
+	api.checkCheckoutPaymentStatus.mockResolvedValue({ outcome: 'not_started' });
+	const checkButton = [...container.querySelectorAll('button')].find(
+		(button) => button.textContent === 'checkPaymentStatus'
+	);
+	await act(async () => checkButton.click());
+	expect(container.textContent).toContain('paymentNotSubmitted');
+	expect(container.textContent).toContain('reviewAndConfirm');
+	expect(localStorage.getItem('24-7labs:unconfirmed-payment:v1')).toBeNull();
+});
+
+it('keeps a successful payment reference until the customer explicitly starts a new order', async () => {
+	let payment;
+	await act(async () => {
+		payment = window.twentyFourSevenLabsAcceptUiResponseHandler({
+			messages: { resultCode: 'Ok' },
+			opaqueData: { dataDescriptor: 'COMMON.ACCEPT.INAPP.PAYMENT', dataValue: 'synthetic-nonce' },
+		});
+	});
+	await act(async () => {
+		finishPayment({ outcome: 'succeeded', orderId: 44 });
+		await payment;
+	});
+	expect(container.textContent).toContain('successTitle');
+	expect(localStorage.getItem('24-7labs:unconfirmed-payment:v1')).not.toBeNull();
+	const newOrder = [...container.querySelectorAll('button')].find((button) => button.textContent === 'startNewOrder');
+	await act(async () => newOrder.click());
+	expect(localStorage.getItem('24-7labs:unconfirmed-payment:v1')).toBeNull();
+	expect(container.textContent).toContain('reviewAndConfirm');
+});
+
+it('does not release a completed payment reference while the paid cart remains saved', async () => {
+	state.clearCart.mockReturnValue(false);
+	let payment;
+	await act(async () => {
+		payment = window.twentyFourSevenLabsAcceptUiResponseHandler({
+			messages: { resultCode: 'Ok' },
+			opaqueData: { dataDescriptor: 'COMMON.ACCEPT.INAPP.PAYMENT', dataValue: 'synthetic-nonce' },
+		});
+	});
+	await act(async () => {
+		finishPayment({ outcome: 'succeeded', orderId: 44 });
+		await payment;
+	});
+	expect(container.textContent).toContain('completedCartNotCleared');
+
+	const newOrder = [...container.querySelectorAll('button')].find((button) => button.textContent === 'startNewOrder');
+	await act(async () => newOrder.click());
+	expect(localStorage.getItem('24-7labs:unconfirmed-payment:v1')).not.toBeNull();
+	expect(container.textContent).toContain('successTitle');
+
+	state.clearCart.mockReturnValue(true);
+	await act(async () => newOrder.click());
+	expect(localStorage.getItem('24-7labs:unconfirmed-payment:v1')).toBeNull();
 });

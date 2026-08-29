@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
 	buildCheckoutPayload,
+	checkoutReviewFailureKey,
 	checkoutCartItems,
 	formatCents,
 	newPaymentAttemptIdempotencyKey,
@@ -35,10 +36,12 @@ describe('checkout workflow helpers', () => {
 				{ id: '9', quantity: 2, name: 'ignored', price: 1 },
 				{ id: 4, quantity: 1 },
 				{ id: 9, quantity: 3 },
+				{ id: 20, variantId: 14, quantity: 2, name: 'selected variant' },
 			])
 		).toEqual([
 			{ productId: 4, quantity: 1 },
 			{ productId: 9, quantity: 5 },
+			{ productId: 14, quantity: 2 },
 		]);
 		expect(() => checkoutCartItems([{ id: 'not-a-product', quantity: 1 }])).toThrow('invalid product');
 		expect(() => checkoutCartItems([{ id: 1, quantity: 101 }])).toThrow('invalid quantity');
@@ -98,5 +101,17 @@ describe('checkout workflow helpers', () => {
 		expect(() => newPaymentAttemptIdempotencyKey({ randomUUID: () => 'predictable' })).toThrow('Secure');
 		expect(formatCents(12345, 'en')).toBe('$123.45');
 		expect(formatCents(12.5, 'en')).toBe('');
+	});
+
+	it('maps checkout rejections to a specific nontechnical recovery instruction', () => {
+		expect(checkoutReviewFailureKey({ code: 'CHECKOUT_PRODUCT_UNAVAILABLE' })).toBe('productUnavailable');
+		expect(checkoutReviewFailureKey({ code: 'CHECKOUT_COUPON_INVALID' })).toBe('couponNoLongerValid');
+		expect(checkoutReviewFailureKey({ code: 'CHECKOUT_APPOINTMENT_INVALID' })).toBe('appointmentInvalid');
+		expect(checkoutReviewFailureKey({ code: 'CHECKOUT_INPUT_INVALID' })).toBe('detailsInvalid');
+		expect(checkoutReviewFailureKey({ code: 'CHECKOUT_ITEMS_INVALID' })).toBe('cartInvalid');
+		expect(checkoutReviewFailureKey({ code: 'CHECKOUT_PRICING_CHANGED' })).toBe('pricingChanged');
+		expect(checkoutReviewFailureKey({ status: 429 })).toBe('tooManyRequests');
+		expect(checkoutReviewFailureKey({ status: 503 })).toBe('checkoutUnavailable');
+		expect(checkoutReviewFailureKey({ status: 502 })).toBe('submitError');
 	});
 });

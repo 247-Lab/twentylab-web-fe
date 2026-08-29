@@ -3,6 +3,8 @@ import {
 	CHECKOUT_RECOVERY_KEY,
 	clearCheckoutRecovery,
 	readCheckoutRecovery,
+	retainSuccessfulCheckoutRecovery,
+	settleCheckoutRecovery,
 	saveCheckoutRecovery,
 	withCheckoutLock,
 } from '../src/lib/checkoutRecovery';
@@ -51,6 +53,34 @@ describe('unconfirmed checkout recovery', () => {
 		expect(readCheckoutRecovery(store)).toEqual(ticket);
 		clearCheckoutRecovery(ticket, store);
 		expect(readCheckoutRecovery(store)).toBeNull();
+	});
+	it('does not let storage cleanup hide an authoritative terminal result', () => {
+		saveCheckoutRecovery(ticket, store);
+		const unavailableRemoval = {
+			...store,
+			removeItem() {
+				throw new Error('storage unavailable');
+			},
+		};
+		expect(settleCheckoutRecovery(ticket, unavailableRemoval)).toEqual(ticket);
+
+		clearCheckoutRecovery(ticket, store);
+		expect(settleCheckoutRecovery(ticket, store)).toBeNull();
+	});
+	it('retains successful evidence until the customer explicitly starts another order', () => {
+		saveCheckoutRecovery(ticket, store);
+		expect(retainSuccessfulCheckoutRecovery(ticket, store)).toEqual(ticket);
+		expect(readCheckoutRecovery(store)).toEqual(ticket);
+	});
+	it('does not accept a different saved payment reference as the completed one', () => {
+		const nextTicket = {
+			reference: 'PAY-18',
+			statusToken: `status-v1.18.1800000000.${'c'.repeat(43)}.${'d'.repeat(43)}`,
+		};
+		saveCheckoutRecovery(ticket, store);
+		saveCheckoutRecovery(nextTicket, store);
+		expect(retainSuccessfulCheckoutRecovery(ticket, store)).toEqual({ unavailable: true });
+		expect(readCheckoutRecovery(store)).toEqual(nextTicket);
 	});
 	it('does not start a second payment in another tab or a browser without safe locking', async () => {
 		const pay = vi.fn();

@@ -82,7 +82,7 @@ describe('same-origin preview browser contract', () => {
 				},
 			})
 		);
-		await api.createCheckoutCapability({}, checkout);
+		await api.createCheckoutCapability({ items: [{ productId: 1, quantity: 1 }] }, checkout);
 		expect(checkout).toHaveBeenCalledWith(
 			`${browserOrigin}/api/payment/checkout`,
 			expect.objectContaining({ credentials: 'same-origin' })

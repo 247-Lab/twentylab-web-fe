@@ -87,6 +87,7 @@ export default React.memo(function TestingServiceCard({ product }) {
 	const locale = useLocale();
 	const { addToCart } = useCart();
 	const [added, setAdded] = useState(false);
+	const [addError, setAddError] = useState(false);
 	const productName = product.name ?? t('fallbackProductName', { id: product.id });
 	const categoryNames = product.categories.length
 		? product.categories.map((category) => category.name).join(', ')
@@ -109,7 +110,12 @@ export default React.memo(function TestingServiceCard({ product }) {
 	function handleAddToCart(event) {
 		event.preventDefault();
 		event.stopPropagation();
-		addToCart(product);
+		if (!addToCart(product)) {
+			setAdded(false);
+			setAddError(true);
+			return;
+		}
+		setAddError(false);
 		setAdded(true);
 	}
 
@@ -201,6 +207,11 @@ export default React.memo(function TestingServiceCard({ product }) {
 							</button>
 						)}
 					</div>
+					{addError && (
+						<p role="alert" className="mt-2 text-center text-xs font-semibold text-rose-700">
+							{t('cartItemUnavailable')}
+						</p>
+					)}
 				</div>
 			</div>
 		</article>

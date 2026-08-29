@@ -105,6 +105,7 @@ export default React.memo(function TestingServiceDetailsPage({
 	const [selectedVariantId, setSelectedVariantId] = useState('');
 	const [selectedCategoryId, setSelectedCategoryId] = useState('all');
 	const [added, setAdded] = useState(false);
+	const [addError, setAddError] = useState(false);
 	const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
 	const [descriptionExpanded, setDescriptionExpanded] = useState(false);
 	const [categoryDescriptionExpanded, setCategoryDescriptionExpanded] = useState(false);
@@ -221,10 +222,16 @@ export default React.memo(function TestingServiceDetailsPage({
 
 	function handleAddToCart() {
 		const selectedItem = selectedVariant || product;
-		addToCart(selectedItem, {
+		const accepted = addToCart(selectedItem, {
 			variantId: selectedVariant ? selectedVariant.id : null,
 			variantLabel: selectedVariant ? selectedVariant.name : null,
 		});
+		if (!accepted) {
+			setAdded(false);
+			setAddError(true);
+			return;
+		}
+		setAddError(false);
 		setAdded(true);
 		window.setTimeout(() => setAdded(false), 1800);
 	}
@@ -489,6 +496,11 @@ export default React.memo(function TestingServiceDetailsPage({
 														{getMessage('callNow')}
 													</a>
 												</div>
+												{addError && (
+													<p role="alert" className="mt-3 text-sm font-semibold text-rose-700">
+														{getMessage('cartItemUnavailable')}
+													</p>
+												)}
 											</div>
 										</div>
 									</div>

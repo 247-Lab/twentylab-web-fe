@@ -17,12 +17,14 @@ import {
 import {
 	CHECKOUT_RECOVERY_KEY,
 	readCheckoutRecovery,
+	retainSuccessfulCheckoutRecovery,
 	saveCheckoutRecovery,
-	clearCheckoutRecovery,
+	settleCheckoutRecovery,
 	withCheckoutLock,
 } from '@/lib/checkoutRecovery';
 import {
 	buildCheckoutPayload,
+	checkoutReviewFailureKey,
 	formatCents,
 	newPaymentAttemptIdempotencyKey,
 	resolvePublicCheckoutConfig,
@@ -93,7 +95,7 @@ export default function CheckoutPage() {
 	const publicCheckout = useMemo(checkoutConfiguration, []);
 	const selectionCount = cart.items.reduce((count, item) => count + Number(item.quantity || 0), 0);
 	const cartFingerprint = useMemo(
-		() => JSON.stringify(cart.items.map(({ id, quantity }) => [String(id), Number(quantity)])),
+		() => JSON.stringify(cart.items.map(({ id, key, quantity }) => [String(id), String(key), Number(quantity)])),
 		[cart.items]
 	);
 	const [form, setForm] = useState(initialForm);
@@ -115,6 +117,8 @@ export default function CheckoutPage() {
 	const loadedRef = useRef(false);
 	const reviewingRef = useRef(false);
 	const [checkingStatus, setCheckingStatus] = useState(false);
+	const couponRequestVersionRef = useRef(0);
+	const couponValidationRef = useRef(false);
 
 	useEffect(() => {
 		if (!loadedRef.current) {
@@ -215,21 +219,26 @@ export default function CheckoutPage() {
 						opaqueData: tokenized.opaqueData,
 					});
 					if (result.outcome === 'succeeded') {
+						const remainingRecovery = retainSuccessfulCheckoutRecovery(ticket);
+						recoveryRef.current = remainingRecovery;
+						setRecovery(remainingRecovery);
 						setOrderReference(result.orderId);
 						setPhase('succeeded');
 						capabilityRef.current = null;
 						paymentBlockedRef.current = true;
 						setCapability(null);
-						clearCart();
-						clearCheckoutRecovery(ticket);
-						recoveryRef.current = null;
-						setRecovery(null);
+						if (!clearCart()) setMessage(t('completedCartNotCleared'));
 						return;
 					}
 					if (result.outcome === 'declined') {
-						clearCheckoutRecovery(ticket);
-						recoveryRef.current = null;
-						setRecovery(null);
+						const remainingRecovery = settleCheckoutRecovery(ticket);
+						recoveryRef.current = remainingRecovery;
+						setRecovery(remainingRecovery);
+						if (remainingRecovery) {
+							setPhase('confirmationRequired');
+							setMessage(t(remainingRecovery.unavailable ? 'recoveryUnavailable' : 'confirmationRequired'));
+							return;
+						}
 						const next = { ...current, idempotencyKey: newPaymentAttemptIdempotencyKey() };
 						capabilityRef.current = next;
 						setCapability(next);
@@ -269,16 +278,25 @@ export default function CheckoutPage() {
 		try {
 			await withCheckoutLock(async () => {
 				const result = await checkCheckoutPaymentStatus(recovery);
-				if (result.outcome === 'succeeded' || result.outcome === 'declined') {
-					clearCheckoutRecovery(recovery);
-					recoveryRef.current = null;
-					setRecovery(null);
+				if (['succeeded', 'declined', 'not_started'].includes(result.outcome)) {
+					const remainingRecovery =
+						result.outcome === 'succeeded'
+							? retainSuccessfulCheckoutRecovery(recovery)
+							: settleCheckoutRecovery(recovery);
+					recoveryRef.current = remainingRecovery;
+					setRecovery(remainingRecovery);
 					capabilityRef.current = null;
 					setCapability(null);
 					if (result.outcome === 'succeeded') {
 						setOrderReference(result.orderId);
 						setPhase('succeeded');
-						clearCart();
+						setMessage(clearCart() ? '' : t('completedCartNotCleared'));
+					} else if (result.outcome === 'not_started' && !remainingRecovery) {
+						setPhase('editing');
+						setMessage(t('paymentNotSubmitted'));
+					} else if (remainingRecovery) {
+						setPhase('confirmationRequired');
+						setMessage(t(remainingRecovery.unavailable ? 'recoveryUnavailable' : 'confirmationRequired'));
 					} else {
 						setPhase('editing');
 						setMessage(t('paymentDeclined'));
@@ -299,17 +317,22 @@ export default function CheckoutPage() {
 	}
 
 	async function onApplyCoupon() {
+		if (couponValidationRef.current) return;
 		if (!couponCode.trim()) {
 			setCouponError(t('couponRequired'));
 			return;
 		}
+		const requestVersion = ++couponRequestVersionRef.current;
+		couponValidationRef.current = true;
 		setValidatingCoupon(true);
 		setCouponError('');
 		try {
 			const value = await validateCoupon(couponCode);
+			if (requestVersion !== couponRequestVersionRef.current) return;
 			if (!Number.isSafeInteger(Number(value.id)) || Number(value.id) < 1) throw new Error();
 			setAppliedCoupon({ ...value, id: Number(value.id) });
 		} catch (error) {
+			if (requestVersion !== couponRequestVersionRef.current) return;
 			setAppliedCoupon(null);
 			setCouponError(
 				error?.status === 400 || error?.status === 404
@@ -319,11 +342,17 @@ export default function CheckoutPage() {
 						: t('couponUnavailable')
 			);
 		} finally {
-			setValidatingCoupon(false);
+			if (requestVersion === couponRequestVersionRef.current) {
+				couponValidationRef.current = false;
+				setValidatingCoupon(false);
+			}
 		}
 	}
 
 	function onRemoveCoupon() {
+		couponRequestVersionRef.current += 1;
+		couponValidationRef.current = false;
+		setValidatingCoupon(false);
 		setCouponCode('');
 		setCouponError('');
 		setAppliedCoupon(null);
@@ -361,7 +390,7 @@ export default function CheckoutPage() {
 			setPhase('ready');
 		} catch (error) {
 			setPhase('editing');
-			setMessage(error?.status === 429 ? t('tooManyRequests') : t('submitError'));
+			setMessage(t(checkoutReviewFailureKey(error)));
 		} finally {
 			reviewingRef.current = false;
 		}
@@ -376,6 +405,29 @@ export default function CheckoutPage() {
 		setMessage('');
 	}
 
+	function startNewOrder() {
+		if (!recoveryRef.current || recoveryRef.current.unavailable) {
+			setMessage(t('newOrderUnavailable'));
+			return;
+		}
+		if (!clearCart()) {
+			setMessage(t('completedCartNotCleared'));
+			return;
+		}
+		const remainingRecovery = settleCheckoutRecovery(recoveryRef.current);
+		if (remainingRecovery) {
+			recoveryRef.current = remainingRecovery;
+			setRecovery(remainingRecovery);
+			setMessage(t('newOrderUnavailable'));
+			return;
+		}
+		recoveryRef.current = null;
+		setRecovery(null);
+		setOrderReference(null);
+		setPhase('editing');
+		setMessage('');
+	}
+
 	if (phase === 'succeeded') {
 		return (
 			<main className="min-h-screen bg-[linear-gradient(180deg,#eef6ff_0%,#ffffff_40%,#f7fbff_100%)] px-4 py-12">
@@ -384,10 +436,19 @@ export default function CheckoutPage() {
 					<h1 className="font-display mt-4 text-3xl font-black text-[var(--tl-metallic-black)]">{t('successTitle')}</h1>
 					<p className="mt-2 text-slate-600">{t('successBody')}</p>
 					<p className="mt-2 text-sm font-bold text-slate-800">{t('orderReference', { reference: orderReference })}</p>
-					<Link
-						href="/"
-						className="mt-6 inline-flex rounded-full bg-[var(--tl-primary)] px-6 py-3 text-sm font-bold text-white transition hover:bg-[var(--tl-primary-strong)]"
+					{message ? (
+						<p role="alert" className="mt-3 text-sm font-semibold text-rose-700">
+							{message}
+						</p>
+					) : null}
+					<button
+						type="button"
+						onClick={startNewOrder}
+						className="mt-6 inline-flex rounded-full bg-[var(--tl-primary)] px-6 py-3 text-sm font-bold text-white"
 					>
+						{t('startNewOrder')}
+					</button>
+					<Link href="/" className="mt-4 block text-sm font-bold text-[var(--tl-primary)] underline">
 						{t('goHome')}
 					</Link>
 				</section>
@@ -640,6 +701,9 @@ export default function CheckoutPage() {
 									<input
 										value={couponCode}
 										onChange={(event) => {
+											couponRequestVersionRef.current += 1;
+											couponValidationRef.current = false;
+											setValidatingCoupon(false);
 											setCouponCode(event.target.value);
 											setCouponError('');
 										}}
