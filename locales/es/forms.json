@@ -4,6 +4,27 @@
 			"yes": "Si",
 			"no": "No",
 			"sending": "Enviando...",
+			"received": "Tu formulario fue recibido. Referencia: {reference}. Conserva esta referencia si necesitas contactar al personal.",
+			"requestReference": "Referencia de la solicitud",
+			"failure": {
+				"validation": "Esta solicitud no fue recibida. Corrige los campos indicados y envía de nuevo. Tus respuestas siguen en esta página.",
+				"rate_limited": "Se enviaron demasiados formularios en poco tiempo. Esta solicitud no fue recibida. Espera unos minutos antes de intentar de nuevo.",
+				"too_large": "El formulario es demasiado grande. Acorta las respuestas largas o borra y repite la firma antes de enviarlo. Esta solicitud no fue recibida.",
+				"rejected": "No se pudo aceptar esta solicitud. Tus respuestas siguen en esta página. Contacta a 24-7 Labs para recibir ayuda.",
+				"outdated": "Este formulario cambió. Esta solicitud no fue recibida. Recarga la página para completar el formulario actual; esto borrará las respuestas de esta página.",
+				"uncertain": "No se pudo confirmar la recepción del formulario. No lo envíes otra vez todavía. Tus respuestas siguen en esta página. Llama a 24-7 Labs con la referencia para que el personal compruebe si fue recibido."
+			},
+			"serverValidation": {
+				"invalid": "Revisa y corrige esta respuesta antes de enviar.",
+				"required": "Completa este campo antes de enviar.",
+				"invalidEmail": "Ingresa un correo válido, como nombre@example.com.",
+				"invalidPhone": "Ingresa un teléfono de 10 a 15 dígitos.",
+				"invalidSignature": "Borra la firma y firma otra vez, o usa la opción de firma escrita.",
+				"invalidDate": "Ingresa una fecha válida.",
+				"mustAgree": "Lee y acepta este acuerdo antes de enviar.",
+				"outdatedForm": "Recarga la página para usar el formulario actual.",
+				"tooLong": "Acorta esta respuesta antes de enviar."
+			},
 			"callNow": "Llamar ahora",
 			"selectOption": "Selecciona una opcion",
 			"selectState": "Selecciona estado",

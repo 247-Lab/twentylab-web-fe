@@ -5,6 +5,7 @@ import { fetchBlogs, fetchCategories, fetchProducts } from '@/lib/api';
 import { normalizeBlogSlug, toCanonicalBlogPath } from '@/lib/blogRoutes';
 import { toCategoryLink, toProductCard, toRecentPost } from '@/lib/content-view-models';
 import { resolveMetadata } from '@/lib/seo';
+import OptionalContentNotice from '@/components/common/OptionalContentNotice';
 
 export async function generateMetadata({ params }) {
 	const [messages, resolvedParams] = await Promise.all([getMessages(), params]);
@@ -45,11 +46,13 @@ export default async function CanonicalBlogDetailsRoute({ params }) {
 		notFound();
 	}
 
-	const [blogs, categories, products] = await Promise.all([
-		fetchBlogs(locale).catch(() => []),
-		fetchCategories(locale).catch(() => []),
-		fetchProducts(locale).catch(() => []),
+	const [blogs, loadedCategories, loadedProducts] = await Promise.all([
+		fetchBlogs(locale),
+		fetchCategories(locale).catch(() => null),
+		fetchProducts(locale).catch(() => null),
 	]);
+	const categories = loadedCategories || [];
+	const products = loadedProducts || [];
 
 	const blog = blogs.find((entry) => entry.slug === slug);
 	if (!blog) notFound();
@@ -80,12 +83,15 @@ export default async function CanonicalBlogDetailsRoute({ params }) {
 	const relatedProductsToShow = relatedProducts.length > 0 ? relatedProducts : products.slice(0, 4);
 
 	return (
-		<BlogDetailPage
-			blog={blog}
-			categories={categories.map(toCategoryLink)}
-			recentPosts={recentPosts.map(toRecentPost)}
-			relatedProducts={relatedProductsToShow.map(toProductCard)}
-			locale={locale}
-		/>
+		<>
+			<OptionalContentNotice unavailable={loadedCategories === null || loadedProducts === null} />
+			<BlogDetailPage
+				blog={blog}
+				categories={categories.map(toCategoryLink)}
+				recentPosts={recentPosts.map(toRecentPost)}
+				relatedProducts={relatedProductsToShow.map(toProductCard)}
+				locale={locale}
+			/>
+		</>
 	);
 }

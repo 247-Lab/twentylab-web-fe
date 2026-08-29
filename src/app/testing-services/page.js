@@ -10,13 +10,7 @@ export default async function TestingServicesRoute({ searchParams }) {
 	const [locale, resolvedSearchParams = {}] = await Promise.all([getLocale(), searchParams]);
 	const initialSearch = typeof resolvedSearchParams.search === 'string' ? resolvedSearchParams.search : '';
 
-	let products = [];
-
-	try {
-		products = await fetchProducts(locale);
-	} catch {
-		products = [];
-	}
+	const products = await fetchProducts(locale);
 	const listingProducts = products.map(toProductCard);
 
 	return (

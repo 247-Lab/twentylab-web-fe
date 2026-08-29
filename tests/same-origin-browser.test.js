@@ -23,7 +23,14 @@ describe('same-origin preview browser contract', () => {
 	it('continues omitting cookies for an explicitly configured cross-origin API', async () => {
 		vi.stubEnv('NEXT_PUBLIC_PROD_API_URL', 'https://api.example.test');
 		const api = await import('../src/lib/api');
-		const fetchMock = vi.fn(async () => jsonResponse(201, { success: true }));
+		const fetchMock = vi.fn(async (_url, options) =>
+			jsonResponse(201, {
+				id: 1,
+				form_type: 'contact',
+				submitted: true,
+				requestId: options.headers['X-Request-ID'],
+			})
+		);
 		vi.stubGlobal('fetch', fetchMock);
 		await api.submitContactForm({ synthetic: true });
 		expect(fetchMock).toHaveBeenCalledWith(
@@ -34,7 +41,15 @@ describe('same-origin preview browser contract', () => {
 
 	it('sends all five forms to the opened host with only same-origin credentials', async () => {
 		const api = await import('../src/lib/api');
-		const fetchMock = vi.fn(async () => jsonResponse(201, { success: true }));
+		const fetchMock = vi.fn(async (_url, options) => {
+			const { form_type: formType } = JSON.parse(options.body);
+			return jsonResponse(201, {
+				id: 1,
+				form_type: formType,
+				submitted: true,
+				requestId: options.headers['X-Request-ID'],
+			});
+		});
 		vi.stubGlobal('fetch', fetchMock);
 		for (const name of [
 			'submitContactForm',

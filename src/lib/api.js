@@ -1,3 +1,6 @@
+import { validRecoveryTicket } from './checkoutRecovery';
+import { FormSubmissionError } from './formFeedback';
+
 const COMPILED_PUBLIC_API_CONFIG = {
 	mode: process.env.NEXT_PUBLIC_MODE,
 	devApiUrl: process.env.NEXT_PUBLIC_DEV_API_URL,
@@ -54,14 +57,6 @@ export const ENDPOINTS = new Proxy(PATH_MAP, {
 	get: (target, prop) => (prop in target ? `${resolveApiOrigin()}/${target[prop]}` : target[prop]),
 });
 
-async function parseJsonResponse(response) {
-	if (!response.ok) {
-		throw new Error(`API failed with status ${response.status}`);
-	}
-
-	return response.json();
-}
-
 function withJsonOptions(body) {
 	return {
 		method: 'POST',
@@ -98,6 +93,7 @@ export async function createCheckoutCapability(payload, fetchImplementation = fe
 			cache: 'no-store',
 			credentials: publicApiCredentials(),
 			referrerPolicy: 'no-referrer',
+			signal: AbortSignal.timeout(15000),
 		})
 	);
 
@@ -149,6 +145,7 @@ export async function processCheckoutPayment(payload, fetchImplementation = fetc
 			cache: 'no-store',
 			credentials: publicApiCredentials(),
 			referrerPolicy: 'no-referrer',
+			signal: AbortSignal.timeout(30000),
 		})
 	);
 
@@ -177,6 +174,42 @@ export async function processCheckoutPayment(payload, fetchImplementation = fetc
 	}
 
 	throw new PublicApiError(responsePayload?.error || 'Payment processing is temporarily unavailable', response.status);
+}
+
+async function paymentStatusRequest(path, payload, fetchImplementation) {
+	const { response, payload: envelope } = await parsePublicJsonResponse(
+		await fetchImplementation(`${ENDPOINTS.PAYMENT}/${path}`, {
+			...withJsonOptions(payload),
+			cache: 'no-store',
+			credentials: publicApiCredentials(),
+			referrerPolicy: 'no-referrer',
+			signal: AbortSignal.timeout(15000),
+		})
+	);
+	if (response.status !== 200 || envelope?.success !== true || !envelope.data) {
+		throw new PublicApiError('Payment status could not be checked', response.status);
+	}
+	return envelope.data;
+}
+
+export async function createPaymentStatusTicket(payload, fetchImplementation = fetch) {
+	const ticket = await paymentStatusRequest('status-ticket', payload, fetchImplementation);
+	if (!validRecoveryTicket(ticket)) throw new PublicApiError('Payment status reference is unavailable', 502);
+	return Object.freeze({ statusToken: ticket.statusToken, reference: ticket.reference });
+}
+
+export async function checkCheckoutPaymentStatus(ticket, fetchImplementation = fetch) {
+	if (!validRecoveryTicket(ticket)) throw new PublicApiError('Payment status could not be confirmed', 400);
+	const data = await paymentStatusRequest('status', { statusToken: ticket.statusToken }, fetchImplementation);
+	if (
+		data.reference !== ticket.reference ||
+		!['succeeded', 'declined', 'confirmation_required'].includes(data.outcome) ||
+		(data.outcome === 'succeeded' && (!Number.isSafeInteger(data.orderId) || data.orderId < 1)) ||
+		(data.outcome !== 'succeeded' && data.orderId !== undefined)
+	) {
+		throw new PublicApiError('Payment status could not be confirmed', 502);
+	}
+	return data.outcome === 'succeeded' ? { outcome: data.outcome, orderId: data.orderId } : { outcome: data.outcome };
 }
 
 function withFormSubmissionOptions(formType, payload) {
@@ -413,7 +446,9 @@ export async function fetchProducts(locale = 'en') {
 		return response.json();
 	});
 
-	return products.map((product) => normalizeProduct(product, locale)).filter(Boolean);
+	const normalized = products.map((product) => normalizeProduct(product, locale));
+	if (normalized.some((product) => !product)) throw new Error('Product content could not be loaded');
+	return normalized;
 }
 
 export async function fetchBlogs(locale = 'en') {
@@ -440,9 +475,11 @@ export async function fetchBlogs(locale = 'en') {
 			? payload.blogs
 			: Array.isArray(payload?.data)
 				? payload.data
-				: [];
-
-	return blogs.map((blog) => normalizeBlog(blog, locale)).filter(Boolean);
+				: null;
+	if (!blogs) throw new Error('Blog content could not be loaded');
+	const normalized = blogs.map((blog) => normalizeBlog(blog, locale));
+	if (normalized.some((blog) => !blog)) throw new Error('Blog content could not be loaded');
+	return normalized;
 }
 
 export async function fetchCategories(locale = 'en') {
@@ -472,7 +509,9 @@ export async function fetchCategories(locale = 'en') {
 				? payload.data
 				: Array.isArray(payload?.data?.categories)
 					? payload.data.categories
-					: [];
+					: null;
+	if (!categories || categories.some((category) => !category?.id))
+		throw new Error('Category content could not be loaded');
 
 	return categories.map((category) => ({
 		...category,
@@ -481,32 +520,75 @@ export async function fetchCategories(locale = 'en') {
 	}));
 }
 
-export async function submitContactForm(payload) {
-	const response = await fetch(ENDPOINTS.FORMS, withFormSubmissionOptions('contact', payload));
-	return parseJsonResponse(response);
+async function submitPublicForm(formType, payload, fetchImplementation) {
+	let reference;
+	try {
+		reference = globalThis.crypto.randomUUID();
+	} catch {
+		throw new FormSubmissionError('rejected', null);
+	}
+	try {
+		const options = withFormSubmissionOptions(formType, payload);
+		const { response, payload: result } = await parsePublicJsonResponse(
+			await fetchImplementation(ENDPOINTS.FORMS, {
+				...options,
+				headers: { ...options.headers, 'X-Request-ID': reference },
+				signal: AbortSignal.timeout(30000),
+			})
+		);
+		if (
+			response.status === 201 &&
+			result?.requestId === reference &&
+			result?.submitted === true &&
+			result.form_type === formType &&
+			Number.isSafeInteger(Number(result.id)) &&
+			Number(result.id) > 0
+		) {
+			return { id: Number(result.id), submitted: true, form_type: formType, reference };
+		}
+		if (
+			response.status === 400 &&
+			result?.requestId === reference &&
+			result?.code === 'FORM_VALIDATION_FAILED' &&
+			result.received === false
+		) {
+			throw new FormSubmissionError(
+				'validation',
+				reference,
+				Array.isArray(result.fieldErrors) ? result.fieldErrors : []
+			);
+		}
+		if (response.status === 429) throw new FormSubmissionError('rate_limited', reference);
+		if (response.status === 413) throw new FormSubmissionError('too_large', reference);
+		if ([401, 403, 415].includes(response.status)) throw new FormSubmissionError('rejected', reference);
+		throw new FormSubmissionError('uncertain', reference);
+	} catch (error) {
+		if (error instanceof FormSubmissionError) throw error;
+		throw new FormSubmissionError('uncertain', reference);
+	}
 }
 
-export async function submitAppointmentForm(payload) {
-	const response = await fetch(ENDPOINTS.FORMS, withFormSubmissionOptions('appointment', payload));
-	return parseJsonResponse(response);
+export async function submitContactForm(payload, fetchImplementation = fetch) {
+	return submitPublicForm('contact', payload, fetchImplementation);
 }
 
-export async function submitPatientIntakeForm(payload) {
-	const response = await fetch(ENDPOINTS.FORMS, withFormSubmissionOptions('patient_intake', payload));
-	return parseJsonResponse(response);
+export async function submitAppointmentForm(payload, fetchImplementation = fetch) {
+	return submitPublicForm('appointment', payload, fetchImplementation);
 }
 
-export async function submitPrescriptionConsentForm(payload) {
-	const response = await fetch(ENDPOINTS.FORMS, withFormSubmissionOptions('consent', payload));
-	return parseJsonResponse(response);
+export async function submitPatientIntakeForm(payload, fetchImplementation = fetch) {
+	return submitPublicForm('patient_intake', payload, fetchImplementation);
 }
 
-export async function submitCovidScreeningForm(payload) {
-	const response = await fetch(ENDPOINTS.FORMS, withFormSubmissionOptions('covid_screening', payload));
-	return parseJsonResponse(response);
+export async function submitPrescriptionConsentForm(payload, fetchImplementation = fetch) {
+	return submitPublicForm('consent', payload, fetchImplementation);
 }
 
-export async function validateCoupon(code) {
+export async function submitCovidScreeningForm(payload, fetchImplementation = fetch) {
+	return submitPublicForm('covid_screening', payload, fetchImplementation);
+}
+
+export async function validateCoupon(code, fetchImplementation = fetch) {
 	const normalizedCode = String(code || '')
 		.trim()
 		.toUpperCase();
@@ -514,14 +596,20 @@ export async function validateCoupon(code) {
 		throw new Error('Coupon code is required');
 	}
 
-	const response = await fetch(`${ENDPOINTS.COUPONS}/validate/${encodeURIComponent(normalizedCode)}`, {
-		method: 'POST',
-		cache: 'no-store',
-		credentials: publicApiCredentials(),
-		headers: {
-			Accept: 'application/json',
-		},
-	});
+	let response;
+	try {
+		response = await fetchImplementation(`${ENDPOINTS.COUPONS}/validate/${encodeURIComponent(normalizedCode)}`, {
+			method: 'POST',
+			cache: 'no-store',
+			credentials: publicApiCredentials(),
+			headers: {
+				Accept: 'application/json',
+			},
+			signal: AbortSignal.timeout(15000),
+		});
+	} catch {
+		throw new PublicApiError('Coupon could not be checked', 0);
+	}
 
 	let payload = null;
 	try {
@@ -530,13 +618,11 @@ export async function validateCoupon(code) {
 		payload = null;
 	}
 
-	if (!response.ok) {
-		throw new Error(payload?.error || `API failed with status ${response.status}`);
-	}
+	if (!response.ok) throw new PublicApiError('Coupon could not be checked', response.status);
 
 	if (payload?.valid) {
 		return payload;
 	}
 
-	throw new Error(payload?.error || 'Invalid or expired coupon code');
+	throw new PublicApiError('Coupon could not be checked', 502);
 }

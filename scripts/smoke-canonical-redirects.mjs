@@ -62,6 +62,10 @@ const api = createServer((request, response) => {
 		response.end('[]');
 		return;
 	}
+	if (url.pathname === '/api/blogs') {
+		response.end('[]');
+		return;
+	}
 	response.statusCode = 404;
 	response.end(JSON.stringify({ error: 'synthetic_not_found' }));
 });

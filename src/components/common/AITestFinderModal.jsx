@@ -29,6 +29,8 @@ export default function AITestFinderModal({ isOpen, onClose }) {
 		recommendedBody: t('recommendedBody'),
 		loading: t('loading'),
 		empty: t('empty'),
+		loadError: t('loadError'),
+		tryAgain: t('tryAgain'),
 		price: t('price'),
 		priceUnavailable: t('priceUnavailable'),
 		bookNow: t('bookNow'),
@@ -80,12 +82,12 @@ export default function AITestFinderModal({ isOpen, onClose }) {
 		return activeSubcategory.refinements[path.refinement]?.productIds || [];
 	}, [activeSubcategory, path.refinement]);
 
-	const { isLoadingProducts, recommendedProducts, resetRecommendedProducts } = useRecommendedProducts({
-		isOpen,
-		step,
-		selectedProductIds,
-		fallbackTestName: copy.fallbackTestName,
-	});
+	const { isLoadingProducts, loadFailed, recommendedProducts, retryRecommendedProducts, resetRecommendedProducts } =
+		useRecommendedProducts({
+			isOpen,
+			step,
+			selectedProductIds,
+		});
 
 	useEffect(() => {
 		if (!isOpen) {
@@ -293,6 +295,16 @@ export default function AITestFinderModal({ isOpen, onClose }) {
 					<p className="rounded-2xl border border-sky-100 bg-sky-50/70 px-3 py-4 text-xs font-semibold text-[var(--tl-primary)] sm:px-4 sm:py-5 sm:text-sm">
 						{copy.loading}
 					</p>
+				) : loadFailed ? (
+					<div
+						role="alert"
+						className="rounded-2xl border border-amber-300 bg-amber-50 px-3 py-4 text-sm text-amber-950 sm:px-4 sm:py-5"
+					>
+						<p>{copy.loadError}</p>
+						<button type="button" className="mt-3 font-bold underline" onClick={retryRecommendedProducts}>
+							{copy.tryAgain}
+						</button>
+					</div>
 				) : recommendedProducts.length === 0 ? (
 					<p className="rounded-2xl border border-sky-100 bg-sky-50/70 px-3 py-4 text-xs text-slate-600 sm:px-4 sm:py-5 sm:text-sm">
 						{copy.empty}

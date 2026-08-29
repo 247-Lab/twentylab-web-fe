@@ -2,12 +2,22 @@ import { beforeAll, describe, expect, it } from 'vitest';
 
 let createCheckoutCapability;
 let processCheckoutPayment;
+let createPaymentStatusTicket;
+let checkCheckoutPaymentStatus;
+let validateCoupon;
 let PublicApiError;
 
 beforeAll(async () => {
 	process.env.NEXT_PUBLIC_MODE = 'prod';
 	process.env.NEXT_PUBLIC_PROD_API_URL = 'https://api.example.test';
-	({ createCheckoutCapability, processCheckoutPayment, PublicApiError } = await import('../src/lib/api.js'));
+	({
+		createCheckoutCapability,
+		processCheckoutPayment,
+		createPaymentStatusTicket,
+		checkCheckoutPaymentStatus,
+		validateCoupon,
+		PublicApiError,
+	} = await import('../src/lib/api.js'));
 });
 
 function jsonResponse(status, payload) {
@@ -81,5 +91,36 @@ describe('checkout API client', () => {
 		await expect(
 			processCheckoutPayment({}, async () => jsonResponse(402, { success: false, error: 'Proxy response' }))
 		).rejects.toBeInstanceOf(PublicApiError);
+	});
+
+	it('uses a separate read-only status ticket and rejects inconsistent terminal evidence', async () => {
+		const ticket = {
+			reference: 'PAY-17',
+			statusToken: `status-v1.17.1800000000.${'a'.repeat(43)}.${'b'.repeat(43)}`,
+		};
+		await expect(
+			createPaymentStatusTicket({}, async () => jsonResponse(200, { success: true, data: ticket }))
+		).resolves.toEqual(ticket);
+		await expect(
+			checkCheckoutPaymentStatus(ticket, async () =>
+				jsonResponse(200, { success: true, data: { reference: 'PAY-17', outcome: 'confirmation_required' } })
+			)
+		).resolves.toEqual({ outcome: 'confirmation_required' });
+		await expect(
+			checkCheckoutPaymentStatus(ticket, async () =>
+				jsonResponse(200, { success: true, data: { reference: 'PAY-17', outcome: 'declined', orderId: 99 } })
+			)
+		).rejects.toBeInstanceOf(PublicApiError);
+	});
+
+	it('keeps coupon rejection separate from an outage without exposing response text', async () => {
+		await expect(
+			validateCoupon('bad', async () => jsonResponse(400, { error: 'private validation detail' }))
+		).rejects.toMatchObject({ name: 'PublicApiError', status: 400, message: 'Coupon could not be checked' });
+		await expect(
+			validateCoupon('test', async () => {
+				throw new Error('private network detail');
+			})
+		).rejects.toMatchObject({ name: 'PublicApiError', status: 0, message: 'Coupon could not be checked' });
 	});
 });

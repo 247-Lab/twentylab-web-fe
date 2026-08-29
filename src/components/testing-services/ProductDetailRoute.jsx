@@ -6,6 +6,7 @@ import { toCategoryLink, toProductCard } from '@/lib/content-view-models';
 import { resolveMetadata } from '@/lib/seo';
 
 import TestingServiceDetailsPage from './TestingServiceDetailsPage';
+import OptionalContentNotice from '@/components/common/OptionalContentNotice';
 
 export async function generateProductDetailMetadata({ id, canonicalPath }) {
 	const [locale, messages] = await Promise.all([getLocale(), getMessages()]);
@@ -33,26 +34,23 @@ export default async function ProductDetailRoute({ id }) {
 	const [locale, messages] = await Promise.all([getLocale(), getMessages()]);
 	const t = messages?.TestingServiceDetailsPage;
 	const [products, allCategories] = await Promise.all([
-		fetchProducts(locale).catch((error) => {
-			console.error('Failed to fetch products:', error);
-			return [];
-		}),
-		fetchCategories(locale).catch((error) => {
-			console.error('Failed to fetch categories:', error);
-			return [];
-		}),
+		fetchProducts(locale),
+		fetchCategories(locale).catch(() => null),
 	]);
 
 	const product = products.find((entry) => String(entry.id) === String(id));
 	if (!product) notFound();
 
 	return (
-		<TestingServiceDetailsPage
-			product={product}
-			allProducts={products.map(toProductCard)}
-			allCategories={allCategories.map(toCategoryLink)}
-			t={t}
-			locale={locale}
-		/>
+		<>
+			<OptionalContentNotice unavailable={allCategories === null} />
+			<TestingServiceDetailsPage
+				product={product}
+				allProducts={products.map(toProductCard)}
+				allCategories={(allCategories || []).map(toCategoryLink)}
+				t={t}
+				locale={locale}
+			/>
+		</>
 	);
 }

@@ -1,4 +1,12 @@
 {
+	"ErrorPage": {
+		"title": "No se pudo cargar esta página",
+		"message": "La información no está disponible temporalmente. Intenta cargar la página otra vez. Si continúa, contacta a 24-7 Labs.",
+		"retry": "Cargar la página otra vez",
+		"contact": "Contactar a 24-7 Labs",
+		"relatedUnavailable": "No se pudieron cargar algunos elementos relacionados. El contenido principal sigue disponible.",
+		"submissionCaution": "Si estabas enviando un formulario o un pago, comprueba si fue recibido antes de enviarlo de nuevo."
+	},
 	"SiteNavbar": {
 		"brand": {
 			"logoAlt": "24-7 Labs"
@@ -92,7 +100,8 @@
 		"fallbackTestName": "Prueba",
 		"ariaLabel": "Buscador de pruebas con IA",
 		"badgeTitle": "Buscador IA",
-		"loadError": "No se pudieron cargar los productos"
+		"loadError": "No se pudieron cargar las recomendaciones. No se mostrará ningún producto ni precio hasta comprobar el catálogo actual.",
+		"tryAgain": "Intentar de nuevo"
 	},
 	"NotFoundPage": {
 		"metadata": {
@@ -168,15 +177,26 @@
 		"confirmedBeforePayment": "Se confirma antes del pago",
 		"cartChanged": "Tu carrito cambio. Revisa el pedido actualizado antes del pago.",
 		"sessionExpired": "La confirmacion del precio vencio. Revisa el pedido de nuevo antes del pago.",
-		"cardEntryError": "Authorize.Net no pudo validar la informacion de la tarjeta. No se envio ningun pago; revisa el formulario e intentalo de nuevo.",
+		"cardEntryError": "El ingreso seguro no pudo validar la informacion de la tarjeta. No se envio ningun pago; revisa el formulario e intentalo de nuevo.",
 		"paymentDeclined": "El pago fue rechazado. No se realizo ningun pedido. Puedes usar otra tarjeta o contactar a 24-7 Labs.",
-		"confirmationRequired": "Se esta confirmando el resultado del pago. No envies otro pago. Contacta a 24-7 Labs e indica el correo electronico utilizado aqui.",
+		"confirmationRequired": "Tu pago aún no está confirmado. No pagues de nuevo. Consulta el estado del pago o contacta a 24-7 Labs con la referencia que aparece abajo.",
+		"paymentNeedsConfirmation": "Verifica este pago antes de continuar",
+		"checkingPreviousPayment": "Buscando un pago anterior…",
+		"paymentReference": "Referencia del pago",
+		"checkPaymentStatus": "Consultar estado del pago",
+		"checkingStatus": "Consultando el estado…",
+		"statusCheckFailed": "No se pudo consultar el estado. No pagues de nuevo. Intenta consultar más tarde o contacta a 24-7 Labs con la referencia del pago.",
+		"recoveryUnavailable": "Este navegador no pudo leer la referencia del pago anterior. No pagues de nuevo si ya lo intentaste. Contacta a 24-7 Labs antes de continuar.",
+		"paymentPreparationFailed": "No se pudo preparar el pago seguro. No se envió un nuevo pago. Comprueba que no tengas otra pestaña de pago abierta. Si continúa, contacta a 24-7 Labs.",
+		"tooManyRequests": "Se han realizado demasiadas solicitudes. Espera unos minutos antes de revisar el pedido. Esta revisión no envió ningún pago.",
 		"paymentLibraryUnavailable": "La entrada segura de tarjetas no esta disponible temporalmente. No se envio ningun pago.",
 		"requiredField": "Completa todos los campos obligatorios.",
-		"submitError": "No se pudo crear el pedido. Intentalo de nuevo.",
+		"submitError": "No se pudo confirmar el total. Revisa los datos e intenta revisar el pedido de nuevo. Esta revisión no envió ningún pago.",
 		"cartEmpty": "Tu carrito esta vacio.",
 		"couponRequired": "Ingresa un codigo de cupon.",
 		"couponInvalid": "Codigo invalido o vencido.",
+		"couponBusy": "Se consultaron demasiados cupones. Espera unos minutos e intenta de nuevo. No se aplicó ningún descuento.",
+		"couponUnavailable": "No se pudo consultar el cupón. No se aplicó ningún descuento. Intenta de nuevo más tarde.",
 		"loadingStates": "Cargando estados...",
 		"selectState": "Selecciona un estado",
 		"normalHours": "Horario normal",

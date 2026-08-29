@@ -12,10 +12,12 @@ function toRecommendation(product) {
 	};
 }
 
-export default function useRecommendedProducts({ isOpen, step, selectedProductIds, fallbackTestName }) {
+export default function useRecommendedProducts({ isOpen, step, selectedProductIds }) {
 	const locale = useLocale();
 	const [isLoadingProducts, setIsLoadingProducts] = useState(false);
 	const [recommendedProducts, setRecommendedProducts] = useState([]);
+	const [loadFailed, setLoadFailed] = useState(false);
+	const [retrySequence, setRetrySequence] = useState(0);
 
 	useEffect(() => {
 		if (!isOpen || step !== 5) {
@@ -24,6 +26,7 @@ export default function useRecommendedProducts({ isOpen, step, selectedProductId
 
 		if (selectedProductIds.length === 0) {
 			setRecommendedProducts([]);
+			setLoadFailed(false);
 			return;
 		}
 
@@ -31,6 +34,7 @@ export default function useRecommendedProducts({ isOpen, step, selectedProductId
 
 		const loadRecommendedProducts = async () => {
 			setIsLoadingProducts(true);
+			setLoadFailed(false);
 
 			try {
 				const products = await fetchProducts(locale);
@@ -41,16 +45,8 @@ export default function useRecommendedProducts({ isOpen, step, selectedProductId
 				const productById = new Map(products.map((product) => [String(product.id), product]));
 				const orderedRecommendations = selectedProductIds.map((id) => {
 					const match = productById.get(String(id));
-					if (match) {
-						return toRecommendation(match);
-					}
-
-					return {
-						id,
-						name: `${fallbackTestName} #${id}`,
-						image: '/images/placeholder.png',
-						price: null,
-					};
+					if (!match) throw new Error('Recommendation catalog is incomplete');
+					return toRecommendation(match);
 				});
 
 				setRecommendedProducts(orderedRecommendations);
@@ -59,14 +55,8 @@ export default function useRecommendedProducts({ isOpen, step, selectedProductId
 					return;
 				}
 
-				setRecommendedProducts(
-					selectedProductIds.map((id) => ({
-						id,
-						name: `${fallbackTestName} #${id}`,
-						image: '/images/placeholder.png',
-						price: null,
-					}))
-				);
+				setRecommendedProducts([]);
+				setLoadFailed(true);
 			} finally {
 				if (isActive) {
 					setIsLoadingProducts(false);
@@ -79,16 +69,19 @@ export default function useRecommendedProducts({ isOpen, step, selectedProductId
 		return () => {
 			isActive = false;
 		};
-	}, [fallbackTestName, isOpen, locale, selectedProductIds, step]);
+	}, [isOpen, locale, retrySequence, selectedProductIds, step]);
 
 	const resetRecommendedProducts = () => {
 		setRecommendedProducts([]);
 		setIsLoadingProducts(false);
+		setLoadFailed(false);
 	};
 
 	return {
 		isLoadingProducts,
+		loadFailed,
 		recommendedProducts,
+		retryRecommendedProducts: () => setRetrySequence((value) => value + 1),
 		resetRecommendedProducts,
 	};
 }

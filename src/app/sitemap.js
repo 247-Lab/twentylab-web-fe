@@ -10,9 +10,9 @@ export const dynamic = 'force-dynamic';
 
 export default async function sitemap() {
 	const [products, categories, blogs] = await Promise.all([
-		fetchProducts('en').catch(() => []),
-		fetchCategories('en').catch(() => []),
-		fetchBlogs('en').catch(() => []),
+		fetchProducts('en'),
+		fetchCategories('en'),
+		fetchBlogs('en'),
 	]);
 
 	const entries = new Map();

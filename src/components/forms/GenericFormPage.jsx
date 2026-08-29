@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { ArrowRight, Clock3, Loader2, Mail, MapPin, PhoneCall } from 'lucide-react';
 import FormFieldRenderer from '@/components/forms/generic-form/FormFieldRenderer';
@@ -8,6 +8,7 @@ import { buildFormConfig, flattenVisibleFields, initialFieldValues } from '@/com
 import { fieldConstraintError } from '@/components/forms/generic-form/validationConstraints';
 import { appData } from '@/lib/static-data';
 import { normalizeDateOnly, safeT } from '@/components/forms/generic-form/utils';
+import { formErrorFields, formFailureKind } from '@/lib/formFeedback';
 
 export default function GenericFormPage({ formKey, initialValues = {} }) {
 	const t = useTranslations('Forms');
@@ -21,6 +22,16 @@ export default function GenericFormPage({ formKey, initialValues = {} }) {
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [submitResult, setSubmitResult] = useState({ status: 'idle', message: '' });
 	const [validationAttempted, setValidationAttempted] = useState(false);
+	const formRef = useRef(null);
+	const submittingRef = useRef(false);
+	const [focusSequence, setFocusSequence] = useState(0);
+	useEffect(() => {
+		if (focusSequence === 0) return;
+		const target =
+			formRef.current?.querySelector('[aria-invalid="true"], [data-field-invalid="true"]') ||
+			formRef.current?.querySelector('[data-form-feedback]');
+		target?.focus();
+	}, [focusSequence]);
 
 	const optionSets = useMemo(
 		() => ({
@@ -88,25 +99,33 @@ export default function GenericFormPage({ formKey, initialValues = {} }) {
 
 	async function handleSubmit(event) {
 		event.preventDefault();
+		if (submittingRef.current || submitResult.status === 'uncertain') return;
 		setSubmitResult({ status: 'idle', message: '' });
 		setValidationAttempted(true);
 
 		const isValid = validateForm();
 		if (!isValid) {
+			setFocusSequence((value) => value + 1);
 			return;
 		}
 
 		setIsSubmitting(true);
+		submittingRef.current = true;
 		try {
 			const payload = config.buildPayload(values, { locale });
-			await config.submit(payload);
-			setSubmitResult({ status: 'success', message: config.successMessage });
+			const receipt = await config.submit(payload);
+			setSubmitResult({ status: 'success', message: t('common.received', { reference: receipt.id }) });
 			setValues(initialFieldValues(formKey));
 			setValidationAttempted(false);
-		} catch {
-			setSubmitResult({ status: 'error', message: config.errorMessage });
+		} catch (error) {
+			const status = formFailureKind(error);
+			const fieldErrors = formErrorFields(error, flattenVisibleFields(config, values), t);
+			setErrors(fieldErrors);
+			setSubmitResult({ status, message: t(`common.failure.${status}`), reference: error?.reference });
+			setFocusSequence((value) => value + 1);
 		} finally {
 			setIsSubmitting(false);
+			submittingRef.current = false;
 		}
 	}
 
@@ -165,49 +184,71 @@ export default function GenericFormPage({ formKey, initialValues = {} }) {
 					) : null}
 
 					<form
+						ref={formRef}
+						noValidate
 						onSubmit={handleSubmit}
 						className={`overflow-hidden rounded-3xl border border-sky-100 bg-white p-6 shadow-sm ${
 							config.layout === 'single' ? 'mx-auto max-w-5xl' : ''
 						}`}
 					>
-						{config.sections.map((section, sectionIndex) => (
-							<div key={`${formKey}-section-${sectionIndex}`} className={sectionIndex > 0 ? 'mt-8' : ''}>
-								<h2 className="font-display text-2xl font-extrabold text-slate-900">{section.title}</h2>
-								<div className="mt-4 grid gap-4 md:grid-cols-2">
-									{section.fields.map((field) => (
-										<FormFieldRenderer
-											key={field.name}
-											field={field}
-											value={values[field.name]}
-											fieldError={errors[field.name]}
-											values={values}
-											t={t}
-											onChange={setFieldValue}
-										/>
-									))}
+						<fieldset disabled={isSubmitting}>
+							{config.sections.map((section, sectionIndex) => (
+								<div key={`${formKey}-section-${sectionIndex}`} className={sectionIndex > 0 ? 'mt-8' : ''}>
+									<h2 className="font-display text-2xl font-extrabold text-slate-900">{section.title}</h2>
+									<div className="mt-4 grid gap-4 md:grid-cols-2">
+										{section.fields.map((field) => (
+											<FormFieldRenderer
+												key={field.name}
+												field={field}
+												fieldId={`form-${formKey}-${field.name}`}
+												value={values[field.name]}
+												fieldError={errors[field.name]}
+												values={values}
+												t={t}
+												onChange={setFieldValue}
+											/>
+										))}
+									</div>
 								</div>
-							</div>
-						))}
+							))}
+						</fieldset>
 
-						{validationAttempted && Object.keys(errors).length > 0 ? (
-							<p className="mt-5 rounded-xl bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+						{validationAttempted && Object.values(errors).some(Boolean) ? (
+							<p role="alert" className="mt-5 rounded-xl bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
 								{safeT(t, 'common.validation.fixErrors', 'Please fix the errors above before submitting.')}
 							</p>
 						) : null}
 
 						{submitResult.status !== 'idle' ? (
-							<p
+							<div
+								role={submitResult.status === 'success' ? 'status' : 'alert'}
+								tabIndex={-1}
+								data-form-feedback
 								className={`mt-5 rounded-xl px-4 py-3 text-sm font-semibold ${
-									submitResult.status === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
+									submitResult.status === 'success'
+										? 'bg-emerald-50 text-emerald-700'
+										: submitResult.status === 'uncertain'
+											? 'bg-amber-50 text-amber-950'
+											: 'bg-rose-50 text-rose-700'
 								}`}
 							>
 								{submitResult.message}
-							</p>
+								{submitResult.reference && (
+									<p className="mt-2 break-all">
+										{t('common.requestReference')}: {submitResult.reference}
+									</p>
+								)}
+								{submitResult.status === 'uncertain' && (
+									<a className="mt-2 block underline" href="tel:8139323741">
+										{safeT(t, 'common.callNow', 'Call now')}
+									</a>
+								)}
+							</div>
 						) : null}
 
 						<button
 							type="submit"
-							disabled={isSubmitting}
+							disabled={isSubmitting || submitResult.status === 'uncertain'}
 							className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--tl-primary)] px-6 py-3 text-sm font-bold text-white transition hover:bg-[var(--tl-primary-strong)] disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
 						>
 							{isSubmitting ? (

@@ -1,4 +1,12 @@
 {
+	"ErrorPage": {
+		"title": "This page could not be loaded",
+		"message": "The information is temporarily unavailable. Try loading the page again. If this continues, contact 24-7 Labs.",
+		"retry": "Load page again",
+		"contact": "Contact 24-7 Labs",
+		"relatedUnavailable": "Some related items could not be loaded. The main content is still available.",
+		"submissionCaution": "If you were sending a form or payment, check whether it was received before submitting again."
+	},
 	"SiteNavbar": {
 		"brand": {
 			"logoAlt": "24-7 Labs"
@@ -92,7 +100,8 @@
 		"fallbackTestName": "Test",
 		"ariaLabel": "AI test finder",
 		"badgeTitle": "AI Test Finder",
-		"loadError": "Unable to load products"
+		"loadError": "Recommendations could not be loaded. No product or price is being shown until the current catalog can be checked.",
+		"tryAgain": "Try again"
 	},
 	"NotFoundPage": {
 		"metadata": {
@@ -168,15 +177,26 @@
 		"confirmedBeforePayment": "Confirmed before payment",
 		"cartChanged": "Your cart changed. Review the updated order before payment.",
 		"sessionExpired": "Your price confirmation expired. Review the order again before payment.",
-		"cardEntryError": "Authorize.Net could not validate the card information. No payment was submitted; check the form and try again.",
+		"cardEntryError": "Secure card entry could not validate the card information. No payment was submitted; check the form and try again.",
 		"paymentDeclined": "The payment was declined. No order was placed. You may use a different card or contact 24-7 Labs.",
-		"confirmationRequired": "The payment outcome is being confirmed. Do not submit another payment. Contact 24-7 Labs and provide the email address used here.",
+		"confirmationRequired": "Your payment is not yet confirmed. Do not pay again. Use Check payment status, or contact 24-7 Labs with the payment reference below.",
+		"paymentNeedsConfirmation": "Check this payment before continuing",
+		"checkingPreviousPayment": "Checking for a previous payment…",
+		"paymentReference": "Payment reference",
+		"checkPaymentStatus": "Check payment status",
+		"checkingStatus": "Checking status…",
+		"statusCheckFailed": "Payment status could not be checked. Do not pay again. Try checking later or contact 24-7 Labs with your payment reference.",
+		"recoveryUnavailable": "This browser could not read the previous payment reference. Do not pay again if you already tried. Contact 24-7 Labs to check before continuing.",
+		"paymentPreparationFailed": "Secure checkout could not be prepared. No new payment was submitted. Make sure checkout is not open in another tab. If this continues, contact 24-7 Labs for help.",
+		"tooManyRequests": "There have been too many requests. Wait a few minutes before reviewing the order again. No payment was submitted by this review.",
 		"paymentLibraryUnavailable": "Secure card entry is temporarily unavailable. No payment was submitted.",
 		"requiredField": "Please complete all required fields.",
-		"submitError": "Failed to create order. Please try again.",
+		"submitError": "The order total could not be confirmed. Check your details and try reviewing again. No payment was submitted by this review.",
 		"cartEmpty": "Your cart is empty.",
 		"couponRequired": "Please enter a coupon code.",
 		"couponInvalid": "Invalid or expired coupon code.",
+		"couponBusy": "Too many coupon checks were made. Wait a few minutes, then try again. No discount was applied.",
+		"couponUnavailable": "The coupon could not be checked right now. No discount was applied. Try again later.",
 		"loadingStates": "Loading states...",
 		"selectState": "Select state",
 		"normalHours": "Normal hours",
