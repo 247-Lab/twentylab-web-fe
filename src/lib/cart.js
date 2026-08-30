@@ -1,8 +1,23 @@
 const CART_STORAGE_KEY = 'twentylab.cart.v1';
+const MAX_CART_ITEM_QUANTITY = 100;
 
 function toNumber(value) {
 	const numeric = Number(value);
 	return Number.isFinite(numeric) ? numeric : null;
+}
+
+function toCartId(value) {
+	const id = Number(value);
+	return Number.isSafeInteger(id) && id > 0 ? String(id) : null;
+}
+
+function toCartQuantity(value) {
+	const quantity = Number(value);
+	return Number.isSafeInteger(quantity) && quantity >= 1 ? Math.min(quantity, MAX_CART_ITEM_QUANTITY) : 1;
+}
+
+function toOptionalText(value) {
+	return typeof value === 'string' && value.trim() ? value : null;
 }
 
 export function getItemPrice(item) {
@@ -21,21 +36,25 @@ export function getItemPrice(item) {
 }
 
 export function makeCartItem(product, options = {}) {
-	if (!product?.id) {
+	const id = toCartId(product?.id);
+	if (!id) {
 		return null;
 	}
 
-	const quantity = Math.max(1, Number(options.quantity) || 1);
-	const variantId = options.variantId ? String(options.variantId) : null;
-	const variantLabel = options.variantLabel ? String(options.variantLabel) : null;
+	const quantity = toCartQuantity(options.quantity);
+	const variantId = toCartId(options.variantId);
+	const variantLabel = toOptionalText(options.variantLabel);
 	const price = getItemPrice(product);
-	const image = product.mainImage || product.image || '/images/placeholder.png';
+	if (price === null) {
+		return null;
+	}
+	const image = toOptionalText(product.mainImage) || toOptionalText(product.image) || '/images/placeholder.png';
 
 	return {
-		id: String(product.id),
+		id,
 		variantId,
-		key: variantId ? `${product.id}:${variantId}` : String(product.id),
-		name: product.name ?? `Product ${product.id}`,
+		key: variantId ? `${id}:${variantId}` : id,
+		name: toOptionalText(product.name) || `Product ${id}`,
 		price,
 		quantity,
 		image,
@@ -44,29 +63,46 @@ export function makeCartItem(product, options = {}) {
 }
 
 export function normalizeCart(rawCart) {
-	const items = Array.isArray(rawCart?.items)
+	const normalizedItems = Array.isArray(rawCart?.items)
 		? rawCart.items
 				.map((item) => {
-					if (!item?.id || !item?.key) {
+					const id = toCartId(item?.id);
+					if (!id) {
 						return null;
 					}
 
-					const quantity = Math.max(1, Number(item.quantity) || 1);
-					const price = toNumber(item.price);
+					const quantity = toCartQuantity(item.quantity);
+					const rawPrice = toNumber(item.price);
+					const price = rawPrice !== null && rawPrice > 0 ? rawPrice : null;
+					const variantId = toCartId(item.variantId);
 
 					return {
-						id: String(item.id),
-						variantId: item.variantId ? String(item.variantId) : null,
-						key: String(item.key),
-						name: item.name ?? `Product ${item.id}`,
+						id,
+						variantId,
+						key: variantId ? `${id}:${variantId}` : id,
+						name: toOptionalText(item.name) || `Product ${id}`,
 						price,
 						quantity,
-						image: item.image || '/images/placeholder.png',
-						variantLabel: item.variantLabel ? String(item.variantLabel) : null,
+						image: toOptionalText(item.image) || '/images/placeholder.png',
+						variantLabel: toOptionalText(item.variantLabel),
 					};
 				})
-				.filter(Boolean)
+				.filter((item) => item && item.price !== null)
 		: [];
+	const items = [];
+	const itemIndexes = new Map();
+	for (const item of normalizedItems) {
+		const existingIndex = itemIndexes.get(item.key);
+		if (existingIndex === undefined) {
+			itemIndexes.set(item.key, items.length);
+			items.push(item);
+			continue;
+		}
+		items[existingIndex] = {
+			...items[existingIndex],
+			quantity: Math.min(MAX_CART_ITEM_QUANTITY, items[existingIndex].quantity + item.quantity),
+		};
+	}
 
 	const subtotal = items.reduce((total, item) => {
 		return total + (item.price || 0) * item.quantity;
@@ -80,29 +116,65 @@ export function normalizeCart(rawCart) {
 	};
 }
 
-export function loadCartFromStorage() {
-	if (typeof window === 'undefined') {
-		return normalizeCart({ items: [] });
+export function readCartFromStorage(storage) {
+	let targetStorage = storage;
+	if (targetStorage === undefined) {
+		try {
+			targetStorage = typeof window === 'undefined' ? null : window.localStorage;
+		} catch {
+			return { cart: normalizeCart({ items: [] }), readable: false };
+		}
+	}
+	if (!targetStorage) {
+		return { cart: normalizeCart({ items: [] }), readable: false };
 	}
 
 	try {
-		const value = window.localStorage.getItem(CART_STORAGE_KEY);
+		const value = targetStorage.getItem(CART_STORAGE_KEY);
 		if (!value) {
-			return normalizeCart({ items: [] });
+			return { cart: normalizeCart({ items: [] }), readable: true };
 		}
 
-		return normalizeCart(JSON.parse(value));
+		const parsed = JSON.parse(value);
+		const rawItems = parsed?.items;
+		const structurallySafe =
+			Array.isArray(rawItems) &&
+			rawItems.every((item) => {
+				const id = toCartId(item?.id);
+				const variantId = item?.variantId == null ? null : toCartId(item.variantId);
+				const quantity = Number(item?.quantity);
+				const price = toNumber(item?.price);
+				return (
+					id !== null &&
+					(item?.variantId == null || variantId !== null) &&
+					Number.isSafeInteger(quantity) &&
+					quantity >= 1 &&
+					quantity <= MAX_CART_ITEM_QUANTITY &&
+					price !== null &&
+					price > 0
+				);
+			});
+		return { cart: normalizeCart(parsed), readable: structurallySafe };
 	} catch {
-		return normalizeCart({ items: [] });
+		return { cart: normalizeCart({ items: [] }), readable: false };
 	}
+}
+
+export function loadCartFromStorage() {
+	return readCartFromStorage().cart;
 }
 
 export function saveCartToStorage(cart) {
 	if (typeof window === 'undefined') {
-		return;
+		return false;
 	}
 
-	window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify({ items: cart.items }));
+	try {
+		window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify({ items: cart.items }));
+		return true;
+	} catch {
+		return false;
+	}
 }
 
-export { CART_STORAGE_KEY };
+export { CART_STORAGE_KEY, MAX_CART_ITEM_QUANTITY };

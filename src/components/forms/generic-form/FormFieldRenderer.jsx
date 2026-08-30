@@ -2,7 +2,15 @@ import SignatureField from '@/components/forms/SignatureField';
 import { inputClassName, safeT } from './utils';
 import { fieldMaxLength } from './validationConstraints';
 
-export default function FormFieldRenderer({ field, value, fieldError, values, t, onChange }) {
+export default function FormFieldRenderer({
+	field,
+	fieldId = `form-${field.name}`,
+	value,
+	fieldError,
+	values,
+	t,
+	onChange,
+}) {
 	if (typeof field.showWhen === 'function' && !field.showWhen(values)) {
 		return null;
 	}
@@ -10,6 +18,19 @@ export default function FormFieldRenderer({ field, value, fieldError, values, t,
 	const isFullWidth = field.span === 'full';
 	const wrapperClass = isFullWidth ? 'md:col-span-2' : '';
 	const maxLength = fieldMaxLength(field.name);
+	const errorId = `${fieldId}-error`;
+	const inputProps = {
+		id: fieldId,
+		name: field.name,
+		'aria-invalid': Boolean(fieldError),
+		'aria-describedby': fieldError ? errorId : undefined,
+		'aria-required': Boolean(field.required),
+	};
+	const errorMessage = fieldError ? (
+		<p id={errorId} className="mt-1 text-xs text-rose-700">
+			{fieldError}
+		</p>
+	) : null;
 
 	if (field.type === 'notice') {
 		return (
@@ -40,6 +61,7 @@ export default function FormFieldRenderer({ field, value, fieldError, values, t,
 				</details>
 				<label className="mt-3 flex items-start gap-2 text-sm font-semibold text-slate-800">
 					<input
+						{...inputProps}
 						type="checkbox"
 						checked={Boolean(value)}
 						onChange={(event) => onChange(field.name, event.target.checked)}
@@ -47,15 +69,15 @@ export default function FormFieldRenderer({ field, value, fieldError, values, t,
 					/>
 					<span>{safeT(t, 'common.agreeTo', 'I have read and agree.')}</span>
 				</label>
-				{fieldError ? <p className="mt-1 text-xs text-rose-600">{fieldError}</p> : null}
+				{errorMessage}
 			</div>
 		);
 	}
 
 	if (field.type === 'radio') {
 		return (
-			<div key={field.name} className="md:col-span-2">
-				<p className="text-sm font-semibold text-slate-700">{field.label}</p>
+			<fieldset key={field.name} className="md:col-span-2">
+				<legend className="text-sm font-semibold text-slate-700">{field.label}</legend>
 				<div className="mt-2 flex flex-wrap gap-4">
 					{field.options.map((option) => (
 						<label
@@ -63,8 +85,9 @@ export default function FormFieldRenderer({ field, value, fieldError, values, t,
 							className="inline-flex items-center gap-2 text-sm text-slate-700"
 						>
 							<input
+								{...inputProps}
+								id={`${fieldId}-${option.value}`}
 								type="radio"
-								name={field.name}
 								value={option.value}
 								checked={value === option.value}
 								onChange={(event) => onChange(field.name, event.target.value)}
@@ -74,8 +97,8 @@ export default function FormFieldRenderer({ field, value, fieldError, values, t,
 						</label>
 					))}
 				</div>
-				{fieldError ? <p className="mt-1 text-xs text-rose-600">{fieldError}</p> : null}
-			</div>
+				{errorMessage}
+			</fieldset>
 		);
 	}
 
@@ -83,7 +106,12 @@ export default function FormFieldRenderer({ field, value, fieldError, values, t,
 		return (
 			<label key={field.name} className={`${wrapperClass} text-sm font-semibold text-slate-700`}>
 				{field.label}
-				<select className={inputClassName} value={value} onChange={(event) => onChange(field.name, event.target.value)}>
+				<select
+					{...inputProps}
+					className={inputClassName}
+					value={value}
+					onChange={(event) => onChange(field.name, event.target.value)}
+				>
 					<option value="">{field.placeholder || safeT(t, 'common.selectOption', 'Select an option')}</option>
 					{field.options.map((option) => (
 						<option key={`${field.name}-${option.value}`} value={option.value}>
@@ -91,7 +119,7 @@ export default function FormFieldRenderer({ field, value, fieldError, values, t,
 						</option>
 					))}
 				</select>
-				{fieldError ? <p className="mt-1 text-xs text-rose-600">{fieldError}</p> : null}
+				{errorMessage}
 			</label>
 		);
 	}
@@ -101,42 +129,54 @@ export default function FormFieldRenderer({ field, value, fieldError, values, t,
 			<label key={field.name} className={`${wrapperClass} text-sm font-semibold text-slate-700`}>
 				{field.label}
 				<textarea
+					{...inputProps}
 					rows={field.rows || 4}
 					maxLength={maxLength}
 					className={inputClassName}
 					value={value}
 					onChange={(event) => onChange(field.name, event.target.value)}
 				/>
-				{fieldError ? <p className="mt-1 text-xs text-rose-600">{fieldError}</p> : null}
+				{errorMessage}
 			</label>
 		);
 	}
 
 	if (field.type === 'signature') {
 		return (
-			<SignatureField
-				key={field.name}
-				label={field.label}
-				value={value}
-				error={fieldError}
-				clearLabel={safeT(t, 'common.clearSignature', 'Clear Signature')}
-				drawModeLabel={safeT(t, 'common.signature.drawMode', 'Draw signature')}
-				typeModeLabel={safeT(t, 'common.signature.typeMode', 'Type signature')}
-				typedNameLabel={safeT(t, 'common.signature.typedNameLabel', 'Full legal name')}
-				typedNameHelp={safeT(
-					t,
-					'common.signature.typedNameHelp',
-					'Typing your full legal name applies it as your electronic signature.'
-				)}
-				applyTypedLabel={safeT(t, 'common.signature.applyTyped', 'Apply typed signature')}
-				typedAppliedLabel={safeT(t, 'common.signature.typedApplied', 'Typed signature applied.')}
-				typedNameError={safeT(
-					t,
-					'common.signature.typedNameError',
-					'Enter your full legal name using 2 to 150 characters.'
-				)}
-				onChange={(nextValue) => onChange(field.name, nextValue)}
-			/>
+			<div
+				className="md:col-span-2"
+				id={fieldId}
+				tabIndex={-1}
+				role="group"
+				aria-label={field.label}
+				aria-describedby={fieldError ? errorId : undefined}
+				data-field-invalid={fieldError ? 'true' : undefined}
+			>
+				<SignatureField
+					key={field.name}
+					label={field.label}
+					value={value}
+					error={fieldError}
+					errorId={errorId}
+					clearLabel={safeT(t, 'common.clearSignature', 'Clear Signature')}
+					drawModeLabel={safeT(t, 'common.signature.drawMode', 'Draw signature')}
+					typeModeLabel={safeT(t, 'common.signature.typeMode', 'Type signature')}
+					typedNameLabel={safeT(t, 'common.signature.typedNameLabel', 'Full legal name')}
+					typedNameHelp={safeT(
+						t,
+						'common.signature.typedNameHelp',
+						'Typing your full legal name applies it as your electronic signature.'
+					)}
+					applyTypedLabel={safeT(t, 'common.signature.applyTyped', 'Apply typed signature')}
+					typedAppliedLabel={safeT(t, 'common.signature.typedApplied', 'Typed signature applied.')}
+					typedNameError={safeT(
+						t,
+						'common.signature.typedNameError',
+						'Enter your full legal name using 2 to 150 characters.'
+					)}
+					onChange={(nextValue) => onChange(field.name, nextValue)}
+				/>
+			</div>
 		);
 	}
 
@@ -144,13 +184,14 @@ export default function FormFieldRenderer({ field, value, fieldError, values, t,
 		<label key={field.name} className={`${wrapperClass} text-sm font-semibold text-slate-700`}>
 			{field.label}
 			<input
+				{...inputProps}
 				type={field.type === 'date' ? 'date' : field.type === 'tel' ? 'tel' : field.type === 'email' ? 'email' : 'text'}
 				className={inputClassName}
 				maxLength={maxLength}
 				value={value}
 				onChange={(event) => onChange(field.name, event.target.value)}
 			/>
-			{fieldError ? <p className="mt-1 text-xs text-rose-600">{fieldError}</p> : null}
+			{errorMessage}
 		</label>
 	);
 }

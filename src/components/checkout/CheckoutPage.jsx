@@ -7,9 +7,24 @@ import { CheckCircle2, LoaderCircle, LockKeyhole, Tag, TriangleAlert } from 'luc
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useCart } from '@/components/cart/CartProvider';
 import { appData } from '@/lib/static-data';
-import { createCheckoutCapability, processCheckoutPayment, validateCoupon } from '@/lib/api';
+import {
+	createCheckoutCapability,
+	processCheckoutPayment,
+	createPaymentStatusTicket,
+	checkCheckoutPaymentStatus,
+	validateCoupon,
+} from '@/lib/api';
+import {
+	CHECKOUT_RECOVERY_KEY,
+	readCheckoutRecovery,
+	retainSuccessfulCheckoutRecovery,
+	saveCheckoutRecovery,
+	settleCheckoutRecovery,
+	withCheckoutLock,
+} from '@/lib/checkoutRecovery';
 import {
 	buildCheckoutPayload,
+	checkoutReviewFailureKey,
 	formatCents,
 	newPaymentAttemptIdempotencyKey,
 	resolvePublicCheckoutConfig,
@@ -80,7 +95,7 @@ export default function CheckoutPage() {
 	const publicCheckout = useMemo(checkoutConfiguration, []);
 	const selectionCount = cart.items.reduce((count, item) => count + Number(item.quantity || 0), 0);
 	const cartFingerprint = useMemo(
-		() => JSON.stringify(cart.items.map(({ id, quantity }) => [String(id), Number(quantity)])),
+		() => JSON.stringify(cart.items.map(({ id, key, quantity }) => [String(id), String(key), Number(quantity)])),
 		[cart.items]
 	);
 	const [form, setForm] = useState(initialForm);
@@ -88,7 +103,7 @@ export default function CheckoutPage() {
 	const [appliedCoupon, setAppliedCoupon] = useState(null);
 	const [couponError, setCouponError] = useState('');
 	const [validatingCoupon, setValidatingCoupon] = useState(false);
-	const [phase, setPhase] = useState('editing');
+	const [phase, setPhase] = useState('checking');
 	const [capability, setCapability] = useState(null);
 	const [scriptReady, setScriptReady] = useState(false);
 	const [message, setMessage] = useState('');
@@ -97,6 +112,35 @@ export default function CheckoutPage() {
 	const processingRef = useRef(false);
 	const paymentBlockedRef = useRef(true);
 	const usedNonceValuesRef = useRef(new Set());
+	const [recovery, setRecovery] = useState(null);
+	const recoveryRef = useRef(null);
+	const loadedRef = useRef(false);
+	const reviewingRef = useRef(false);
+	const [checkingStatus, setCheckingStatus] = useState(false);
+	const couponRequestVersionRef = useRef(0);
+	const couponValidationRef = useRef(false);
+
+	useEffect(() => {
+		if (!loadedRef.current) {
+			loadedRef.current = true;
+			const saved = readCheckoutRecovery();
+			recoveryRef.current = saved;
+			setRecovery(saved);
+			setPhase(saved ? 'confirmationRequired' : 'editing');
+		}
+		const onStorage = (event) => {
+			if (event.key !== CHECKOUT_RECOVERY_KEY && event.key !== null) return;
+			const saved = readCheckoutRecovery();
+			// Another tab clearing storage is not authoritative payment evidence.
+			if (!saved) return;
+			recoveryRef.current = saved;
+			paymentBlockedRef.current = true;
+			setRecovery(saved);
+			setPhase('confirmationRequired');
+		};
+		window.addEventListener('storage', onStorage);
+		return () => window.removeEventListener('storage', onStorage);
+	}, []);
 
 	useEffect(() => {
 		capabilityRef.current = capability;
@@ -104,6 +148,7 @@ export default function CheckoutPage() {
 
 	useEffect(() => {
 		if (!capability || capability.cartFingerprint === cartFingerprint) return;
+		if (processingRef.current || recoveryRef.current) return;
 		capabilityRef.current = null;
 		paymentBlockedRef.current = true;
 		setCapability(null);
@@ -113,6 +158,7 @@ export default function CheckoutPage() {
 
 	useEffect(() => {
 		if (!capability) return undefined;
+		if (processingRef.current || recoveryRef.current) return undefined;
 		const remaining = Date.parse(capability.expiresAt) - Date.now();
 		if (!Number.isFinite(remaining) || remaining <= 0) {
 			capabilityRef.current = null;
@@ -123,6 +169,7 @@ export default function CheckoutPage() {
 			return undefined;
 		}
 		const timer = window.setTimeout(() => {
+			if (processingRef.current || recoveryRef.current) return;
 			capabilityRef.current = null;
 			paymentBlockedRef.current = true;
 			setCapability(null);
@@ -151,36 +198,70 @@ export default function CheckoutPage() {
 			setPhase('processing');
 			setMessage('');
 			try {
-				const result = await processCheckoutPayment({
-					checkoutToken: current.checkoutToken,
-					idempotencyKey: current.idempotencyKey,
-					opaqueData: tokenized.opaqueData,
+				await withCheckoutLock(async () => {
+					const saved = readCheckoutRecovery();
+					if (saved) {
+						recoveryRef.current = saved;
+						setRecovery(saved);
+						setPhase('confirmationRequired');
+						return;
+					}
+					const ticket = await createPaymentStatusTicket({
+						checkoutToken: current.checkoutToken,
+						idempotencyKey: current.idempotencyKey,
+					});
+					saveCheckoutRecovery(ticket);
+					recoveryRef.current = ticket;
+					setRecovery(ticket);
+					const result = await processCheckoutPayment({
+						checkoutToken: current.checkoutToken,
+						idempotencyKey: current.idempotencyKey,
+						opaqueData: tokenized.opaqueData,
+					});
+					if (result.outcome === 'succeeded') {
+						const remainingRecovery = retainSuccessfulCheckoutRecovery(ticket);
+						recoveryRef.current = remainingRecovery;
+						setRecovery(remainingRecovery);
+						setOrderReference(result.orderId);
+						setPhase('succeeded');
+						capabilityRef.current = null;
+						paymentBlockedRef.current = true;
+						setCapability(null);
+						if (!clearCart()) setMessage(t('completedCartNotCleared'));
+						return;
+					}
+					if (result.outcome === 'declined') {
+						const remainingRecovery = settleCheckoutRecovery(ticket);
+						recoveryRef.current = remainingRecovery;
+						setRecovery(remainingRecovery);
+						if (remainingRecovery) {
+							setPhase('confirmationRequired');
+							setMessage(t(remainingRecovery.unavailable ? 'recoveryUnavailable' : 'confirmationRequired'));
+							return;
+						}
+						const next = { ...current, idempotencyKey: newPaymentAttemptIdempotencyKey() };
+						capabilityRef.current = next;
+						setCapability(next);
+						paymentBlockedRef.current = false;
+						setPhase('ready');
+						setMessage(t('paymentDeclined'));
+						return;
+					}
+					setPhase('confirmationRequired');
+					setMessage(t('confirmationRequired'));
 				});
-				if (result.outcome === 'succeeded') {
-					setOrderReference(result.orderId);
-					setPhase('succeeded');
-					capabilityRef.current = null;
-					paymentBlockedRef.current = true;
-					setCapability(null);
-					clearCart();
-					return;
-				}
-				if (result.outcome === 'declined') {
-					const next = { ...current, idempotencyKey: newPaymentAttemptIdempotencyKey() };
-					capabilityRef.current = next;
-					setCapability(next);
-					paymentBlockedRef.current = false;
-					setPhase('ready');
-					setMessage(t('paymentDeclined'));
-					return;
-				}
-				setPhase('confirmationRequired');
-				setMessage(t('confirmationRequired'));
 			} catch {
 				// A provider call may have completed before a transport or server failure.
 				// Keep the same attempt blocked for reconciliation instead of inviting a retry.
-				setPhase('confirmationRequired');
-				setMessage(t('confirmationRequired'));
+				if (recoveryRef.current) {
+					setPhase('confirmationRequired');
+					setMessage(t('confirmationRequired'));
+				} else {
+					capabilityRef.current = null;
+					setCapability(null);
+					setPhase('editing');
+					setMessage(t('paymentPreparationFailed'));
+				}
 			} finally {
 				processingRef.current = false;
 			}
@@ -191,7 +272,43 @@ export default function CheckoutPage() {
 		};
 	}, [clearCart, publicCheckout.enabled, t]);
 
-	if (!publicCheckout.enabled) return <DisabledCheckout count={selectionCount} />;
+	async function checkPaymentStatus() {
+		if (!recovery || recovery.unavailable || processingRef.current || checkingStatus) return;
+		setCheckingStatus(true);
+		try {
+			await withCheckoutLock(async () => {
+				const result = await checkCheckoutPaymentStatus(recovery);
+				if (['succeeded', 'declined', 'not_started'].includes(result.outcome)) {
+					const remainingRecovery =
+						result.outcome === 'succeeded'
+							? retainSuccessfulCheckoutRecovery(recovery)
+							: settleCheckoutRecovery(recovery);
+					recoveryRef.current = remainingRecovery;
+					setRecovery(remainingRecovery);
+					capabilityRef.current = null;
+					setCapability(null);
+					if (result.outcome === 'succeeded') {
+						setOrderReference(result.orderId);
+						setPhase('succeeded');
+						setMessage(clearCart() ? '' : t('completedCartNotCleared'));
+					} else if (result.outcome === 'not_started' && !remainingRecovery) {
+						setPhase('editing');
+						setMessage(t('paymentNotSubmitted'));
+					} else if (remainingRecovery) {
+						setPhase('confirmationRequired');
+						setMessage(t(remainingRecovery.unavailable ? 'recoveryUnavailable' : 'confirmationRequired'));
+					} else {
+						setPhase('editing');
+						setMessage(t('paymentDeclined'));
+					}
+				} else setMessage(t('confirmationRequired'));
+			});
+		} catch {
+			setMessage(t('statusCheckFailed'));
+		} finally {
+			setCheckingStatus(false);
+		}
+	}
 
 	function onFieldChange(event) {
 		const { name, value } = event.target;
@@ -200,25 +317,42 @@ export default function CheckoutPage() {
 	}
 
 	async function onApplyCoupon() {
+		if (couponValidationRef.current) return;
 		if (!couponCode.trim()) {
 			setCouponError(t('couponRequired'));
 			return;
 		}
+		const requestVersion = ++couponRequestVersionRef.current;
+		couponValidationRef.current = true;
 		setValidatingCoupon(true);
 		setCouponError('');
 		try {
 			const value = await validateCoupon(couponCode);
+			if (requestVersion !== couponRequestVersionRef.current) return;
 			if (!Number.isSafeInteger(Number(value.id)) || Number(value.id) < 1) throw new Error();
 			setAppliedCoupon({ ...value, id: Number(value.id) });
-		} catch {
+		} catch (error) {
+			if (requestVersion !== couponRequestVersionRef.current) return;
 			setAppliedCoupon(null);
-			setCouponError(t('couponInvalid'));
+			setCouponError(
+				error?.status === 400 || error?.status === 404
+					? t('couponInvalid')
+					: error?.status === 429
+						? t('couponBusy')
+						: t('couponUnavailable')
+			);
 		} finally {
-			setValidatingCoupon(false);
+			if (requestVersion === couponRequestVersionRef.current) {
+				couponValidationRef.current = false;
+				setValidatingCoupon(false);
+			}
 		}
 	}
 
 	function onRemoveCoupon() {
+		couponRequestVersionRef.current += 1;
+		couponValidationRef.current = false;
+		setValidatingCoupon(false);
 		setCouponCode('');
 		setCouponError('');
 		setAppliedCoupon(null);
@@ -226,11 +360,21 @@ export default function CheckoutPage() {
 
 	async function onReviewOrder(event) {
 		event.preventDefault();
+		if (!loadedRef.current || reviewingRef.current || processingRef.current || recoveryRef.current) return;
+		const existingRecovery = readCheckoutRecovery();
+		if (existingRecovery) {
+			recoveryRef.current = existingRecovery;
+			setRecovery(existingRecovery);
+			setPhase('confirmationRequired');
+			setMessage(t('confirmationRequired'));
+			return;
+		}
 		if (cart.items.length === 0) {
 			setMessage(t('cartEmpty'));
 			return;
 		}
 		setPhase('quoting');
+		reviewingRef.current = true;
 		setMessage('');
 		try {
 			const payload = buildCheckoutPayload({ form, items: cart.items, couponId: appliedCoupon?.id ?? null });
@@ -246,14 +390,40 @@ export default function CheckoutPage() {
 			setPhase('ready');
 		} catch (error) {
 			setPhase('editing');
-			setMessage(error?.message || t('submitError'));
+			setMessage(t(checkoutReviewFailureKey(error)));
+		} finally {
+			reviewingRef.current = false;
 		}
 	}
 
 	function editOrder() {
+		if (processingRef.current || recoveryRef.current) return;
 		capabilityRef.current = null;
 		paymentBlockedRef.current = true;
 		setCapability(null);
+		setPhase('editing');
+		setMessage('');
+	}
+
+	function startNewOrder() {
+		if (!recoveryRef.current || recoveryRef.current.unavailable) {
+			setMessage(t('newOrderUnavailable'));
+			return;
+		}
+		if (!clearCart()) {
+			setMessage(t('completedCartNotCleared'));
+			return;
+		}
+		const remainingRecovery = settleCheckoutRecovery(recoveryRef.current);
+		if (remainingRecovery) {
+			recoveryRef.current = remainingRecovery;
+			setRecovery(remainingRecovery);
+			setMessage(t('newOrderUnavailable'));
+			return;
+		}
+		recoveryRef.current = null;
+		setRecovery(null);
+		setOrderReference(null);
 		setPhase('editing');
 		setMessage('');
 	}
@@ -266,16 +436,66 @@ export default function CheckoutPage() {
 					<h1 className="font-display mt-4 text-3xl font-black text-[var(--tl-metallic-black)]">{t('successTitle')}</h1>
 					<p className="mt-2 text-slate-600">{t('successBody')}</p>
 					<p className="mt-2 text-sm font-bold text-slate-800">{t('orderReference', { reference: orderReference })}</p>
-					<Link
-						href="/"
-						className="mt-6 inline-flex rounded-full bg-[var(--tl-primary)] px-6 py-3 text-sm font-bold text-white transition hover:bg-[var(--tl-primary-strong)]"
+					{message ? (
+						<p role="alert" className="mt-3 text-sm font-semibold text-rose-700">
+							{message}
+						</p>
+					) : null}
+					<button
+						type="button"
+						onClick={startNewOrder}
+						className="mt-6 inline-flex rounded-full bg-[var(--tl-primary)] px-6 py-3 text-sm font-bold text-white"
 					>
+						{t('startNewOrder')}
+					</button>
+					<Link href="/" className="mt-4 block text-sm font-bold text-[var(--tl-primary)] underline">
 						{t('goHome')}
 					</Link>
 				</section>
 			</main>
 		);
 	}
+
+	if (recovery || phase === 'processing' || phase === 'checking') {
+		return (
+			<main className="min-h-screen bg-slate-50 px-4 py-12">
+				<section className="mx-auto max-w-2xl rounded-2xl border border-amber-300 bg-white p-8">
+					<h1 className="text-2xl font-bold">
+						{t(
+							phase === 'processing'
+								? 'processingPayment'
+								: phase === 'checking'
+									? 'checkingPreviousPayment'
+									: 'paymentNeedsConfirmation'
+						)}
+					</h1>
+					<p role="status" aria-live="polite" className="mt-4 text-slate-800">
+						{recovery?.unavailable ? t('recoveryUnavailable') : message || t('confirmationRequired')}
+					</p>
+					{recovery?.reference && (
+						<p className="mt-3 font-semibold">
+							{t('paymentReference')}: {recovery.reference}
+						</p>
+					)}
+					{recovery && !recovery.unavailable && (
+						<button
+							type="button"
+							onClick={checkPaymentStatus}
+							disabled={phase === 'processing' || checkingStatus}
+							className="mt-5 rounded-full bg-[var(--tl-primary)] px-6 py-3 font-bold text-white disabled:opacity-50"
+						>
+							{t(checkingStatus ? 'checkingStatus' : 'checkPaymentStatus')}
+						</button>
+					)}
+					<Link href="/contact" className="mt-5 block font-semibold underline">
+						{t('contactLabs')}
+					</Link>
+				</section>
+			</main>
+		);
+	}
+
+	if (!publicCheckout.enabled) return <DisabledCheckout count={selectionCount} />;
 
 	if (cart.items.length === 0) {
 		return (
@@ -481,6 +701,9 @@ export default function CheckoutPage() {
 									<input
 										value={couponCode}
 										onChange={(event) => {
+											couponRequestVersionRef.current += 1;
+											couponValidationRef.current = false;
+											setValidatingCoupon(false);
 											setCouponCode(event.target.value);
 											setCouponError('');
 										}}
@@ -554,7 +777,7 @@ export default function CheckoutPage() {
 				onLoad={() => setScriptReady(true)}
 				onError={() => {
 					setScriptReady(false);
-					setMessage(t('paymentLibraryUnavailable'));
+					if (!processingRef.current && !recoveryRef.current) setMessage(t('paymentLibraryUnavailable'));
 				}}
 			/>
 		</main>

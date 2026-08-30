@@ -6,6 +6,7 @@ import SiteNavbar from '@/components/common/SiteNavbar';
 import SiteFooter from '@/components/common/SiteFooter';
 import FloatingLocaleSwitcher from '@/components/common/FloatingLocaleSwitcher';
 import { CartProvider } from '@/components/cart/CartProvider';
+import CartPersistenceAlert from '@/components/cart/CartPersistenceAlert';
 import { SITE_URL } from '@/lib/seo';
 import './globals.css';
 
@@ -42,6 +43,7 @@ export default async function RootLayout({ children }) {
 			<body className="min-h-full bg-[var(--tl-surface)] font-sans text-[var(--tl-ink)]">
 				<NextIntlClientProvider locale={locale} messages={messages}>
 					<CartProvider>
+						<CartPersistenceAlert />
 						<RouteScrollReset />
 						<SiteNavbar />
 						<div className="pt-[98px]">{children}</div>

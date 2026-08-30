@@ -4,6 +4,27 @@
 			"yes": "Yes",
 			"no": "No",
 			"sending": "Sending...",
+			"received": "Your form was received. Form reference: {reference}. Keep this reference if you need to contact staff.",
+			"requestReference": "Request reference",
+			"failure": {
+				"validation": "This submission was not received. Check the highlighted fields, then submit again. Your answers are still on this page.",
+				"rate_limited": "Too many forms were submitted in a short time. This submission was not received. Wait a few minutes before trying again.",
+				"too_large": "This form is too large to send. Shorten long answers or clear and redraw a large signature, then submit again. This submission was not received.",
+				"rejected": "This submission could not be accepted. Your answers are still on this page. Contact 24-7 Labs for help.",
+				"outdated": "This form has changed. This submission was not received. Reload the page to complete the current form; reloading will clear the answers on this page.",
+				"uncertain": "Receipt of this form could not be confirmed. Do not submit again yet. Your answers are still on this page. Call 24-7 Labs with the request reference so staff can check whether it was received."
+			},
+			"serverValidation": {
+				"invalid": "Check this answer and correct it before submitting.",
+				"required": "Complete this field before submitting.",
+				"invalidEmail": "Enter a valid email address, such as name@example.com.",
+				"invalidPhone": "Enter a phone number with 10 to 15 digits.",
+				"invalidSignature": "Clear the signature and sign again, or use the typed signature option.",
+				"invalidDate": "Enter a valid calendar date.",
+				"mustAgree": "Read and accept this agreement before submitting.",
+				"outdatedForm": "Reload the page to use the current form.",
+				"tooLong": "Shorten this answer before submitting."
+			},
 			"callNow": "Call Now",
 			"selectOption": "Select an option",
 			"selectState": "Select State",

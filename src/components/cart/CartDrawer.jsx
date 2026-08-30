@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { Minus, Plus, ShoppingCart, Trash2, X } from 'lucide-react';
 import { useEffect } from 'react';
 import { useCart } from '@/components/cart/CartProvider';
+import { MAX_CART_ITEM_QUANTITY } from '@/lib/cart';
 import { isPublicCheckoutEnabled } from '@/lib/checkout';
 
 export default function CartDrawer({ open, onClose }) {
@@ -102,7 +103,8 @@ export default function CartDrawer({ open, onClose }) {
 												<button
 													type="button"
 													onClick={() => setQuantity(item.key, Math.max(1, item.quantity - 1))}
-													className="inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-700 transition hover:bg-white hover:text-[var(--tl-primary)]"
+													disabled={item.quantity <= 1}
+													className="inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-700 transition hover:bg-white hover:text-[var(--tl-primary)] disabled:cursor-not-allowed disabled:opacity-40"
 													aria-label={t('decrease')}
 												>
 													<Minus className="h-3.5 w-3.5" />
@@ -111,7 +113,8 @@ export default function CartDrawer({ open, onClose }) {
 												<button
 													type="button"
 													onClick={() => setQuantity(item.key, item.quantity + 1)}
-													className="inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-700 transition hover:bg-white hover:text-[var(--tl-primary)]"
+													disabled={item.quantity >= MAX_CART_ITEM_QUANTITY}
+													className="inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-700 transition hover:bg-white hover:text-[var(--tl-primary)] disabled:cursor-not-allowed disabled:opacity-40"
 													aria-label={t('increase')}
 												>
 													<Plus className="h-3.5 w-3.5" />

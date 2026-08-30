@@ -12,6 +12,7 @@ export default function SignatureField({
 	label,
 	value,
 	error,
+	errorId,
 	onChange,
 	clearLabel = 'Clear Signature',
 	drawModeLabel = 'Draw signature',
@@ -197,7 +198,11 @@ export default function SignatureField({
 					{clearLabel}
 				</button>
 			</div>
-			{error ? <p className="mt-1 text-xs text-rose-600">{error}</p> : null}
+			{error ? (
+				<p id={errorId} role="alert" className="mt-1 text-xs text-rose-600">
+					{error}
+				</p>
+			) : null}
 		</div>
 	);
 }

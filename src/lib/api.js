@@ -1,3 +1,7 @@
+import { validRecoveryTicket } from './checkoutRecovery';
+import { FormSubmissionError } from './formFeedback';
+import { normalizeBlogSlug } from './blogRoutes';
+
 const COMPILED_PUBLIC_API_CONFIG = {
 	mode: process.env.NEXT_PUBLIC_MODE,
 	devApiUrl: process.env.NEXT_PUBLIC_DEV_API_URL,
@@ -54,14 +58,6 @@ export const ENDPOINTS = new Proxy(PATH_MAP, {
 	get: (target, prop) => (prop in target ? `${resolveApiOrigin()}/${target[prop]}` : target[prop]),
 });
 
-async function parseJsonResponse(response) {
-	if (!response.ok) {
-		throw new Error(`API failed with status ${response.status}`);
-	}
-
-	return response.json();
-}
-
 function withJsonOptions(body) {
 	return {
 		method: 'POST',
@@ -84,10 +80,11 @@ async function parsePublicJsonResponse(response) {
 }
 
 export class PublicApiError extends Error {
-	constructor(message, status) {
+	constructor(message, status, code = null) {
 		super(message);
 		this.name = 'PublicApiError';
 		this.status = status;
+		this.code = typeof code === 'string' && /^[A-Z][A-Z0-9_]{2,63}$/.test(code) ? code : null;
 	}
 }
 
@@ -98,13 +95,30 @@ export async function createCheckoutCapability(payload, fetchImplementation = fe
 			cache: 'no-store',
 			credentials: publicApiCredentials(),
 			referrerPolicy: 'no-referrer',
+			signal: AbortSignal.timeout(15000),
 		})
 	);
 
 	if (!response.ok) {
-		throw new PublicApiError(responsePayload?.error || 'Checkout is temporarily unavailable', response.status);
+		throw new PublicApiError(
+			responsePayload?.error || 'Checkout is temporarily unavailable',
+			response.status,
+			responsePayload?.code
+		);
 	}
 	const data = responsePayload?.data;
+	const requestedItems = Array.isArray(payload?.items) ? payload.items : [];
+	const validRequestedItems =
+		requestedItems.length >= 1 &&
+		requestedItems.every(
+			(item) =>
+				Number.isSafeInteger(item?.productId) &&
+				item.productId > 0 &&
+				Number.isSafeInteger(item?.quantity) &&
+				item.quantity >= 1 &&
+				item.quantity <= 100
+		) &&
+		new Set(requestedItems.map((item) => item.productId)).size === requestedItems.length;
 	const validItems =
 		Array.isArray(data?.items) &&
 		data.items.length >= 1 &&
@@ -120,6 +134,23 @@ export async function createCheckoutCapability(payload, fetchImplementation = fe
 				Number.isSafeInteger(item?.lineTotalCents) &&
 				item.lineTotalCents === item.unitPriceCents * item.quantity
 		);
+	const returnedSelection = validItems
+		? data.items
+				.map(({ productId, quantity }) => ({ productId, quantity }))
+				.sort((left, right) => left.productId - right.productId)
+		: [];
+	const requestedSelection = validRequestedItems
+		? requestedItems
+				.map(({ productId, quantity }) => ({ productId, quantity }))
+				.sort((left, right) => left.productId - right.productId)
+		: [];
+	const selectionMatches =
+		validRequestedItems &&
+		returnedSelection.length === requestedSelection.length &&
+		returnedSelection.every(
+			(item, index) =>
+				item.productId === requestedSelection[index].productId && item.quantity === requestedSelection[index].quantity
+		);
 	if (
 		response.status !== 201 ||
 		responsePayload?.success !== true ||
@@ -129,6 +160,7 @@ export async function createCheckoutCapability(payload, fetchImplementation = fe
 		data.amountCents < 1 ||
 		data.currency !== 'USD' ||
 		!validItems ||
+		!selectionMatches ||
 		!Number.isFinite(Date.parse(data.expiresAt))
 	) {
 		throw new PublicApiError('Checkout returned an invalid response', 502);
@@ -149,6 +181,7 @@ export async function processCheckoutPayment(payload, fetchImplementation = fetc
 			cache: 'no-store',
 			credentials: publicApiCredentials(),
 			referrerPolicy: 'no-referrer',
+			signal: AbortSignal.timeout(30000),
 		})
 	);
 
@@ -177,6 +210,42 @@ export async function processCheckoutPayment(payload, fetchImplementation = fetc
 	}
 
 	throw new PublicApiError(responsePayload?.error || 'Payment processing is temporarily unavailable', response.status);
+}
+
+async function paymentStatusRequest(path, payload, fetchImplementation) {
+	const { response, payload: envelope } = await parsePublicJsonResponse(
+		await fetchImplementation(`${ENDPOINTS.PAYMENT}/${path}`, {
+			...withJsonOptions(payload),
+			cache: 'no-store',
+			credentials: publicApiCredentials(),
+			referrerPolicy: 'no-referrer',
+			signal: AbortSignal.timeout(15000),
+		})
+	);
+	if (response.status !== 200 || envelope?.success !== true || !envelope.data) {
+		throw new PublicApiError('Payment status could not be checked', response.status);
+	}
+	return envelope.data;
+}
+
+export async function createPaymentStatusTicket(payload, fetchImplementation = fetch) {
+	const ticket = await paymentStatusRequest('status-ticket', payload, fetchImplementation);
+	if (!validRecoveryTicket(ticket)) throw new PublicApiError('Payment status reference is unavailable', 502);
+	return Object.freeze({ statusToken: ticket.statusToken, reference: ticket.reference });
+}
+
+export async function checkCheckoutPaymentStatus(ticket, fetchImplementation = fetch) {
+	if (!validRecoveryTicket(ticket)) throw new PublicApiError('Payment status could not be confirmed', 400);
+	const data = await paymentStatusRequest('status', { statusToken: ticket.statusToken }, fetchImplementation);
+	if (
+		data.reference !== ticket.reference ||
+		!['succeeded', 'declined', 'not_started', 'confirmation_required'].includes(data.outcome) ||
+		(data.outcome === 'succeeded' && (!Number.isSafeInteger(data.orderId) || data.orderId < 1)) ||
+		(data.outcome !== 'succeeded' && data.orderId !== undefined)
+	) {
+		throw new PublicApiError('Payment status could not be confirmed', 502);
+	}
+	return data.outcome === 'succeeded' ? { outcome: data.outcome, orderId: data.orderId } : { outcome: data.outcome };
 }
 
 function withFormSubmissionOptions(formType, payload) {
@@ -266,9 +335,10 @@ export function normalizeSameOriginMediaUrl(value, config = COMPILED_PUBLIC_API_
 }
 
 export function resolveImageUrl(value, config = COMPILED_PUBLIC_API_CONFIG) {
-	if (!value) {
+	if (typeof value !== 'string' || !value.trim()) {
 		return '/images/placeholder.png';
 	}
+	value = value.trim();
 
 	value = normalizeSameOriginMediaUrl(value, config);
 	if (value.startsWith('http://') || value.startsWith('https://')) {
@@ -290,6 +360,7 @@ export function resolveImageUrl(value, config = COMPILED_PUBLIC_API_CONFIG) {
 
 export async function collectProductPages(fetchPage) {
 	const products = [];
+	const seenProductIds = new Set();
 	let expectedTotal;
 	let expectedPages;
 
@@ -321,7 +392,14 @@ export async function collectProductPages(fetchPage) {
 			throw new Error('Product API pagination exceeds the safe traversal limit');
 		}
 
-		products.push(...payload.products);
+		for (const product of payload.products) {
+			const id = Number(product?.id);
+			if (!Number.isSafeInteger(id) || id < 1 || seenProductIds.has(id)) {
+				throw new Error('Product API pagination returned a duplicate or invalid product');
+			}
+			seenProductIds.add(id);
+			products.push(product);
+		}
 		if (page >= payload.pages) {
 			if (products.length !== payload.total) {
 				throw new Error('Product API pagination was incomplete');
@@ -333,61 +411,184 @@ export async function collectProductPages(fetchPage) {
 	throw new Error('Product API pagination exceeds the safe traversal limit');
 }
 
-export function normalizeProduct(product, locale = 'en') {
-	if (!product?.id) {
+function normalizedPublicPrice(value, { optional = false } = {}) {
+	if (optional && (value === null || value === undefined)) {
+		return { valid: true, value: null };
+	}
+	if ((typeof value !== 'string' && typeof value !== 'number') || String(value).trim() === '') {
+		return { valid: false, value: null };
+	}
+	const numeric = Number(value);
+	if (!Number.isFinite(numeric) || numeric < 0 || numeric > 99_999_999.99) {
+		return { valid: false, value: null };
+	}
+	return { valid: true, value: numeric };
+}
+
+function normalizedContentCategory(category, locale) {
+	const id = Number(category?.id);
+	const name = resolveLocalizedText(category?.name, locale).trim();
+	if (!Number.isSafeInteger(id) || id < 1 || !name) return null;
+	return { ...category, id, name };
+}
+
+function hasUniquePositiveIds(rows, { excludedId } = {}) {
+	if (!Array.isArray(rows)) return false;
+	const ids = rows.map((row) => Number(row?.id));
+	return ids.every((id) => Number.isSafeInteger(id) && id > 0 && id !== excludedId) && new Set(ids).size === ids.length;
+}
+
+export function normalizeProduct(product, locale = 'en', { variant = false } = {}) {
+	if (!product || typeof product !== 'object' || Array.isArray(product)) return null;
+	const id = Number(product?.id);
+	const name = resolveLocalizedText(product.name, locale).trim();
+	const regularPrice = normalizedPublicPrice(product.regular_price);
+	const salePrice = normalizedPublicPrice(product.sale_price, { optional: true });
+	if (
+		!Number.isSafeInteger(id) ||
+		id < 1 ||
+		!name ||
+		!regularPrice.valid ||
+		(variant && regularPrice.value <= 0) ||
+		!salePrice.valid ||
+		(salePrice.value !== null && salePrice.value > regularPrice.value)
+	) {
 		return null;
 	}
 
-	const regularPrice = Number(product.regular_price);
-	const salePrice = Number(product.sale_price);
+	if (product.categories !== undefined && !Array.isArray(product.categories)) return null;
+	if (product.variants !== undefined && !Array.isArray(product.variants)) return null;
+	const categories = (product.categories || []).map((category) => normalizedContentCategory(category, locale));
+	const variants = Array.isArray(product.variants)
+		? product.variants.map((entry) => normalizeProduct(entry, locale, { variant: true }))
+		: [];
 	const stockQuantity = Number(product.stock_quantity);
+	const hasStockQuantity = product.stock_quantity !== undefined && product.stock_quantity !== null;
+	const stockQuantityIsValid =
+		(!hasStockQuantity && variant) || (hasStockQuantity && Number.isSafeInteger(stockQuantity) && stockQuantity >= 0);
+	const visibilityIsValid = variant
+		? (product.published === undefined || product.published === true) &&
+			(product.visible === undefined || product.visible === true)
+		: product.published === true && product.visible === true;
+	const parentReferenceIsValid = variant
+		? product.variant_of === undefined ||
+			product.variant_of === null ||
+			(Number.isSafeInteger(Number(product.variant_of)) && Number(product.variant_of) > 0)
+		: product.variant_of === null || product.variant_of === undefined;
+	const hasCheckoutPrice = regularPrice.value > 0 || (!variant && variants.length > 0);
+	// Do not silently publish a partially normalized product. Missing category or
+	// variant identifiers are a content/API failure, not permission to hide the
+	// affected relationship from customers.
+	if (
+		categories.some((category) => !category) ||
+		variants.some((entry) => !entry) ||
+		!hasUniquePositiveIds(categories) ||
+		!hasUniquePositiveIds(variants, { excludedId: id }) ||
+		!stockQuantityIsValid ||
+		!visibilityIsValid ||
+		!parentReferenceIsValid ||
+		!hasCheckoutPrice
+	) {
+		return null;
+	}
 
 	return {
-		id: product.id,
-		name: resolveLocalizedText(product.name, locale) || null,
+		id,
+		name,
 		description: resolveLocalizedText(product.description, locale),
 		mainImage: resolveImageUrl(product.main_image),
 		image: resolveImageUrl(product.main_image),
-		categories: Array.isArray(product.categories)
-			? product.categories.map((category) => ({
-					...category,
-					name: resolveLocalizedText(category?.name, locale) || null,
-				}))
-			: [],
-		variants: Array.isArray(product.variants)
-			? product.variants.map((variant) => normalizeProduct(variant, locale)).filter(Boolean)
-			: [],
-		variantOf: product.variant_of ?? null,
-		rawRegularPrice: product.regular_price ?? null,
+		categories,
+		variants,
+		variantOf:
+			Number.isSafeInteger(Number(product.variant_of)) && Number(product.variant_of) > 0
+				? Number(product.variant_of)
+				: null,
+		rawRegularPrice: product.regular_price,
 		rawSalePrice: product.sale_price ?? null,
-		regularPrice: Number.isFinite(regularPrice) ? regularPrice : null,
-		salePrice: Number.isFinite(salePrice) ? salePrice : null,
-		published: Boolean(product.published),
-		visible: Boolean(product.visible),
-		stockQuantity: Number.isFinite(stockQuantity) ? stockQuantity : null,
+		regularPrice: regularPrice.value,
+		salePrice: salePrice.value === 0 ? null : salePrice.value,
+		published: variant ? (product.published ?? true) : true,
+		visible: variant ? (product.visible ?? true) : true,
+		stockQuantity: hasStockQuantity ? stockQuantity : null,
 	};
 }
 
 export function normalizeBlog(blog, locale = 'en') {
-	if (!blog?.id) {
+	if (!blog || typeof blog !== 'object' || Array.isArray(blog)) return null;
+	const id = Number(blog?.id);
+	const title = resolveLocalizedText(blog.title, locale).trim();
+	const blogcontent = resolveLocalizedText(blog.blogcontent, locale);
+	let slug;
+	try {
+		slug = normalizeBlogSlug(blog.slug);
+	} catch {
+		return null;
+	}
+	if (
+		!Number.isSafeInteger(id) ||
+		id < 1 ||
+		!title ||
+		!blogcontent.trim() ||
+		blog.isactive !== true ||
+		!Number.isFinite(Date.parse(blog.created_at))
+	) {
+		return null;
+	}
+	if (blog.categories !== undefined && !Array.isArray(blog.categories)) return null;
+	const categories = (blog.categories || []).map((category) => normalizedContentCategory(category, locale));
+	// A category without an identifier cannot be linked, filtered, or keyed
+	// reliably. Reject the affected post instead of publishing a partial view
+	// that silently drops or misroutes its category relationship.
+	if (categories.some((category) => !category) || !hasUniquePositiveIds(categories)) {
 		return null;
 	}
 
 	return {
-		id: blog.id,
-		slug: blog.slug ?? String(blog.id),
-		title: resolveLocalizedText(blog.title, locale) ?? null,
-		author: blog.author ?? null,
-		blogcontent: resolveLocalizedText(blog.blogcontent, locale) ?? '',
+		id,
+		slug,
+		title,
+		author: resolveLocalizedText(blog.author, locale) || null,
+		blogcontent,
 		thumbnailimage: resolveImageUrl(blog.thumbnailimage),
 		created_at: blog.created_at ?? null,
-		categories: Array.isArray(blog.categories)
-			? blog.categories.map((category) => ({
-					id: category?.id,
-					name: resolveLocalizedText(category?.name, locale) || null,
-				}))
-			: [],
+		categories,
 	};
+}
+
+export function normalizeBlogList(blogs, locale = 'en') {
+	if (!Array.isArray(blogs)) throw new Error('Blog content could not be loaded');
+	const normalized = blogs.map((blog) => normalizeBlog(blog, locale));
+	if (
+		normalized.some((blog) => !blog) ||
+		!hasUniquePositiveIds(normalized) ||
+		new Set(normalized.map((blog) => blog.slug)).size !== normalized.length
+	) {
+		throw new Error('Blog content could not be loaded');
+	}
+	return normalized;
+}
+
+export function normalizeCategoryList(categories, locale = 'en') {
+	if (
+		!Array.isArray(categories) ||
+		categories.some((category) => {
+			const id = Number(category?.id);
+			const name = resolveLocalizedText(category?.name, locale).trim();
+			return !Number.isSafeInteger(id) || id < 1 || !name;
+		}) ||
+		!hasUniquePositiveIds(categories)
+	) {
+		throw new Error('Category content could not be loaded');
+	}
+
+	return categories.map((category) => ({
+		...category,
+		id: Number(category.id),
+		name: resolveLocalizedText(category?.name, locale).trim(),
+		description: resolveLocalizedText(category?.description, locale),
+		main_image: resolveImageUrl(category?.main_image),
+	}));
 }
 
 export async function fetchProducts(locale = 'en') {
@@ -413,7 +614,9 @@ export async function fetchProducts(locale = 'en') {
 		return response.json();
 	});
 
-	return products.map((product) => normalizeProduct(product, locale)).filter(Boolean);
+	const normalized = products.map((product) => normalizeProduct(product, locale));
+	if (normalized.some((product) => !product)) throw new Error('Product content could not be loaded');
+	return normalized;
 }
 
 export async function fetchBlogs(locale = 'en') {
@@ -440,9 +643,9 @@ export async function fetchBlogs(locale = 'en') {
 			? payload.blogs
 			: Array.isArray(payload?.data)
 				? payload.data
-				: [];
-
-	return blogs.map((blog) => normalizeBlog(blog, locale)).filter(Boolean);
+				: null;
+	if (!blogs) throw new Error('Blog content could not be loaded');
+	return normalizeBlogList(blogs, locale);
 }
 
 export async function fetchCategories(locale = 'en') {
@@ -472,41 +675,79 @@ export async function fetchCategories(locale = 'en') {
 				? payload.data
 				: Array.isArray(payload?.data?.categories)
 					? payload.data.categories
-					: [];
-
-	return categories.map((category) => ({
-		...category,
-		name: resolveLocalizedText(category?.name, locale) || null,
-		description: resolveLocalizedText(category?.description, locale),
-	}));
+					: null;
+	return normalizeCategoryList(categories, locale);
 }
 
-export async function submitContactForm(payload) {
-	const response = await fetch(ENDPOINTS.FORMS, withFormSubmissionOptions('contact', payload));
-	return parseJsonResponse(response);
+async function submitPublicForm(formType, payload, fetchImplementation) {
+	let reference;
+	try {
+		reference = globalThis.crypto.randomUUID();
+	} catch {
+		throw new FormSubmissionError('rejected', null);
+	}
+	try {
+		const options = withFormSubmissionOptions(formType, payload);
+		const { response, payload: result } = await parsePublicJsonResponse(
+			await fetchImplementation(ENDPOINTS.FORMS, {
+				...options,
+				headers: { ...options.headers, 'X-Request-ID': reference },
+				signal: AbortSignal.timeout(30000),
+			})
+		);
+		if (
+			response.status === 201 &&
+			result?.requestId === reference &&
+			result?.submitted === true &&
+			result.form_type === formType &&
+			Number.isSafeInteger(Number(result.id)) &&
+			Number(result.id) > 0
+		) {
+			return { id: Number(result.id), submitted: true, form_type: formType, reference };
+		}
+		if (
+			response.status === 400 &&
+			result?.requestId === reference &&
+			result?.code === 'FORM_VALIDATION_FAILED' &&
+			result.received === false
+		) {
+			throw new FormSubmissionError(
+				'validation',
+				reference,
+				Array.isArray(result.fieldErrors) ? result.fieldErrors : []
+			);
+		}
+		if (response.status === 429) throw new FormSubmissionError('rate_limited', reference);
+		if (response.status === 413) throw new FormSubmissionError('too_large', reference);
+		if ([401, 403, 415].includes(response.status)) throw new FormSubmissionError('rejected', reference);
+		throw new FormSubmissionError('uncertain', reference);
+	} catch (error) {
+		if (error instanceof FormSubmissionError) throw error;
+		throw new FormSubmissionError('uncertain', reference);
+	}
 }
 
-export async function submitAppointmentForm(payload) {
-	const response = await fetch(ENDPOINTS.FORMS, withFormSubmissionOptions('appointment', payload));
-	return parseJsonResponse(response);
+export async function submitContactForm(payload, fetchImplementation = fetch) {
+	return submitPublicForm('contact', payload, fetchImplementation);
 }
 
-export async function submitPatientIntakeForm(payload) {
-	const response = await fetch(ENDPOINTS.FORMS, withFormSubmissionOptions('patient_intake', payload));
-	return parseJsonResponse(response);
+export async function submitAppointmentForm(payload, fetchImplementation = fetch) {
+	return submitPublicForm('appointment', payload, fetchImplementation);
 }
 
-export async function submitPrescriptionConsentForm(payload) {
-	const response = await fetch(ENDPOINTS.FORMS, withFormSubmissionOptions('consent', payload));
-	return parseJsonResponse(response);
+export async function submitPatientIntakeForm(payload, fetchImplementation = fetch) {
+	return submitPublicForm('patient_intake', payload, fetchImplementation);
 }
 
-export async function submitCovidScreeningForm(payload) {
-	const response = await fetch(ENDPOINTS.FORMS, withFormSubmissionOptions('covid_screening', payload));
-	return parseJsonResponse(response);
+export async function submitPrescriptionConsentForm(payload, fetchImplementation = fetch) {
+	return submitPublicForm('consent', payload, fetchImplementation);
 }
 
-export async function validateCoupon(code) {
+export async function submitCovidScreeningForm(payload, fetchImplementation = fetch) {
+	return submitPublicForm('covid_screening', payload, fetchImplementation);
+}
+
+export async function validateCoupon(code, fetchImplementation = fetch) {
 	const normalizedCode = String(code || '')
 		.trim()
 		.toUpperCase();
@@ -514,14 +755,20 @@ export async function validateCoupon(code) {
 		throw new Error('Coupon code is required');
 	}
 
-	const response = await fetch(`${ENDPOINTS.COUPONS}/validate/${encodeURIComponent(normalizedCode)}`, {
-		method: 'POST',
-		cache: 'no-store',
-		credentials: publicApiCredentials(),
-		headers: {
-			Accept: 'application/json',
-		},
-	});
+	let response;
+	try {
+		response = await fetchImplementation(`${ENDPOINTS.COUPONS}/validate/${encodeURIComponent(normalizedCode)}`, {
+			method: 'POST',
+			cache: 'no-store',
+			credentials: publicApiCredentials(),
+			headers: {
+				Accept: 'application/json',
+			},
+			signal: AbortSignal.timeout(15000),
+		});
+	} catch {
+		throw new PublicApiError('Coupon could not be checked', 0);
+	}
 
 	let payload = null;
 	try {
@@ -530,13 +777,23 @@ export async function validateCoupon(code) {
 		payload = null;
 	}
 
-	if (!response.ok) {
-		throw new Error(payload?.error || `API failed with status ${response.status}`);
+	if (!response.ok) throw new PublicApiError('Coupon could not be checked', response.status);
+
+	const id = Number(payload?.id);
+	const discount = Number(payload?.discount);
+	const returnedCode = typeof payload?.code === 'string' ? payload.code.trim().toUpperCase() : '';
+	if (
+		payload?.valid === true &&
+		Number.isSafeInteger(id) &&
+		id > 0 &&
+		/^[A-Z0-9_-]{1,10}$/.test(returnedCode) &&
+		returnedCode === normalizedCode &&
+		Number.isSafeInteger(discount) &&
+		discount >= 1 &&
+		discount <= 99
+	) {
+		return Object.freeze({ valid: true, id, code: returnedCode, discount });
 	}
 
-	if (payload?.valid) {
-		return payload;
-	}
-
-	throw new Error(payload?.error || 'Invalid or expired coupon code');
+	throw new PublicApiError('Coupon could not be checked', 502);
 }

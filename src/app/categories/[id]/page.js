@@ -1,4 +1,5 @@
 import { getLocale, getMessages } from 'next-intl/server';
+import { notFound } from 'next/navigation';
 import { fetchCategories, fetchProducts } from '@/lib/api';
 import { toProductCard } from '@/lib/content-view-models';
 import CategoryDetailPage from '@/components/categories/CategoryDetailPage';
@@ -26,13 +27,7 @@ export default async function CategoryRoute({ params }) {
 
 	const category = categories.find((cat) => String(cat.id) === String(id));
 
-	if (!category) {
-		return (
-			<div className="flex min-h-screen items-center justify-center">
-				<p>Category not found</p>
-			</div>
-		);
-	}
+	if (!category) notFound();
 
 	const categoryProducts = allProducts
 		.filter((product) => product.categories.some((cat) => String(cat.id) === String(id)))

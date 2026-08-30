@@ -55,7 +55,11 @@ export function checkoutCartItems(items) {
 
 	const quantities = new Map();
 	for (const item of items) {
-		const productId = Number(item?.id);
+		// Variants are separately priced product rows in the backend. Send the
+		// selected variant ID, not its display parent's ID, so the authoritative
+		// quote matches what the customer selected.
+		const selectedId = item?.variantId === null || item?.variantId === undefined ? item?.id : item.variantId;
+		const productId = Number(selectedId);
 		const quantity = Number(item?.quantity);
 		if (!Number.isSafeInteger(productId) || productId < 1) {
 			throw new Error('Checkout cart contains an invalid product');
@@ -92,6 +96,26 @@ export function buildCheckoutPayload({ form, items, couponId = null }) {
 		coupon_id: couponId,
 		items: checkoutCartItems(items),
 	};
+}
+
+export function checkoutReviewFailureKey(error) {
+	switch (error?.code) {
+		case 'CHECKOUT_PRODUCT_UNAVAILABLE':
+			return 'productUnavailable';
+		case 'CHECKOUT_COUPON_INVALID':
+			return 'couponNoLongerValid';
+		case 'CHECKOUT_APPOINTMENT_INVALID':
+			return 'appointmentInvalid';
+		case 'CHECKOUT_INPUT_INVALID':
+			return 'detailsInvalid';
+		case 'CHECKOUT_ITEMS_INVALID':
+			return 'cartInvalid';
+		case 'CHECKOUT_PRICING_CHANGED':
+			return 'pricingChanged';
+		default:
+			if (error?.status === 429) return 'tooManyRequests';
+			return error?.status === 503 ? 'checkoutUnavailable' : 'submitError';
+	}
 }
 
 export function formatCents(value, locale = 'en') {
