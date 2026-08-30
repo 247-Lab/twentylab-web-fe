@@ -8,7 +8,7 @@ describe('sanitizeCmsHtml', () => {
 		);
 
 		expect(result).toContain('<strong>Safe</strong>');
-		expect(result).toContain('https://24-7labs.com/wp-content/uploads/example.jpg');
+		expect(result).toMatch(/src="(?:https:\/\/24-7labs\.com)?\/wp-content\/uploads\/example\.jpg"/);
 		expect(result).not.toMatch(/onclick|onerror|<script/i);
 	});
 

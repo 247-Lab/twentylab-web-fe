@@ -6,6 +6,12 @@ import { describe, expect, it } from 'vitest';
 const workflow = readFileSync(join(cwd(), '.github', 'workflows', 'publish-production-image.yml'), 'utf8');
 
 describe('immutable production image publisher', () => {
+	it('publishes browser-same-origin images while retaining the canonical SEO host', () => {
+		expect(workflow).toContain('--build-arg NEXT_PUBLIC_PROD_API_URL=same-origin');
+		expect(workflow).toContain('--build-arg NEXT_PUBLIC_SITE_URL=https://24-7labs.com');
+		expect(workflow).not.toContain('--build-arg NEXT_PUBLIC_PROD_API_URL=https://24-7labs.com');
+	});
+
 	it('is default-off, protected, current-main, and CI-bound', () => {
 		expect(workflow).toMatch(/vars\.AWS_ARTIFACT_PUBLISH_ENABLED == 'true'/);
 		expect(workflow).toMatch(/environment: production-artifact/);

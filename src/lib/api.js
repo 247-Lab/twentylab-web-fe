@@ -4,19 +4,34 @@ const COMPILED_PUBLIC_API_CONFIG = {
 	prodApiUrl: process.env.NEXT_PUBLIC_PROD_API_URL,
 };
 
+export function usesSameOriginApi(config = COMPILED_PUBLIC_API_CONFIG) {
+	return config.mode === 'prod' && config.prodApiUrl === 'same-origin';
+}
+
 export function resolvePublicApiBase(config = COMPILED_PUBLIC_API_CONFIG) {
 	const publicBase = config.mode === 'dev' ? config.devApiUrl : config.prodApiUrl;
 	if (!publicBase) throw new Error('Public API origin is not configured');
+	if (publicBase === 'same-origin' && config.mode !== 'prod') {
+		throw new Error('same-origin API mode is supported only for production builds');
+	}
 	return publicBase.replace(/\/$/, '');
 }
 
 export function resolveApiOrigin(config) {
 	const publicBase = resolvePublicApiBase(config);
 	const internalApiUrl = typeof window === 'undefined' ? config?.internalApiUrl || process.env.INTERNAL_API_URL : null;
-	const base = internalApiUrl || publicBase;
+	if (publicBase === 'same-origin' && typeof window === 'undefined' && !internalApiUrl) {
+		throw new Error('INTERNAL_API_URL is required for server requests in same-origin mode');
+	}
+	const base = internalApiUrl || (publicBase === 'same-origin' ? window.location.origin : publicBase);
 
 	if (!base) throw new Error('API origin is not configured');
 	return `${base.replace(/\/$/, '')}/api`;
+}
+
+function publicApiCredentials() {
+	// The preview cookie is host-only. Never opt cross-origin APIs into cookies.
+	return usesSameOriginApi() ? 'same-origin' : 'omit';
 }
 
 const CONTENT_REVALIDATE_SECONDS = 300;
@@ -81,7 +96,7 @@ export async function createCheckoutCapability(payload, fetchImplementation = fe
 		await fetchImplementation(`${ENDPOINTS.PAYMENT}/checkout`, {
 			...withJsonOptions(payload),
 			cache: 'no-store',
-			credentials: 'omit',
+			credentials: publicApiCredentials(),
 			referrerPolicy: 'no-referrer',
 		})
 	);
@@ -132,7 +147,7 @@ export async function processCheckoutPayment(payload, fetchImplementation = fetc
 		await fetchImplementation(`${ENDPOINTS.PAYMENT}/process`, {
 			...withJsonOptions(payload),
 			cache: 'no-store',
-			credentials: 'omit',
+			credentials: publicApiCredentials(),
 			referrerPolicy: 'no-referrer',
 		})
 	);
@@ -171,7 +186,7 @@ function withFormSubmissionOptions(formType, payload) {
 			form_type: formType,
 		}),
 		cache: 'no-store',
-		credentials: 'omit',
+		credentials: publicApiCredentials(),
 		referrerPolicy: 'no-referrer',
 	};
 }
@@ -230,11 +245,32 @@ export function extractProducts(payload) {
 	return [];
 }
 
+export function normalizeSameOriginMediaUrl(value, config = COMPILED_PUBLIC_API_CONFIG) {
+	if (!usesSameOriginApi(config) || !value) return value;
+	try {
+		const url = new URL(value.startsWith('//') ? `https:${value}` : value);
+		if (
+			['http:', 'https:'].includes(url.protocol) &&
+			['24-7labs.com', 'www.24-7labs.com', 'api.24-7labs.com'].includes(url.hostname) &&
+			!url.port &&
+			!url.username &&
+			!url.password &&
+			(url.pathname.startsWith('/uploads/') || url.pathname.startsWith('/wp-content/uploads/'))
+		) {
+			return `${url.pathname}${url.search}${url.hash}`;
+		}
+	} catch {
+		// Relative media already belongs to the current browser origin.
+	}
+	return value;
+}
+
 export function resolveImageUrl(value, config = COMPILED_PUBLIC_API_CONFIG) {
 	if (!value) {
 		return '/images/placeholder.png';
 	}
 
+	value = normalizeSameOriginMediaUrl(value, config);
 	if (value.startsWith('http://') || value.startsWith('https://')) {
 		return value;
 	}
@@ -242,6 +278,8 @@ export function resolveImageUrl(value, config = COMPILED_PUBLIC_API_CONFIG) {
 	if (value.startsWith('//')) {
 		return `https:${value}`;
 	}
+
+	if (usesSameOriginApi(config)) return value.startsWith('/') ? value : `/${value}`;
 
 	if (value.startsWith('/')) {
 		return `${new URL(resolvePublicApiBase(config)).origin}${value}`;
@@ -358,6 +396,7 @@ export async function fetchProducts(locale = 'en') {
 		url.searchParams.set('page', String(page));
 		url.searchParams.set('limit', String(limit));
 		const response = await fetch(url, {
+			credentials: publicApiCredentials(),
 			next: {
 				revalidate: CONTENT_REVALIDATE_SECONDS,
 				tags: [`products:${locale}`],
@@ -379,6 +418,7 @@ export async function fetchProducts(locale = 'en') {
 
 export async function fetchBlogs(locale = 'en') {
 	const response = await fetch(withLocaleQuery(ENDPOINTS.BLOGS, locale), {
+		credentials: publicApiCredentials(),
 		next: {
 			revalidate: CONTENT_REVALIDATE_SECONDS,
 			tags: [`blogs:${locale}`],
@@ -407,6 +447,7 @@ export async function fetchBlogs(locale = 'en') {
 
 export async function fetchCategories(locale = 'en') {
 	const response = await fetch(withLocaleQuery(ENDPOINTS.CATEGORIES, locale), {
+		credentials: publicApiCredentials(),
 		next: {
 			revalidate: CONTENT_REVALIDATE_SECONDS,
 			tags: [`categories:${locale}`],
@@ -476,6 +517,7 @@ export async function validateCoupon(code) {
 	const response = await fetch(`${ENDPOINTS.COUPONS}/validate/${encodeURIComponent(normalizedCode)}`, {
 		method: 'POST',
 		cache: 'no-store',
+		credentials: publicApiCredentials(),
 		headers: {
 			Accept: 'application/json',
 		},

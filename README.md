@@ -18,7 +18,7 @@ Run the local CI gates with `npm run ci`, `npm run audit`, and `npm run audit:pr
 The multi-stage image uses the Next.js standalone output, runs without root, and can be built for ARM64 with Buildx:
 
 ```bash
-docker buildx build --platform linux/arm64 --build-arg NEXT_PUBLIC_PROD_API_URL=https://api.example.com --build-arg NEXT_PUBLIC_SITE_URL=https://24-7labs.com -t 24-7labs-web .
+docker buildx build --platform linux/arm64 --build-arg NEXT_PUBLIC_PROD_API_URL=same-origin --build-arg NEXT_PUBLIC_SITE_URL=https://24-7labs.com -t 24-7labs-web .
 ```
 
 You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
@@ -37,6 +37,12 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 ## Deployment
 
 Deploy only an image that passed the required `Frontend Fast Checks` branch-protection check. Public `NEXT_PUBLIC_*` values are embedded at build time and must never contain secrets.
+
+Production images use `NEXT_PUBLIC_PROD_API_URL=same-origin`: browser API and media requests stay on the host the user opened, including the authenticated CloudFront preview before DNS cutover. Forms and checkout include only same-origin cookies; absolute cross-origin API configurations retain cookie omission. Admin/API authentication remains separate from the edge preview session. Absolute API origins remain supported for local and cross-origin environments.
+
+Set the runtime-only `INTERNAL_API_URL` to the private backend origin (for example, `http://backend:3000`) for server rendering. It is deliberately absent during an image build: server content fetches fail locally instead of falling back to the live GoDaddy website. `NEXT_PUBLIC_SITE_URL=https://24-7labs.com` still controls canonical SEO URLs and is not the browser API destination.
+
+In same-origin mode, approved canonical `/uploads/...` and `/wp-content/uploads/...` image URLs become root-relative, and Next image optimization is disabled so the browser can send its host-bound preview cookie directly. This preserves layout and lazy loading but forgoes server-generated resized/format-converted images; upload sizing and media acceptance remain required. Unrelated external media URLs are not rewritten or added to the CSP.
 
 Before production DNS cutover, complete the source-backed legacy URL inventory and validation gate in `docs/legacy-url-cutover.md`; the small checked-in redirect list is intentionally not presented as complete.
 

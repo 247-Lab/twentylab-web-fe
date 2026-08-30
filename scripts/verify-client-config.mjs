@@ -1,5 +1,6 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { usesUnoptimizedImages, validatePublicBuildConfig } from '../config/securityHeaders.mjs';
 
 const STATIC_DIRECTORY = join('.next', 'static');
 async function javascriptFiles(directory) {
@@ -25,8 +26,14 @@ function selectedPublicApiUrl(environment = process.env) {
 	return value.replace(/\/$/, '');
 }
 
+validatePublicBuildConfig();
 const expectedApiUrl = selectedPublicApiUrl();
-const expectedUnoptimizedImages = process.env.NEXT_PUBLIC_MODE === 'dev';
+const selectedConfigProperty = process.env.NEXT_PUBLIC_MODE === 'dev' ? 'devApiUrl' : 'prodApiUrl';
+const escapedApiUrl = expectedApiUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+// Match the compiled configuration value, not merely the comparison/credential
+// literal "same-origin", which also exists in cross-origin builds.
+const compiledApiPattern = new RegExp(`\\b${selectedConfigProperty}\\s*:\\s*(["'])${escapedApiUrl}/?\\1`);
+const expectedUnoptimizedImages = usesUnoptimizedImages();
 const selectedVariable =
 	process.env.NEXT_PUBLIC_MODE === 'dev' ? 'NEXT_PUBLIC_DEV_API_URL' : 'NEXT_PUBLIC_PROD_API_URL';
 const checkoutEnabled = process.env.NEXT_PUBLIC_CHECKOUT_ENABLED === 'true';
@@ -58,7 +65,7 @@ const unresolvedLookups = [];
 
 for (const file of files) {
 	const source = await readFile(file, 'utf8');
-	if (source.includes(expectedApiUrl)) compiledOriginFound = true;
+	if (compiledApiPattern.test(source)) compiledOriginFound = true;
 	for (const value of expectedCheckoutValues) {
 		if (value && source.includes(value)) compiledCheckoutValues.add(value);
 	}

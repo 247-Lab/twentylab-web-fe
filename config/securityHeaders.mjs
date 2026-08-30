@@ -48,7 +48,9 @@ export function buildSecurityHeaders(environment = process.env) {
 	const apiOrigin = httpOrigin(apiUrl);
 	const payment = resolveAuthorizeNetBrowserConfig(environment);
 	const connectSources = ["'self'", apiOrigin].filter(Boolean).join(' ');
-	const imageSources = ["'self'", 'blob:', 'data:', apiOrigin, 'https://24-7labs.com'].filter(Boolean).join(' ');
+	const imageSources = ["'self'", 'blob:', 'data:', apiOrigin, apiUrl === 'same-origin' ? null : 'https://24-7labs.com']
+		.filter(Boolean)
+		.join(' ');
 	const scriptSources = ["'self'", "'unsafe-inline'", isDevelopment ? "'unsafe-eval'" : null, payment.origin]
 		.filter(Boolean)
 		.join(' ');
@@ -83,6 +85,10 @@ export function buildSecurityHeaders(environment = process.env) {
 	return headers;
 }
 
+export function usesUnoptimizedImages(environment = process.env) {
+	return environment.NEXT_PUBLIC_MODE === 'dev' || environment.NEXT_PUBLIC_PROD_API_URL === 'same-origin';
+}
+
 export function buildApiImagePattern(environment = process.env) {
 	const apiUrl =
 		environment.NEXT_PUBLIC_MODE === 'dev' ? environment.NEXT_PUBLIC_DEV_API_URL : environment.NEXT_PUBLIC_PROD_API_URL;
@@ -110,6 +116,7 @@ export function validatePublicBuildConfig(environment = process.env) {
 	for (const name of [apiVariable, 'NEXT_PUBLIC_SITE_URL']) {
 		const value = environment[name];
 		if (!value) throw new Error(`${name} is required for a production image`);
+		if (name === 'NEXT_PUBLIC_PROD_API_URL' && value === 'same-origin') continue;
 
 		const parsed = new URL(value);
 		const isLoopback = ['localhost', '127.0.0.1', '::1'].includes(parsed.hostname);

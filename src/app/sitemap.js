@@ -4,6 +4,10 @@ import { toProductDetailPath } from '@/lib/productRoutes';
 import { INDEXABLE_STATIC_ROUTES } from '@/lib/publicRoutes';
 import { toSitemapEntry } from '@/lib/sitemap';
 
+// Image builds have no backend. Generate against the runtime internal API rather
+// than permanently caching a build-time sitemap with no imported content.
+export const dynamic = 'force-dynamic';
+
 export default async function sitemap() {
 	const [products, categories, blogs] = await Promise.all([
 		fetchProducts('en').catch(() => []),
