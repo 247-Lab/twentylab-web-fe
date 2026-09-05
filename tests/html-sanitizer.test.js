@@ -16,6 +16,14 @@ describe('sanitizeCmsHtml', () => {
 		expect(sanitizeCmsHtml('<img src="data:text/html,unsafe" alt="unsafe">')).not.toContain('src=');
 	});
 
+	it('removes SVG animation content rather than applying URL rules to it', () => {
+		const result = sanitizeCmsHtml(
+			'<svg><a><animate attributeName="href" values="#safe;javascript:alert(1)" dur=".01s" fill="freeze"></animate><text>Read</text></a></svg>'
+		);
+
+		expect(result).not.toMatch(/<svg|<animate|javascript:/i);
+	});
+
 	it('rejects unsafe link schemes and protects new tabs', () => {
 		const result = sanitizeCmsHtml('<a href="javascript:alert(1)" target="_BLANK" rel="opener sponsored">Read</a>');
 
