@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { cwd } from 'node:process';
 import { describe, expect, it } from 'vitest';
@@ -6,6 +6,26 @@ import { describe, expect, it } from 'vitest';
 const workflow = readFileSync(join(cwd(), '.github', 'workflows', 'publish-production-image.yml'), 'utf8');
 
 describe('immutable production image publisher', () => {
+	it('uses only approved immutable Node 24 workflow actions', () => {
+		const approvedActions = new Set([
+			'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1',
+			'actions/setup-node@820762786026740c76f36085b0efc47a31fe5020',
+			'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a',
+			'aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c',
+		]);
+		const observedActions = new Set();
+		for (const file of readdirSync(join(cwd(), '.github', 'workflows')).filter((name) => /\.ya?ml$/u.test(name))) {
+			const source = readFileSync(join(cwd(), '.github', 'workflows', file), 'utf8');
+			for (const match of source.matchAll(/^\s*(?:-\s*)?uses:\s+([^\s#]+)(?:\s+#.*)?$/gmu)) {
+				const action = match[1];
+				expect(action).toMatch(/^[^@\s]+@[a-f0-9]{40}$/u);
+				expect(approvedActions.has(action), `${file}: unapproved action ${action}`).toBe(true);
+				observedActions.add(action);
+			}
+		}
+		expect(observedActions).toEqual(approvedActions);
+	});
+
 	it('publishes browser-same-origin images while retaining the canonical SEO host', () => {
 		expect(workflow).toContain('--build-arg NEXT_PUBLIC_PROD_API_URL=same-origin');
 		expect(workflow).toContain('--build-arg NEXT_PUBLIC_SITE_URL=https://24-7labs.com');
